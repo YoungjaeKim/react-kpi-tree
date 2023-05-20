@@ -1,0 +1,21 @@
+{
+  "name": "react-kpi-tree-backend",
+  "version": "1.0.0",
+  "description": "This package is for putting data for react-kpi-tree",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "mongodb"
+  ],
+  "author": "Youngjae",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.1.0",
+    "mysql": "^2.18.1"
+  }
+}
