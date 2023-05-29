@@ -15,7 +15,9 @@ app.listen(3000, () => {
     console.log("server started. port 3000");
 });
 
-// Define a route for token-based pagination
+/**
+ * a list of KpiElement. It implements token-based pagination.
+ */
 app.get('/elements', async (req, res) => {
     const pageSize = 50; // Number of records to fetch per page
     const pageToken = parseInt(req.query.page, 10); // Token for the requested page

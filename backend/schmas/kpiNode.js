@@ -2,8 +2,6 @@ const mongoose = require('mongoose');
 
 /**
  * a tree structure data to represent each node and its relationship.
- *
- * @type {module:mongoose.Schema<any, Model<any, any, any, any>, {}, {}, {}, {}, DefaultSchemaOptions, {parent: {ref: string, default: null, type: ObjectId}, isRoot: {default: boolean, type: BooleanConstructor}, children: [{ref: string, type: ObjectId}], name: {type: StringConstructor, required: boolean}}, HydratedDocument<FlatRecord<{parent: {ref: string, default: null, type: ObjectId}, isRoot: {default: boolean, type: BooleanConstructor}, children: [{ref: string, type: ObjectId}], name: {type: StringConstructor, required: boolean}}>, {}>>}
  */
 const kpiNodeSchema = new mongoose.Schema({
     name: {
