@@ -1,13 +1,15 @@
 const KpiElement = require("../schmas/kpiElement");
 const KpiElementRecord = require("../schmas/kpiElementRecord");
+const {isNullOrEmpty} = require("../utils");
+
 
 exports.createElement = async (req, res) => {
     try {
         const newKpiElement = new KpiElement(req.body);
         const savedKpiElement = await newKpiElement.save();
         res.status(201).json(savedKpiElement);
-    } catch (error) {
-        console.error('Failed to save document:', error);
+    } catch (err) {
+        console.error('Failed to save document:', err);
         res.status(500).send('Failed to save document');
     }
 };
@@ -30,17 +32,19 @@ exports.getElements = async (req, res) => {
             elements: kpiElements,
             nextPageToken: nextPageToken
         });
-    } catch (error) {
-        console.error(error);
+    } catch (err) {
+        console.error(err);
         res.status(500).json({error: 'Server error'});
     }
 };
 
-exports.getElementById = (req, res) => {
-    const resourceId = parseInt(req.params.id); // Convert the ID to a number
+exports.getElementById = async (req, res) => {
+    const resourceId = req.params.id;
+    if (isNullOrEmpty(resourceId))
+        res.status(401).json({error: "invalid id"});
 
     // Find the resource with the matching ID
-    const resource = KpiElement.find(r => r.id === resourceId);
+    const resource = await KpiElement.findOne({id: resourceId});
 
     if (!resource) {
         // Return a 404 response if the resource is not found
@@ -51,18 +55,56 @@ exports.getElementById = (req, res) => {
     }
 };
 
-exports.getElementRecords = (req, res) => {
-    // Create a new instance of the Document model with the data
-    const newKpiElementRecord = new KpiElementRecord(req.body);
+// element-records
+exports.createElementRecords = async (req, res) => {
+    try {
+        const newKpiElementRecord = new KpiElementRecord(req.body);
+        const savedKpiElementRecord = await newKpiElementRecord.save();
+        res.status(201).json(savedKpiElementRecord);
+    } catch (err) {
+        console.error('Failed to save document:', err);
+        res.status(500).send('Failed to save document');
+    }
+};
 
-    // Save the new document to the database
-    newKpiElementRecord.save()
-        .then((savedKpiElementRecord) => {
-            console.log('Document saved:', savedKpiElementRecord);
-            res.status(201).json(savedKpiElementRecord);
-        })
-        .catch((err) => {
-            console.error('Failed to save document:', err);
-            res.status(500).send('Failed to save document');
+exports.getElementRecords = async (req, res) => {
+    const pageSize = 50; // Number of records to fetch per page
+    const pageToken = parseInt(req.query.page, 10); // Token for the requested page
+
+    // Check if pageToken is not a valid number
+    const startIndex = (isNaN(pageToken) || pageToken < 0) ? 0 : pageToken;
+
+    try {
+        // Retrieve the resources with pagination
+        const elementRecords = await KpiElementRecord.find().skip(startIndex).limit(pageSize).exec();
+
+        // Determine the next page token
+        const nextPageToken = startIndex + pageSize;
+
+        res.json({
+            elements: elementRecords,
+            nextPageToken: nextPageToken
         });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({error: 'Server error'});
+    }
+};
+
+
+exports.getElementRecordById = async (req, res) => {
+    const resourceId = req.params.id;
+    if (isNullOrEmpty(resourceId))
+        res.status(401).json({error: "invalid id"});
+
+    // Find the resource with the matching ID
+    const resource = await KpiElementRecord.findOne({id: resourceId});
+
+    if (!resource) {
+        // Return a 404 response if the resource is not found
+        res.status(404).json({error: "Resource not found"});
+    } else {
+        // Return the resource as the response
+        res.json(resource);
+    }
 };

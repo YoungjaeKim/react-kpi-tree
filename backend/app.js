@@ -1,8 +1,6 @@
 const express = require("express");
 const mongodb = require("./index"); // reference index.js to connect to MongoDB
 const mongoose = require("mongoose");
-const KpiElement = require("./schmas/kpiElement");
-const KpiElementRecord = require("./schmas/kpiElementRecord");
 const elementRoute = require("./routes/element");
 
 const app = express();
