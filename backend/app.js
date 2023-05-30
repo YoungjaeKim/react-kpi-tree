@@ -1,6 +1,5 @@
 const express = require("express");
-const mongodb = require("./index"); // reference index.js to connect to MongoDB
-const mongoose = require("mongoose");
+const mongodb = require("./db"); // reference db.js to connect to MongoDB
 const elementRoute = require("./routes/element");
 
 const app = express();
