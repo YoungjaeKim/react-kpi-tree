@@ -1,19 +1,20 @@
 const KpiElement = require("../schmas/kpiElement");
+const KpiElementRecord = require("../schmas/kpiElementRecord");
 const {isNullOrEmpty} = require("../utils");
 
-
-exports.createElement = async (req, res) => {
+// element-records
+exports.createElementRecords = async (req, res) => {
     try {
-        const newKpiElement = new KpiElement(req.body);
-        const savedKpiElement = await newKpiElement.save();
-        res.status(201).json(savedKpiElement);
+        const newKpiElementRecord = new KpiElementRecord(req.body);
+        const savedKpiElementRecord = await newKpiElementRecord.save();
+        res.status(201).json(savedKpiElementRecord);
     } catch (err) {
         console.error('Failed to save document:', err);
         res.status(500).send('Failed to save document');
     }
 };
 
-exports.getElements = async (req, res) => {
+exports.getElementRecords = async (req, res) => {
     const pageSize = 50; // Number of records to fetch per page
     const pageToken = parseInt(req.query.page, 10); // Token for the requested page
 
@@ -22,13 +23,13 @@ exports.getElements = async (req, res) => {
 
     try {
         // Retrieve the resources with pagination
-        const kpiElements = await KpiElement.find().skip(startIndex).limit(pageSize).exec();
+        const elementRecords = await KpiElementRecord.find().skip(startIndex).limit(pageSize).exec();
 
         // Determine the next page token
         const nextPageToken = startIndex + pageSize;
 
         res.json({
-            elements: kpiElements,
+            elements: elementRecords,
             nextPageToken: nextPageToken
         });
     } catch (err) {
@@ -37,13 +38,14 @@ exports.getElements = async (req, res) => {
     }
 };
 
-exports.getElementById = async (req, res) => {
+
+exports.getElementRecordById = async (req, res) => {
     const resourceId = req.params.id;
     if (isNullOrEmpty(resourceId))
         res.status(401).json({error: "invalid id"});
 
     // Find the resource with the matching ID
-    const resource = await KpiElement.findOne({id: resourceId});
+    const resource = await KpiElementRecord.findOne({id: resourceId});
 
     if (!resource) {
         // Return a 404 response if the resource is not found

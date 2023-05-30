@@ -29,7 +29,7 @@ const kpiElementSchema = new Schema({
     },
     lastUpdatedDateTime: {
         type: Date,
-        default: Date.now()
+        default: Date.now
     },
 });
 

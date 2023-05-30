@@ -20,6 +20,10 @@ const kpiNodeSchema = new mongoose.Schema({
     isRoot: {
         type: Boolean,
         default: false
+    },
+    timestamp: {
+        type: Date,
+        default: Date.now
     }
 });
 

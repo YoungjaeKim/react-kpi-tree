@@ -7,7 +7,8 @@ const {Schema} = mongoose;
 const kpiElementRecordSchema = new Schema({
     elementId: {
         type: Schema.Types.ObjectId,
-        ref: 'KpiElement', required: true
+        ref: 'KpiElement',
+        required: true
     },
     recordKey: {
         type: String,
@@ -19,7 +20,7 @@ const kpiElementRecordSchema = new Schema({
     },
     timestamp: {
         type: Date,
-        default: Date.now()
+        default: Date.now
     }
 })
 

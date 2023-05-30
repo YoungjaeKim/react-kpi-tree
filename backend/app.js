@@ -1,6 +1,7 @@
 const express = require("express");
 const mongodb = require("./db"); // reference db.js to connect to MongoDB
 const elementRoute = require("./routes/element");
+const elementRecordRoute = require("./routes/element-records");
 
 const app = express();
 // Middleware to parse incoming request bodies
@@ -13,4 +14,5 @@ app.listen(3000, () => {
     console.log("server started. port 3000");
 });
 
-app.use('/element', elementRoute);
+app.use('/elements', elementRoute);
+app.use('/element-records', elementRecordRoute);
