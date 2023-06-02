@@ -1,6 +1,9 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import BlockCanvas from "./components/BlockCanvas";
+
+let blockCanvasSize = {width: 800, height: 800}
 
 function App() {
   return (
@@ -18,6 +21,9 @@ function App() {
         >
           Learn React
         </a>
+        <div style={blockCanvasSize}>
+          <BlockCanvas></BlockCanvas>
+        </div>
       </header>
     </div>
   );

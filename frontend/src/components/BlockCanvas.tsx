@@ -1,12 +1,41 @@
-import React from "react";
-import ReactFlow from 'react-flow-renderer'
+import { useCallback } from 'react';
+import ReactFlow, {
+    MiniMap,
+    Controls,
+    Background,
+    useNodesState,
+    useEdgesState,
+    addEdge,
+} from 'reactflow';
 
+import 'reactflow/dist/style.css';
 
-const elements = [
-    {id: '1', data: {label: 'Node 1'}, position: {x: 250, y: 5}},
-    // you can also pass a React component as a label
-    {id: '2', data: {label: <div>Node 2</div>}, position: {x: 100, y: 100}},
-    {id: 'e1-2', source: '1', target: '2', animated: true},
+const initialNodes = [
+    { id: '1', position: { x: 0, y: 0 }, data: { label: '1' } },
+    { id: '2', position: { x: 0, y: 100 }, data: { label: '2' } },
 ];
 
-const BasicFlow = () => <ReactFlow elements={elements}/>;
+const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }];
+
+function Flow() {
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+    const onConnect = useCallback((params: any) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+
+    return (
+        <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+        >
+            <MiniMap />
+            <Controls />
+            <Background />
+        </ReactFlow>
+    );
+}
+
+export default Flow;
