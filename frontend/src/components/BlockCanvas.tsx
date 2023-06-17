@@ -10,16 +10,26 @@ import ReactFlow, {
 
 import 'reactflow/dist/style.css';
 
-const initialNodes = [
-    { id: '1', position: { x: 0, y: 0 }, data: { label: '1' } },
-    { id: '2', position: { x: 0, y: 100 }, data: { label: '2' } },
-];
+type BlockEdge = {
+    id: string;
+    source: string;
+    target: string;
+};
 
-const initialEdges = [{ id: 'e1-2', source: '1', target: '2' }];
+type BlockNode = {
+    id: string;
+    position: { x: number; y: number };
+    data: { label: string };
+};
 
-function Flow() {
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+interface BlockCanvasProps {
+    edges: BlockEdge[];
+    nodes: BlockNode[];
+}
+
+function BlockCanvas(props: BlockCanvasProps) {
+    const [nodes, setNodes, onNodesChange] = useNodesState(props.nodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(props.edges);
 
     const onConnect = useCallback((params: any) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
@@ -38,4 +48,4 @@ function Flow() {
     );
 }
 
-export default Flow;
+export default BlockCanvas;
