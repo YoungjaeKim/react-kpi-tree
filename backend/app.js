@@ -16,3 +16,5 @@ app.listen(3000, () => {
 
 app.use('/elements', elementRoute);
 app.use('/element-records', elementRecordRoute);
+app.use('/nodes', elementRecordRoute);
+app.use('/edges', elementRecordRoute);
