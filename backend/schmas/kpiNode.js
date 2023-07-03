@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const {v4: uuidv4} = require('uuid');
 
 /**
  * a tree structure data to represent each node and its relationship.
@@ -18,8 +19,13 @@ const kpiNodeSchema = new mongoose.Schema({
             required: true
         }
     },
+    groupId: {
+        type: String,
+        required: true,
+        default: uuidv4
+    },
     data: {
-        label: {
+        label: { // a latest visual label
             type: String,
             required: false
         },

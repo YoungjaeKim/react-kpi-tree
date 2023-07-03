@@ -5,7 +5,7 @@ const {Schema} = mongoose;
  * an ElementRecord which contains time-series data of an Element
  */
 const kpiElementRecordSchema = new Schema({
-    elementId: {
+    elementId: { // parent reference
         type: Schema.Types.ObjectId,
         ref: 'KpiElement',
         required: true

@@ -27,7 +27,21 @@ exports.upsertEdges = async (req, res) => {
 };
 
 exports.getNodeAndEdge = async (req, res) => {
+    const groupId = req.query.id;
 
+    try {
+        // get all records of KpiNodes of nodeId and KpiElement item should be populated by its elementId.
+        const kpiNodes = await KpiNode.find({groupId: groupId}).populate('data.elementId').exec();
+        const kpiEdges = await KpiEdge.find({groupId: groupId}).exec();
+
+        res.json({
+            nodes: kpiNodes,
+            edges: kpiEdges,
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({error: 'Server error'});
+    }
 };
 
 exports.getNodeById = async (req, res) => {

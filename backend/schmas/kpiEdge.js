@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 /**
- * a tree structure data to represent each node and its relationship.
+ * a tree structure data to represent each edge relationship.
  */
 const kpiEdgeSchema = new mongoose.Schema({
     id: {
@@ -15,9 +15,14 @@ const kpiEdgeSchema = new mongoose.Schema({
     target: {
         type: String,
         required: true
+    },
+    groupId: {
+        type: String,
+        required: true,
+        index: true
     }
 });
 
-const KpiEdge = mongoose.model('KpiEdge', kpiNodeSchema);
+const KpiEdge = mongoose.model('KpiEdge', kpiEdgeSchema);
 
 module.exports = KpiEdge;
