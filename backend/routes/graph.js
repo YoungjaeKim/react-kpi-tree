@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const elementController = require("../controllers/element");
+const graphController = require("../controllers/graph");
 
-router.post('/', graphController.createElement);
-router.get('/', graphController.getElements);
+router.post('/', graphController.getNodeAndEdge);
+router.post('/:id', graphController.getNodeById);
 
 module.exports = router;
