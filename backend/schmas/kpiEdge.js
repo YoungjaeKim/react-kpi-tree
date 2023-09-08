@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 /**
- * a tree structure data to represent each edge relationship.
+ * a visual tree structure data to represent each edge(linkage) relationship.
  */
 const kpiEdgeSchema = new mongoose.Schema({
     id: {
