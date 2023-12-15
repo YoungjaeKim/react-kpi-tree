@@ -2,7 +2,12 @@ const KpiElement = require("../schmas/kpiElement");
 const KpiElementRecord = require("../schmas/kpiElementRecord");
 const {isNullOrEmpty} = require("../utils");
 
-// element-records
+/**
+ * Create a new element record
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
 exports.createElementRecords = async (req, res) => {
     try {
         const newKpiElementRecord = new KpiElementRecord(req.body);
@@ -14,6 +19,12 @@ exports.createElementRecords = async (req, res) => {
     }
 };
 
+/**
+ * Get all element records
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
 exports.getElementRecords = async (req, res) => {
     const pageSize = 50; // Number of records to fetch per page
     const pageToken = parseInt(req.query.page, 10); // Token for the requested page
@@ -38,11 +49,16 @@ exports.getElementRecords = async (req, res) => {
     }
 };
 
-
+/**
+ * Get element record by id
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
 exports.getElementRecordById = async (req, res) => {
     const resourceId = req.params.id;
     if (isNullOrEmpty(resourceId))
-        res.status(401).json({error: "invalid id"});
+        res.status(400).json({error: "invalid id"});
 
     // Find the resource with the matching ID
     const resource = await KpiElementRecord.findById(resourceId);

@@ -40,7 +40,7 @@ exports.getElements = async (req, res) => {
 exports.getElementById = async (req, res) => {
     const resourceId = req.params.id;
     if (isNullOrEmpty(resourceId))
-        res.status(401).json({error: "invalid id"});
+        res.status(400).json({error: "invalid id"});
 
     // Find the resource with the matching ID
     const resource = await KpiElement.findById(resourceId);
