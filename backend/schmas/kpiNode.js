@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const {v4: uuidv4} = require('uuid');
 
 /**
- * a visual tree structure data to represent each node(leaf). Data is defined in kpiElement.js
+ * a visual tree structure data to represent each node(dot or leaf). Data is defined in kpiElement.js
  */
 const kpiNodeSchema = new mongoose.Schema({
     id: {

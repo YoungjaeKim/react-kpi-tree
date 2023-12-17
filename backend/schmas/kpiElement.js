@@ -18,6 +18,11 @@ const kpiElementSchema = new Schema({
         require: false,
         default: true
     },
+    isActive:{
+        type: Boolean,
+        require: false,
+        default: true
+    },
     expression: { // a mathematics expression to reference other elements
         type: String
     },
