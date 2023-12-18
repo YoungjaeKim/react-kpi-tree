@@ -5,6 +5,14 @@ const expect = chai.expect;
 
 chai.use(chaiHttp);
 
+test('call / and returns status 200', () => {
+    return chai.request(app)
+        .get('/')
+        .then((res) => {
+            expect(res).to.have.status(200);
+        });
+});
+
 /**
  * TODO: not working. it's just snippet of references.
  */

@@ -5,7 +5,7 @@ const connect = () => {
         mongoose.set('debug', true);
     }
 
-    mongoose.connect('mongodb://root:1234@127.0.0.1:27017/', {
+    mongoose.connect('mongodb://127.0.0.1:27017/', {
         dbName: 'dev',
     })
         .then(() => {
