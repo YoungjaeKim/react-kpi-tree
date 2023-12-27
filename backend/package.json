@@ -4,6 +4,7 @@
   "description": "This package is for putting data for react-kpi-tree",
   "main": "app.js",
   "scripts": {
+    "seed": "node tests/seed.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js"
   },
