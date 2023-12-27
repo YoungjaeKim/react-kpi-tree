@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const {Schema} = mongoose;
 
 /**
- * an Element definition.
+ * Data layer for kpiNode.js
  */
 const kpiElementSchema = new Schema({
     title: {
@@ -24,12 +24,6 @@ const kpiElementSchema = new Schema({
         default: true
     },
     expression: { // a mathematics expression to reference other elements
-        type: String
-    },
-    prefix: { // display prefix
-        type: String
-    },
-    suffix: { // display suffix
         type: String
     },
     lastUpdatedDateTime: {

@@ -1,14 +1,12 @@
 const mongoose = require('mongoose');
 const {v4: uuidv4} = require('uuid');
+const {Schema} = require("mongoose");
 
 /**
- * a visual tree structure data to represent each node(dot or leaf). Data is defined in kpiElement.js
+ * a visual tree structure data to represent each node(dot or leaf).
+ * Data layer is defined in kpiElement.js
  */
 const kpiNodeSchema = new mongoose.Schema({
-    id: {
-        type: String,
-        required: true
-    },
     position: {
         x: {
             type: Number,
@@ -19,7 +17,7 @@ const kpiNodeSchema = new mongoose.Schema({
             required: true
         }
     },
-    groupId: {
+    groupId: { // same data as kpiEdge.groupId in order to group nodes and edges
         type: String,
         required: true,
         default: uuidv4

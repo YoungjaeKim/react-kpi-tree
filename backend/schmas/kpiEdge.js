@@ -1,13 +1,10 @@
 const mongoose = require('mongoose');
+const {v4: uuidv4} = require("uuid");
 
 /**
  * a visual tree structure data to represent each edge(linkage) relationship.
  */
 const kpiEdgeSchema = new mongoose.Schema({
-    id: {
-        type: String,
-        required: true
-    },
     source: {
         type: String,
         required: true
@@ -16,10 +13,11 @@ const kpiEdgeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    groupId: {
+    groupId: { // same data as kpiNode.groupId in order to group nodes and edges
         type: String,
         required: true,
-        index: true
+        index: true,
+        default: uuidv4
     }
 });
 

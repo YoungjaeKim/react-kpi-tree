@@ -1,10 +1,10 @@
-// seed.js
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 const kpiElement = require('../schmas/kpiElement');
+const kpiNode = require('../schmas/kpiNode');
+const kpiEdge = require('../schmas/kpiEdge');
 
-// MongoDB URI
 const mongoURI = 'mongodb://localhost:27017/dev';
 
 
@@ -16,6 +16,8 @@ mongoose.connect(mongoURI, {useNewUrlParser: true, useUnifiedTopology: true})
 
 const deleteAllData = async () => {
     try {
+        await kpiEdge.deleteMany({});
+        await kpiNode.deleteMany({});
         await kpiElement.deleteMany({});
         console.log('Data successfully deleted');
     } catch (error) {
@@ -24,22 +26,28 @@ const deleteAllData = async () => {
     }
 }
 
-const readFakeData = async (filePath) => {
-    const jsonData = fs.readFileSync(path.join(__dirname, filePath), 'utf8');
-    return JSON.parse(jsonData);
-}
-
 /**
  * Seeds the database with data from the provided filenames.
- * @param {string[]} filenames - An array of filenames containing the data to seed.
  */
-const seedDatabase = async (filenames) => {
+const seedDatabase = async (filename) => {
     try {
-        for (let i = 0; i < filenames.length; i++) {
-            const data = await readFakeData(filenames[i]);
-            await kpiElement.insertMany(data);
-            console.log(`\'${filenames[i]}\' is successfully seeded`);
-        }
+        const fileData = fs.readFileSync(path.join(__dirname, filename), 'utf8');
+        const jsonData = JSON.parse(fileData);
+
+        // 1. insert kpiElement data
+        const insertedElements = await kpiElement.insertMany(jsonData["kpiElement"]);
+        const elementIds = insertedElements.map(element => element._id);
+
+        // 2. insert kpiNode data
+        const kpiNodeData = jsonData["kpiNode"]
+        // Replace the placeholder elementId with actual ObjectIds from inserted KpiElements
+        kpiNodeData.forEach((node, index) => {
+            node.data.elementId = elementIds[index % elementIds.length]; // Loop if fewer elements than nodes
+        });
+        await kpiNode.insertMany(kpiNodeData);
+
+        // 3. insert kpiEdge data
+        await kpiEdge.insertMany(jsonData["kpiEdge"]);
     } catch (error) {
         console.error('Error seeding data', error);
         throw error;
@@ -47,10 +55,10 @@ const seedDatabase = async (filenames) => {
 };
 
 // Run the functions in sequence
-const runSeedProcess = async (filenames) => {
+const runSeedProcess = async (filename) => {
     try {
         await deleteAllData();
-        await seedDatabase(filenames);
+        await seedDatabase(filename);
     } catch (error) {
         // Handle any errors that occurred during delete or seed
         console.error('An error occurred during the seed process', error);
@@ -62,6 +70,4 @@ const runSeedProcess = async (filenames) => {
 };
 
 // Run the seed process. Delete all database and seed with the following files.
-runSeedProcess([
-    'seed_kpiElement.json'
-]);
+runSeedProcess('seed_v1.json');
