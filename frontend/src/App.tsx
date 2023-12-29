@@ -27,14 +27,14 @@ async function getNodesAndElements() {
     // assign an array of type KpiNode
     let nodes: KpiNode[] = [];
     let edges: KpiEdge[] = [];
-    await axios.get('http://localhost:8080/api/v1/nodes')
+    await axios.get('http://localhost:8080/graphs')
         .then((response) => {
             nodes = response.data;
         })
         .catch((error) => {
             console.log(error);
         });
-    await axios.get('http://localhost:8080/api/v1/elements')
+    await axios.get('http://localhost:8080/graphs')
         .then((response) => {
             edges = response.data;
         })

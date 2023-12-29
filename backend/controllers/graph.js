@@ -26,6 +26,12 @@ exports.upsertEdges = async (req, res) => {
     }
 };
 
+/**
+ * get groupId as QueryString and return nodes and edges of the group.
+ * @param req groupId as QueryString
+ * @param res json to have "nodes", "edges" body.
+ * @returns {Promise<void>}
+ */
 exports.getNodeAndEdge = async (req, res) => {
     const groupId = req.query.id;
 

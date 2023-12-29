@@ -2,6 +2,7 @@ const express = require("express");
 const mongodb = require("./db"); // reference db.js to connect to MongoDB
 const elementRoute = require("./routes/element");
 const elementRecordRoute = require("./routes/element-records");
+const graphRoute = require("./routes/graph");
 
 const app = express();
 app.get('/', (req, res) => {
@@ -19,7 +20,6 @@ app.listen(3000, () => {
 
 app.use('/elements', elementRoute);
 app.use('/element-records', elementRecordRoute);
-app.use('/nodes', elementRecordRoute);
-app.use('/edges', elementRecordRoute);
+app.use('/graphs', graphRoute);
 
 module.exports = app;
