@@ -24,19 +24,14 @@ interface KpiEdge {
 
 // download Nodes and Elements from backend
 async function getNodesAndElements() {
+    console.log("getNodesAndElements() is called");
     // assign an array of type KpiNode
     let nodes: KpiNode[] = [];
     let edges: KpiEdge[] = [];
-    await axios.get('http://localhost:8080/graphs')
+    await axios.get('http://localhost:8080/graphs?groupId=772fd988-0aff-4e84-b111-2366c77cf27e')
         .then((response) => {
-            nodes = response.data;
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-    await axios.get('http://localhost:8080/graphs')
-        .then((response) => {
-            edges = response.data;
+            nodes = response.data["nodes"];
+            edges = response.data["edges"];
         })
         .catch((error) => {
             console.log(error);
@@ -45,6 +40,7 @@ async function getNodesAndElements() {
 }
 
 function App() {
+    console.log("App() is called");
 
     // call getNodesAndElements() to get nodes and edges and then assign them to initialNodes and initialEdges
     let initialNodes: KpiNode[] = [];
@@ -56,7 +52,6 @@ function App() {
 
     // output as debug log
     console.log("initialNodes: " + initialNodes);
-
     console.log("initialEdges: " + initialEdges);
 
     // let initialNodes = [

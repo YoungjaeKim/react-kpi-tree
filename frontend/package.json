@@ -35,8 +35,8 @@
   },
   "scripts": {
     "start": "react-scripts --openssl-legacy-provider start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "build": "react-scripts --openssl-legacy-provider build",
+    "test": "react-scripts --openssl-legacy-provider test",
     "eject": "react-scripts eject",
     "dual": "concurrently \"cross-env PORT=3001 npm run start\" \"cd ../backend && npm run start\""
   },

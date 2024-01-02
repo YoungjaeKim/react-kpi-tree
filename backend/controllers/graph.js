@@ -33,7 +33,12 @@ exports.upsertEdges = async (req, res) => {
  * @returns {Promise<void>}
  */
 exports.getNodeAndEdge = async (req, res) => {
-    const groupId = req.query.id;
+    const groupId = req.query.groupId;
+
+    if (isNullOrEmpty(groupId)) {
+        res.status(404).json({error: "groupId is required"});
+        return;
+    }
 
     try {
         // get all records of KpiNodes of nodeId and KpiElement item should be populated by its elementId.

@@ -11,6 +11,19 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
+// rewrite this file to fit to React 18.
+// ReactDOM.render(
+//     <React.StrictMode>
+//         <BlockCanvas nodes={initialNodes} edges={initialEdges} size={blockCanvasSize}/>
+//     </React.StrictMode>,
+//     document.getElementById('root')
+// );
+//
+// export default App;
+// export {KpiNode, KpiEdge, getNodesAndElements, initialNodes, initialEdges, blockCanvasSize};
+// export default App;
+
+
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
