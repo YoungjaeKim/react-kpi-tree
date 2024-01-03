@@ -1,4 +1,10 @@
 {
+  "kpiGroup": [
+    {
+      "_id": "507f1f77bcf86cd799439011",
+      "title": "First Group"
+    }
+  ],
   "kpiElement": [
     {
       "title": "First",
@@ -11,22 +17,24 @@
   ],
   "kpiNode": [
     {
+      "_id": "6594ec111b59b7919b63bedc",
       "position": {
         "x": 100,
-        "y": 200
+        "y": 100
       },
-      "groupId": "772fd988-0aff-4e84-b111-2366c77cf27e",
+      "groupId": "507f1f77bcf86cd799439011",
       "data": {
         "label": "First KPI Node",
         "elementId": "PLACEHOLDER_FOR_ELEMENT_ID"
       }
     },
     {
+      "_id": "6594ec111b59b7919b63bedd",
       "position": {
         "x": 300,
         "y": 200
       },
-      "groupId": "772fd988-0aff-4e84-b111-2366c77cf27e",
+      "groupId": "507f1f77bcf86cd799439011",
       "data": {
         "label": "Second KPI Node",
         "elementId": "PLACEHOLDER_FOR_ELEMENT_ID"
@@ -35,9 +43,9 @@
   ],
   "kpiEdge": [
     {
-      "source": "node-1",
-      "target": "node-2",
-      "groupId": "772fd988-0aff-4e84-b111-2366c77cf27e"
+      "source": "6594ec111b59b7919b63bedc",
+      "target": "6594ec111b59b7919b63bedd",
+      "groupId": "507f1f77bcf86cd799439011"
     }
   ]
 }

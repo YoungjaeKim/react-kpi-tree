@@ -18,9 +18,9 @@ const kpiNodeSchema = new mongoose.Schema({
         }
     },
     groupId: { // same data as kpiEdge.groupId in order to group nodes and edges
-        type: String,
+        type: Schema.Types.ObjectId,
         required: true,
-        default: uuidv4
+        index: true,
     },
     data: {
         label: { // a latest visual label

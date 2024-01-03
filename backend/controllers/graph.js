@@ -1,10 +1,20 @@
 const KpiEdge = require("../schmas/kpiEdge");
 const KpiNode = require("../schmas/kpiNode");
+const KpiGroup = require("../schmas/kpiGroup");
 const {isNullOrEmpty} = require("../utils");
 
-// TODO: createGraph for creating a new canvas of nodes and edges.
+exports.createGroup = async (req, res) => {
+    try {
+        const newKpiGroup = new KpiGroup(req.body);
+        const savedKpiGroup = await newKpiGroup.save();
+        res.status(201).json(savedKpiGroup);
+    } catch (err) {
+        console.error('Failed to save document:', err);
+        res.status(500).send('Failed to save document');
+    }
+}
 
-exports.upsertNodes = async (req, res) => {
+exports.upsertNode = async (req, res) => {
     try {
         const newKpiNode = new KpiNode(req.body);
         const savedKpiNode = await newKpiNode.save();
@@ -15,7 +25,7 @@ exports.upsertNodes = async (req, res) => {
     }
 };
 
-exports.upsertEdges = async (req, res) => {
+exports.upsertEdge = async (req, res) => {
     try {
         const newKpiEdge = new KpiEdge(req.body);
         const savedKpiEdge = await newKpiEdge.save();
@@ -46,8 +56,18 @@ exports.getNodeAndEdge = async (req, res) => {
         const kpiEdges = await KpiEdge.find({groupId: groupId}).exec();
 
         res.json({
-            nodes: kpiNodes,
-            edges: kpiEdges,
+            nodes: kpiNodes.map((node) => {
+                const nodeObject = node.toObject();
+                nodeObject.id = nodeObject._id;
+                delete nodeObject._id;
+                return nodeObject;
+            }),
+            edges: kpiEdges.map((edge) => {
+                const edgeObject = edge.toObject();
+                edgeObject.id = edgeObject._id;
+                delete edgeObject._id;
+                return edgeObject;
+            }),
         });
     } catch (err) {
         console.error(err);

@@ -4,6 +4,7 @@ const path = require('path');
 const kpiElement = require('../schmas/kpiElement');
 const kpiNode = require('../schmas/kpiNode');
 const kpiEdge = require('../schmas/kpiEdge');
+const kpiGroup = require('../schmas/kpiGroup');
 
 const mongoURI = 'mongodb://localhost:27017/dev';
 
@@ -34,11 +35,15 @@ const seedDatabase = async (filename) => {
         const fileData = fs.readFileSync(path.join(__dirname, filename), 'utf8');
         const jsonData = JSON.parse(fileData);
 
-        // 1. insert kpiElement data
+        // 1. insert kpiGroup data
+        const kpiGroupData = jsonData["kpiGroup"];
+        await kpiGroup.insertMany(kpiGroupData);
+
+        // 2. insert kpiElement data
         const insertedElements = await kpiElement.insertMany(jsonData["kpiElement"]);
         const elementIds = insertedElements.map(element => element._id);
 
-        // 2. insert kpiNode data
+        // 3. insert kpiNode data
         const kpiNodeData = jsonData["kpiNode"]
         // Replace the placeholder elementId with actual ObjectIds from inserted KpiElements
         kpiNodeData.forEach((node, index) => {
