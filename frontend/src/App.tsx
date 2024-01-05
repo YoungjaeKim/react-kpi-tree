@@ -3,6 +3,8 @@ import logo from './logo.svg';
 import './App.css';
 import BlockCanvas from "./components/BlockCanvas";
 import axios from 'axios';
+import {useEffect} from "react";
+import {useState} from "react";
 
 let blockCanvasSize = {width: 800, height: 800}
 
@@ -41,28 +43,50 @@ async function getNodesAndElements() {
 
 function App() {
     console.log("App() is called");
-
     // call getNodesAndElements() to get nodes and edges and then assign them to initialNodes and initialEdges
-    let initialNodes : any[] = [];
-    let initialEdges : any[] = [];
-    let initialNodes1: KpiNode[] = [];
-    let initialEdges1: KpiEdge[] = [];
-    getNodesAndElements().then((response) => {
-        initialNodes1 = response.nodes;
-        initialEdges1 = response.edges;
-        // output as debug log
-        console.log("initialNodes: " + initialNodes);
-        console.log("initialEdges: " + initialEdges);
+    let initialNodes: KpiNode[] = [];
+    let initialEdges: KpiEdge[] = [];
+    initialNodes = [
+        {id: '1', position: {x: 0, y: 0}, groupId: '1', data: {label: '1', elementId: 'response.nodes'}},
+        {id: '2', position: {x: 0, y: 100}, groupId: '1', data: {label: '2', elementId: 'response.nodes'}},
+    ];
 
-        initialNodes = [
-            {id: '1', position: {x: 0, y: 0}, data: {label: '1', others1: 2}},
-            {id: '2', position: {x: 0, y: 100}, data: {label: '2', others1: 2345345}},
-        ];
+    initialEdges = [{id: 'e1-2', source: '1', target: '2', groupId: '1'}];
 
-        initialEdges = [{id: 'e1-2', source: '1', target: '2'}];
+    const [nodes, setNodes] = useState<KpiNode[]>(initialNodes);
+    const [edges, setEdges] = useState<KpiEdge[]>(initialEdges);
 
-    });
+    useEffect(() => {
+        getNodesAndElements()
+            .then((response) => {
+                setNodes([
+                    {id: '1', position: {x: 0, y: 0}, groupId: '1', data: {label: '3', elementId: 'response.nodes'}},
+                    {id: '2', position: {x: 100, y: 100}, groupId: '1', data: {label: '4', elementId: 'response.nodes'}},
+                ]);
+                setEdges([{id: 'e1-2', source: '1', target: '2', groupId: '1'}]);
+                console.log("getNodesAndElements called");
+                // setNodes((nds) =>
+                //     nds.map((node) => {
+                //         if (node.id === '2') {
+                //             // it's important that you create a new object here
+                //             // in order to notify react flow about the change
+                //             node = {
+                //                 ...node,
+                //                 position: {x: 100, y: 100},
+                //             };
+                //
+                //             console.log("hit");
+                //         }
+                //         return node;
+                //     })
+                // );
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }, []);
 
+    console.log("return calling2");
 
     return (
         <div className="App">
@@ -80,9 +104,9 @@ function App() {
                     Learn React
                 </a>
                 <div style={blockCanvasSize}>
-                    <BlockCanvas nodes={initialNodes} edges={initialEdges}></BlockCanvas>
+                    <BlockCanvas nodes={nodes} setNodes={setNodes} edges={edges} setEdges={setEdges}></BlockCanvas>
                 </div>
-9            </header>
+            </header>
         </div>
     );
 }
