@@ -1,35 +1,20 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
-import BlockCanvas from "./components/BlockCanvas";
+import BlockCanvas, {BlockEdge, BlockNode} from "./components/BlockCanvas";
 import axios from 'axios';
 import {useEffect} from "react";
 import {useState} from "react";
 
 let blockCanvasSize = {width: 800, height: 800}
 
-// an interface of KpiNode
-interface KpiNode {
-    id: string,
-    position: { x: number, y: number },
-    groupId: string,
-    data: { label: string, elementId: string },
-}
-
-// an interface of KpiEdge
-interface KpiEdge {
-    id: string,
-    source: string,
-    target: string,
-    groupId: string,
-}
 
 // download Nodes and Elements from backend
 async function getNodesAndElements() {
     console.log("getNodesAndElements() is called");
     // assign an array of type KpiNode
-    let nodes: KpiNode[] = [];
-    let edges: KpiEdge[] = [];
+    let nodes: BlockNode[] = [];
+    let edges: BlockEdge[] = [];
     await axios.get('http://localhost:8080/graphs?groupId=507f1f77bcf86cd799439011')
         .then((response) => {
             nodes = response.data["nodes"];
@@ -44,8 +29,9 @@ async function getNodesAndElements() {
 function App() {
     console.log("App() is called");
     // call getNodesAndElements() to get nodes and edges and then assign them to initialNodes and initialEdges
-    let initialNodes: KpiNode[] = [];
-    let initialEdges: KpiEdge[] = [];
+    let initialNodes: BlockNode[];
+    let initialEdges: BlockEdge[];
+
     initialNodes = [
         {id: '1', position: {x: 0, y: 0}, groupId: '1', data: {label: '1', elementId: 'response.nodes'}},
         {id: '2', position: {x: 0, y: 100}, groupId: '1', data: {label: '2', elementId: 'response.nodes'}},
@@ -53,18 +39,15 @@ function App() {
 
     initialEdges = [{id: 'e1-2', source: '1', target: '2', groupId: '1'}];
 
-    const [nodes, setNodes] = useState<KpiNode[]>(initialNodes);
-    const [edges, setEdges] = useState<KpiEdge[]>(initialEdges);
+    const [nodes, setNodes] = useState<BlockNode[]>(initialNodes);
+    const [edges, setEdges] = useState<BlockEdge[]>(initialEdges);
 
     useEffect(() => {
         getNodesAndElements()
             .then((response) => {
-                setNodes([
-                    {id: '1', position: {x: 0, y: 0}, groupId: '1', data: {label: '3', elementId: 'response.nodes'}},
-                    {id: '2', position: {x: 100, y: 100}, groupId: '1', data: {label: '4', elementId: 'response.nodes'}},
-                ]);
-                setEdges([{id: 'e1-2', source: '1', target: '2', groupId: '1'}]);
-                console.log("getNodesAndElements called");
+                setNodes(response.nodes);
+                setEdges(response.edges);
+                console.log(response);
             })
             .catch((error) => {
                 console.log(error);

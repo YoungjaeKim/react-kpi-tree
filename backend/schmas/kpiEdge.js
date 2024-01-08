@@ -7,11 +7,11 @@ const {Schema} = require("mongoose");
  */
 const kpiEdgeSchema = new mongoose.Schema({
     source: {
-        type: String,
+        type: Schema.Types.ObjectId,
         required: true
     },
     target: {
-        type: String,
+        type: Schema.Types.ObjectId,
         required: true
     },
     groupId: { // same data as kpiNode.groupId in order to group nodes and edges

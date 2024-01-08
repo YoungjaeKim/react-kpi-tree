@@ -8,18 +8,19 @@ import ReactFlow, {
 } from 'reactflow';
 
 import 'reactflow/dist/style.css';
-import {addEdge, applyEdgeChanges, applyNodeChanges} from "react-flow-renderer";
 
-type BlockEdge = {
+export type BlockEdge = {
     id: string;
     source: string;
     target: string;
+    groupId: string;
 };
 
-type BlockNode = {
+export type BlockNode = {
     id: string;
     position: { x: number; y: number };
-    data: { label: string };
+    groupId: string;
+    data: { label: string, elementId: string };
 };
 
 interface BlockCanvasProps {
@@ -29,10 +30,18 @@ interface BlockCanvasProps {
 
 function BlockCanvas(props: BlockCanvasProps) {
 
+    const [blockNodes, setBlockNodes] = useNodesState(props.nodes);
+    const [blockEdges, setBlockEdges] = useEdgesState(props.edges);
+
+    useEffect(() => {
+        setBlockNodes(props.nodes);
+        setBlockEdges(props.edges);
+    }, [props.nodes, props.edges]);
+
     return (
         <ReactFlow
-            nodes={props.nodes}
-            edges={props.edges}
+            nodes={blockNodes}
+            edges={blockEdges}
         >
             <MiniMap/>
             <Controls/>
