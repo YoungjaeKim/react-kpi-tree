@@ -29,15 +29,8 @@ async function getNodesAndElements() {
 function App() {
     console.log("App() is called");
     // call getNodesAndElements() to get nodes and edges and then assign them to initialNodes and initialEdges
-    let initialNodes: BlockNode[];
-    let initialEdges: BlockEdge[];
-
-    initialNodes = [
-        {id: '1', position: {x: 0, y: 0}, groupId: '1', data: {label: '1', elementId: 'response.nodes'}},
-        {id: '2', position: {x: 0, y: 100}, groupId: '1', data: {label: '2', elementId: 'response.nodes'}},
-    ];
-
-    initialEdges = [{id: 'e1-2', source: '1', target: '2', groupId: '1'}];
+    let initialNodes: BlockNode[] = [];
+    let initialEdges: BlockEdge[] = [];
 
     const [nodes, setNodes] = useState<BlockNode[]>(initialNodes);
     const [edges, setEdges] = useState<BlockEdge[]>(initialEdges);
@@ -47,7 +40,6 @@ function App() {
             .then((response) => {
                 setNodes(response.nodes);
                 setEdges(response.edges);
-                console.log(response);
             })
             .catch((error) => {
                 console.log(error);
