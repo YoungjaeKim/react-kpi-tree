@@ -65,21 +65,6 @@ function App() {
                 ]);
                 setEdges([{id: 'e1-2', source: '1', target: '2', groupId: '1'}]);
                 console.log("getNodesAndElements called");
-                // setNodes((nds) =>
-                //     nds.map((node) => {
-                //         if (node.id === '2') {
-                //             // it's important that you create a new object here
-                //             // in order to notify react flow about the change
-                //             node = {
-                //                 ...node,
-                //                 position: {x: 100, y: 100},
-                //             };
-                //
-                //             console.log("hit");
-                //         }
-                //         return node;
-                //     })
-                // );
             })
             .catch((error) => {
                 console.log(error);
@@ -104,7 +89,7 @@ function App() {
                     Learn React
                 </a>
                 <div style={blockCanvasSize}>
-                    <BlockCanvas nodes={nodes} setNodes={setNodes} edges={edges} setEdges={setEdges}></BlockCanvas>
+                    <BlockCanvas nodes={nodes} edges={edges}></BlockCanvas>
                 </div>
             </header>
         </div>

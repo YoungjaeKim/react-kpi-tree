@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import {useCallback, useEffect} from 'react';
 import ReactFlow, {
     MiniMap,
     Controls,
@@ -25,36 +25,18 @@ type BlockNode = {
 interface BlockCanvasProps {
     edges: BlockEdge[];
     nodes: BlockNode[];
-    setNodes: any;
-    setEdges: any;
 }
 
 function BlockCanvas(props: BlockCanvasProps) {
-    // const [nodes, setNodes, onNodesChange] = useNodesState(props.nodes);
-    // const [edges, setEdges, onEdgesChange] = useEdgesState(props.edges);
-    const onNodesChange = useCallback((changes: any) => {
-        // Update nodes state based on changes
-        props.setNodes((prevNodes: any) => applyNodeChanges(changes, prevNodes));
-    }, [props.setNodes]);
-
-    const onEdgesChange = useCallback((changes: any) => {
-        // Update edges state based on changes
-        props.setEdges((prevEdges: any) => applyEdgeChanges(changes, prevEdges));
-    }, [props.setEdges]);
-
-    const onConnect = useCallback((params: any) => props.setEdges((eds:any) => addEdge(params, eds)), [props.setEdges]);
 
     return (
         <ReactFlow
             nodes={props.nodes}
             edges={props.edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
         >
-            <MiniMap />
-            <Controls />
-            <Background />
+            <MiniMap/>
+            <Controls/>
+            <Background/>
         </ReactFlow>
     );
 }
