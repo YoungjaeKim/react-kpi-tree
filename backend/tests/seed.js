@@ -17,6 +17,7 @@ mongoose.connect(mongoURI, {useNewUrlParser: true, useUnifiedTopology: true})
 
 const deleteAllData = async () => {
     try {
+        await kpiGroup.deleteMany({});
         await kpiEdge.deleteMany({});
         await kpiNode.deleteMany({});
         await kpiElement.deleteMany({});
@@ -36,23 +37,18 @@ const seedDatabase = async (filename) => {
         const jsonData = JSON.parse(fileData);
 
         // 1. insert kpiGroup data
-        const kpiGroupData = jsonData["kpiGroup"];
-        await kpiGroup.insertMany(kpiGroupData);
+        await kpiGroup.insertMany(jsonData["kpiGroup"]);
 
         // 2. insert kpiElement data
-        const insertedElements = await kpiElement.insertMany(jsonData["kpiElement"]);
-        const elementIds = insertedElements.map(element => element._id);
+        await kpiElement.insertMany(jsonData["kpiElement"]);
 
         // 3. insert kpiNode data
-        const kpiNodeData = jsonData["kpiNode"]
-        // Replace the placeholder elementId with actual ObjectIds from inserted KpiElements
-        kpiNodeData.forEach((node, index) => {
-            node.data.elementId = elementIds[index % elementIds.length]; // Loop if fewer elements than nodes
-        });
-        await kpiNode.insertMany(kpiNodeData);
+        await kpiNode.insertMany(jsonData["kpiNode"]);
 
-        // 3. insert kpiEdge data
+        // 4. insert kpiEdge data
         await kpiEdge.insertMany(jsonData["kpiEdge"]);
+
+        console.log(`'${filename}' insertion success`);
     } catch (error) {
         console.error('Error seeding data', error);
         throw error;

@@ -7,12 +7,14 @@
   ],
   "kpiElement": [
     {
-      "title": "First",
-      "description": "This is first"
+      "_id": "5f4d3f7a2b30a888b6f159dc",
+      "kpiValue": "32252",
+      "kpiValueType": "Integer"
     },
     {
-      "title": "Second",
-      "description": "This is second"
+      "_id": "605a9d8a86b1c11f7a2e4b9f",
+      "kpiValue": "12",
+      "kpiValueType": "Integer"
     }
   ],
   "kpiNode": [
@@ -23,10 +25,10 @@
         "y": 100
       },
       "groupId": "507f1f77bcf86cd799439011",
-      "data": {
-        "label": "First KPI Node",
-        "elementId": "PLACEHOLDER_FOR_ELEMENT_ID"
-      }
+      "title": "First Title",
+      "description": "This is first description",
+      "label": "MAU",
+      "elementId": "5f4d3f7a2b30a888b6f159dc"
     },
     {
       "_id": "6594ec111b59b7919b63bedd",
@@ -35,10 +37,10 @@
         "y": 200
       },
       "groupId": "507f1f77bcf86cd799439011",
-      "data": {
-        "label": "Second KPI Node",
-        "elementId": "PLACEHOLDER_FOR_ELEMENT_ID"
-      }
+      "title": "Second Title",
+      "description": "This is second description",
+      "label": "PU",
+      "elementId": "605a9d8a86b1c11f7a2e4b9f"
     }
   ],
   "kpiEdge": [

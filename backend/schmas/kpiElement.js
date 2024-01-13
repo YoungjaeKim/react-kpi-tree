@@ -5,20 +5,17 @@ const {Schema} = mongoose;
  * Data layer for kpiNode.js
  */
 const kpiElementSchema = new Schema({
-    title: {
+    kpiValue: {
         type: String,
-        require: true
+        require: true,
+        default: ""
     },
-    description: {
+    kpiValueType: {
         type: String,
-        require: false
+        require: true,
+        default: "Integer"
     },
-    isShown: {
-        type: Boolean,
-        require: false,
-        default: true
-    },
-    isActive:{
+    isActive: {
         type: Boolean,
         require: false,
         default: true

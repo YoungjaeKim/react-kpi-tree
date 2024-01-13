@@ -7,6 +7,13 @@ exports.createElement = async (req, res) => {
         const newKpiElement = new KpiElement(req.body);
         const savedKpiElement = await newKpiElement.save();
         res.status(201).json(savedKpiElement);
+
+        // update all nodes that reference this element
+        const nodes = await KpiNode.find({elementId: savedKpiElement._id}).exec();
+        nodes.forEach(async (node) => {
+            node.data = savedKpiElement;
+            await node.save();
+        });
     } catch (err) {
         console.error('Failed to save document:', err);
         res.status(500).send('Failed to save document');

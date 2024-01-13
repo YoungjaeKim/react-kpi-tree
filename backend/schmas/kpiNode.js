@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const {v4: uuidv4} = require('uuid');
 const {Schema} = require("mongoose");
 
 /**
@@ -17,21 +16,27 @@ const kpiNodeSchema = new mongoose.Schema({
             required: true
         }
     },
-    groupId: { // same data as kpiEdge.groupId in order to group nodes and edges
+    groupId: { // same value as kpiEdge.groupId in order to group nodes and edges
         type: Schema.Types.ObjectId,
         required: true,
         index: true,
     },
-    data: {
-        label: { // a latest visual label
-            type: String,
-            required: false
-        },
-        elementId: {
-            type: Schema.Types.ObjectId,
-            ref: 'KpiElement',
-            required: true
-        }
+    title: {
+        type: String,
+        required: false
+    },
+    description: {
+        type: String,
+        require: false
+    },
+    label:{
+        type: String,
+        require: false
+    },
+    elementId: {
+        type: Schema.Types.ObjectId,
+        ref: 'KpiElement',
+        required: true
     }
 });
 
