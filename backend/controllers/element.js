@@ -10,10 +10,10 @@ exports.createElement = async (req, res) => {
 
         // update all nodes that reference this element
         const nodes = await KpiNode.find({elementId: savedKpiElement._id}).exec();
-        nodes.forEach(async (node) => {
+        for (const node of nodes) {
             node.data = savedKpiElement;
             await node.save();
-        });
+        }
     } catch (err) {
         console.error('Failed to save document:', err);
         res.status(500).send('Failed to save document');
