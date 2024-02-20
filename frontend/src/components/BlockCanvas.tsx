@@ -36,7 +36,7 @@ function BlockCanvas(props: BlockCanvasProps) {
     useEffect(() => {
         setBlockNodes(props.nodes);
         setBlockEdges(props.edges);
-    }, [props.nodes, props.edges]);
+    }, [props.nodes, props.edges, setBlockNodes, setBlockEdges]);
 
     return (
         <ReactFlow

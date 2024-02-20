@@ -17,7 +17,12 @@ mongoose.connect(mongoURI, {useNewUrlParser: true, useUnifiedTopology: true})
 
 const deleteAllData = async () => {
     try {
-        await kpiGroup.deleteMany({});
+        // check kpiGroup item is empty or not
+        const kpiGroupCount = await kpiGroup.countDocuments();
+        if (kpiGroupCount > 0) {
+            await kpiGroup.deleteMany({});
+        }
+        
         await kpiEdge.deleteMany({});
         await kpiNode.deleteMany({});
         await kpiElement.deleteMany({});
