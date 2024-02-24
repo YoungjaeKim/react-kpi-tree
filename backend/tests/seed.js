@@ -19,10 +19,7 @@ const deleteAllData = async () => {
     try {
         // check kpiGroup item is empty or not
         const kpiGroupCount = await kpiGroup.countDocuments();
-        if (kpiGroupCount > 0) {
-            await kpiGroup.deleteMany({});
-        }
-        
+        await kpiGroup.deleteMany({});
         await kpiEdge.deleteMany({});
         await kpiNode.deleteMany({});
         await kpiElement.deleteMany({});
@@ -41,16 +38,9 @@ const seedDatabase = async (filename) => {
         const fileData = fs.readFileSync(path.join(__dirname, filename), 'utf8');
         const jsonData = JSON.parse(fileData);
 
-        // 1. insert kpiGroup data
         await kpiGroup.insertMany(jsonData["kpiGroup"]);
-
-        // 2. insert kpiElement data
         await kpiElement.insertMany(jsonData["kpiElement"]);
-
-        // 3. insert kpiNode data
         await kpiNode.insertMany(jsonData["kpiNode"]);
-
-        // 4. insert kpiEdge data
         await kpiEdge.insertMany(jsonData["kpiEdge"]);
 
         console.log(`'${filename}' insertion success`);
@@ -66,10 +56,8 @@ const runSeedProcess = async (filename) => {
         await deleteAllData();
         await seedDatabase(filename);
     } catch (error) {
-        // Handle any errors that occurred during delete or seed
         console.error('An error occurred during the seed process', error);
     } finally {
-        // Close the connection to the database
         await mongoose.connection.close();
         console.log('MongoDB connection closed');
     }
