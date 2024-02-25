@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const cors = require('cors');
 const mongodb = require("./db"); // reference db.js to connect to MongoDB
@@ -19,8 +20,8 @@ app.use(express.json()); // Parse JSON bodies
 
 mongodb.connect();
 
-app.listen(8080, () => {
-    console.log("server started. port 8080");
+app.listen(process.env.PORT, () => {
+    console.log("server started. port " + process.env.PORT);
 });
 
 app.use('/elements', elementRoute);

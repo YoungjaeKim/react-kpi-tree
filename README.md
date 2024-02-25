@@ -7,8 +7,14 @@ The `kpi-tree` is widely used KPI(Key Performance Index) management dashboard in
 ## Dependencies
 - https://github.com/wbkd/react-flow
 
-## Tech Stack
-- express.js + MongoDB
+## How to Config
+1. Create `.env` file in the root directory
+2. Add the following environment variables
+```
+PORT=8080
+MONGODB_DEV=mongodb://localhost:27017/dev
+MONGODB_PRODUCTION=mongodb://localhost:27017/production
+```
 
-## To do
-[] 
+## Tech Stack
+- React + express.js + MongoDB

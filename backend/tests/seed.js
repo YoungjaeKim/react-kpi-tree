@@ -6,7 +6,7 @@ const kpiNode = require('../schmas/kpiNode');
 const kpiEdge = require('../schmas/kpiEdge');
 const kpiGroup = require('../schmas/kpiGroup');
 
-const mongoURI = 'mongodb://localhost:27017/dev';
+const mongoURI = process.env.MONGODB_DEV || 'mongodb://localhost:27017/dev';
 
 
 // Connect to MongoDB
