@@ -1,5 +1,4 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 import BlockCanvas, {BlockEdge, BlockNode} from "./components/BlockCanvas";
 import axios from 'axios';
@@ -8,22 +7,27 @@ import {useState} from "react";
 
 let blockCanvasSize = {width: 800, height: 800}
 
+// convert API Node response scheme to BlockNode
+function toBlockNode(n: any) {
+    console.log("responseToNodes() is called");
+    return {
+        id: n.id,
+        position: {x: n.position.x, y: n.position.y},
+        groupId: n.groupId,
+        data: {label: `${n.title} (${n.label})`, elementId: n.elementId}
+    };
+}
 
 // download Nodes and Elements from backend
-async function getNodesAndElements() {
+async function getNodesAndElements(url: string) {
     console.log("getNodesAndElements() is called");
     // assign an array of type KpiNode
     let nodes: BlockNode[] = [];
     let edges: BlockEdge[] = [];
-    await axios.get('http://localhost:8080/graphs?groupId=507f1f77bcf86cd799439011')
+    await axios.get(url)
         .then((response) => {
-            nodes=response.data["nodes"].map((node: any) => {
-                return {
-                    id: node.id,
-                    position: {x: node.position.x, y: node.position.y},
-                    groupId: node.groupId,
-                    data: {label: `${node.title} (${node.label})`, elementId: node.elementId}
-                }
+            nodes = response.data["nodes"].map((node: any) => {
+                return toBlockNode(node);
             });
 
             edges = response.data["edges"];
@@ -44,7 +48,7 @@ function App() {
     const [edges, setEdges] = useState<BlockEdge[]>(initialEdges);
 
     useEffect(() => {
-        getNodesAndElements()
+        getNodesAndElements('http://localhost:8080/graphs?groupId=507f1f77bcf86cd799439011')
             .then((response) => {
                 setNodes(response.nodes);
                 setEdges(response.edges);
@@ -59,7 +63,6 @@ function App() {
     return (
         <div className="App">
             <header className="App-header">
-                <img src={logo} className="App-logo" alt="logo"/>
                 <p>
                     Edit <code>src/App.tsx</code> and save to reload.
                 </p>
