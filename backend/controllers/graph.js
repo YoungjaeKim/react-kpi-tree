@@ -51,8 +51,8 @@ exports.getNodeAndEdge = async (req, res) => {
     }
 
     try {
-        // get all records of KpiNodes of nodeId and KpiElement item should be populated by its elementId.
-        const kpiNodes = await KpiNode.find({groupId: groupId}).populate('data.elementId').exec();
+        // get KpiNodes by groupId and populate KpiElement by elementId.
+        const kpiNodes = await KpiNode.find({groupId: groupId}).populate('elementId').exec();
         const kpiEdges = await KpiEdge.find({groupId: groupId}).exec();
 
         res.json({
@@ -81,7 +81,7 @@ exports.getNodeById = async (req, res) => {
         res.status(400).json({error: "invalid id"});
 
     // Find the resource with the matching ID
-    const resource = await KpiNode.findById(resourceId).populate('data.elementId');
+    const resource = await KpiNode.findById(resourceId).populate('elementId');
 
     if (!resource) {
         // Return a 404 response if the resource is not found

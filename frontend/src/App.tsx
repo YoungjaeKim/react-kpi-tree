@@ -17,7 +17,15 @@ async function getNodesAndElements() {
     let edges: BlockEdge[] = [];
     await axios.get('http://localhost:8080/graphs?groupId=507f1f77bcf86cd799439011')
         .then((response) => {
-            nodes = response.data["nodes"];
+            nodes=response.data["nodes"].map((node: any) => {
+                return {
+                    id: node.id,
+                    position: {x: node.position.x, y: node.position.y},
+                    groupId: node.groupId,
+                    data: {label: `${node.title} (${node.label})`, elementId: node.elementId}
+                }
+            });
+
             edges = response.data["edges"];
         })
         .catch((error) => {

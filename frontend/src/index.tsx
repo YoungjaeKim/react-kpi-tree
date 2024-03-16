@@ -1,28 +1,20 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+// Find the root element in your HTML
+const rootElement = document.getElementById('root');
+// Create a root using the element
+const root = ReactDOM.createRoot(rootElement!);
+
+// Render your app within the root using the new API
+root.render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>
 );
-
-// rewrite this file to fit to React 18.
-// ReactDOM.render(
-//     <React.StrictMode>
-//         <BlockCanvas nodes={initialNodes} edges={initialEdges} size={blockCanvasSize}/>
-//     </React.StrictMode>,
-//     document.getElementById('root')
-// );
-//
-// export default App;
-// export {KpiNode, KpiEdge, getNodesAndElements, initialNodes, initialEdges, blockCanvasSize};
-// export default App;
-
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

@@ -89,7 +89,7 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+backend/.env
 .env.test
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -123,4 +123,9 @@ dist
 # TernJS port file
 .tern-port
 
+# IDE
 .idea
+.vscode
+
+# Environment Variable
+backend/.env

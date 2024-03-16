@@ -8,8 +8,9 @@ The `kpi-tree` is widely used KPI(Key Performance Index) management dashboard in
 - https://github.com/wbkd/react-flow
 
 ## How to Config
-1. Create `.env` file in the root directory
-2. Add the following environment variables
+1. Go to `/backend` and Copy `.env.example` file to `.env`.
+2. Change the following environment variables if you want.
+
 ```
 PORT=8080
 MONGODB_DEV=mongodb://localhost:27017/dev
