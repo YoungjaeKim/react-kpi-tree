@@ -126,6 +126,3 @@ dist
 # IDE
 .idea
 .vscode
-
-# Environment Variable
-backend/.env
