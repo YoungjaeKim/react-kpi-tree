@@ -19,3 +19,9 @@ MONGODB_PRODUCTION=mongodb://localhost:27017/production
 
 ## Tech Stack
 - React + express.js + MongoDB
+
+## How to Build
+
+1. Go to `/backend` and run `npm install`.
+2. Go to `/frontend` and run `npm install`.
+3. Open your browser and go to `http://localhost:3000`.

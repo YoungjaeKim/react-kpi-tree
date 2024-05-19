@@ -42,6 +42,7 @@ function BlockCanvas(props: BlockCanvasProps) {
         <ReactFlow
             nodes={blockNodes}
             edges={blockEdges}
+            nodesDraggable={true}
         >
             <MiniMap/>
             <Controls/>

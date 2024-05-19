@@ -15,7 +15,7 @@ function toBlockNode(n: any) {
         position: {x: n.position.x, y: n.position.y},
         groupId: n.groupId,
         data: {label: `${n.title} (${n.label})`, elementId: n.elementId}
-    };
+    } as BlockNode
 }
 
 // download Nodes and Elements from backend
@@ -36,6 +36,14 @@ async function getNodesAndElements(url: string) {
             console.log(error);
         });
     return {nodes: nodes, edges: edges};
+}
+
+function generateGUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0,
+            v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
 
 function App() {
@@ -77,6 +85,20 @@ function App() {
                 <div style={blockCanvasSize}>
                     <BlockCanvas nodes={nodes} edges={edges}></BlockCanvas>
                 </div>
+                <div>
+                    <button onClick={() => {
+                        // create new Element, and then add it to the nodes
+                        let newNode: BlockNode = {
+                            id: generateGUID(),
+                            position: {x: 100, y: 100},
+                            groupId: "507f1f77bcf86cd799439011",
+                            data: {label: "New Node", elementId: "New Element"}
+                        };
+                    } }>Add Node</button>
+                    <input type="text" placeholder="Title"/>
+                    <input type="text" placeholder="Label"/>
+                </div>
+                <button onClick={() => {} }>Remove (TBD)</button>
             </header>
         </div>
     );
