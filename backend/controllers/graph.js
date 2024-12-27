@@ -1,6 +1,7 @@
 const KpiEdge = require("../schmas/kpiEdge");
 const KpiNode = require("../schmas/kpiNode");
 const KpiGroup = require("../schmas/kpiGroup");
+const KpiElement = require("../schmas/kpiElement");
 const {isNullOrEmpty} = require("../utils");
 
 exports.createGroup = async (req, res) => {
@@ -15,8 +16,28 @@ exports.createGroup = async (req, res) => {
 }
 
 exports.upsertNode = async (req, res) => {
+    // check elementId is empty
+    if (isNullOrEmpty(req.body.elementId)) {
+        // create Element first
+        const newKpiElement = new KpiElement({
+            kpiValue: req.body.elementValue,
+            kpiValueType: req.body.elementValueType,
+            isActive: req.body.elementIsActive,
+            expression: req.body.elementExpression,
+            lastUpdatedDateTime: Date.now()
+        });
+        const savedKpiElement = await newKpiElement.save();
+        req.body.elementId = savedKpiElement._id;
+    }
     try {
-        const newKpiNode = new KpiNode(req.body);
+        const newKpiNode = new KpiNode({
+            position: req.body.position,
+            groupId: req.body.groupId,
+            title: req.body.title,
+            description: req.body.description,
+            label: req.body.label,
+            elementId: req.body.elementId
+        });
         const savedKpiNode = await newKpiNode.save();
         res.status(201).json(savedKpiNode);
     } catch (err) {

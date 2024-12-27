@@ -16,6 +16,18 @@ export type BlockEdge = {
     groupId: string;
 };
 
+export type BlockNodeTransferForCreate = {
+    position: { x: number; y: number };
+    groupId: string;
+    title: string;
+    label: string;
+    elementValue: string;
+    elementValueType: string;
+    elementIsActive: boolean;
+    elementExpression: string;
+    elementId: string;
+};
+
 export type BlockNode = {
     id: string;
     position: { x: number; y: number };

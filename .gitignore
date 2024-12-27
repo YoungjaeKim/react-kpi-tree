@@ -126,3 +126,6 @@ dist
 # IDE
 .idea
 .vscode
+
+# Enviroment variable
+.env

@@ -1,11 +1,12 @@
 import React from 'react';
 import './App.css';
-import BlockCanvas, {BlockEdge, BlockNode} from "./components/BlockCanvas";
+import BlockCanvas, {BlockEdge, BlockNode, BlockNodeTransferForCreate} from "./components/BlockCanvas";
 import axios from 'axios';
 import {useEffect} from "react";
 import {useState} from "react";
 
 let blockCanvasSize = {width: 800, height: 800}
+const API_URL = process.env.REACT_APP_API_URL;
 
 // convert API Node response scheme to BlockNode
 function toBlockNode(n: any) {
@@ -38,8 +39,30 @@ async function getNodesAndElements(url: string) {
     return {nodes: nodes, edges: edges};
 }
 
+async function addNode(node: BlockNodeTransferForCreate) {
+    console.log("addNode() is called");
+    await axios.post(`${API_URL}/graphs/node`, node)
+        .then((response) => {
+            return response.data as BlockNode;
+        })
+        .catch((error)  => {
+            console.log(error);
+        });
+}
+
+async function addElement(element: BlockNodeTransferForCreate) {
+    console.log("addElement() is called");
+    await axios.post(`${API_URL}/graphs/element`, element)
+        .then((response) => {
+            return response.data as BlockNode;
+        })
+        .catch((error)  => {
+            console.log(error);
+        });
+}
+
 function generateGUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0,
             v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
@@ -54,9 +77,10 @@ function App() {
 
     const [nodes, setNodes] = useState<BlockNode[]>(initialNodes);
     const [edges, setEdges] = useState<BlockEdge[]>(initialEdges);
+    const [title, setTitle] = useState<string>("");
 
     useEffect(() => {
-        getNodesAndElements('http://localhost:8080/graphs?groupId=507f1f77bcf86cd799439011')
+        getNodesAndElements(`${API_URL}/graphs?groupId=507f1f77bcf86cd799439011`)
             .then((response) => {
                 setNodes(response.nodes);
                 setEdges(response.edges);
@@ -88,17 +112,30 @@ function App() {
                 <div>
                     <button onClick={() => {
                         // create new Element, and then add it to the nodes
-                        let newNode: BlockNode = {
-                            id: generateGUID(),
+                        let newNode = {
                             position: {x: 100, y: 100},
                             groupId: "507f1f77bcf86cd799439011",
-                            data: {label: "New Node", elementId: "New Element"}
+                            title: "New Node",
+                            label: "New Node",
+                            elementValue: "",
+                            elementValueType: "",
+                            elementIsActive: true,
+                            elementExpression: "",
+                            elementId: ""
                         };
-                    } }>Add Node</button>
-                    <input type="text" placeholder="Title"/>
+                        addNode(newNode).then((node) => {
+                            console.log("addNode() is called" + node);
+                            // setNodes([...nodes, toBlockNode(node)]);
+                        });
+                    }
+                    }>Add Node
+                    </button>
+                    <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
                     <input type="text" placeholder="Label"/>
                 </div>
-                <button onClick={() => {} }>Remove (TBD)</button>
+                <button onClick={() => {
+                }}>Remove (TBD)
+                </button>
             </header>
         </div>
     );
