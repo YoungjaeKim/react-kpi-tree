@@ -78,6 +78,7 @@ function App() {
     const [nodes, setNodes] = useState<BlockNode[]>(initialNodes);
     const [edges, setEdges] = useState<BlockEdge[]>(initialEdges);
     const [title, setTitle] = useState<string>("");
+    const [label, setLabel] = useState<string>("");
 
     useEffect(() => {
         getNodesAndElements(`${API_URL}/graphs?groupId=507f1f77bcf86cd799439011`)
@@ -115,8 +116,8 @@ function App() {
                         let newNode = {
                             position: {x: 100, y: 100},
                             groupId: "507f1f77bcf86cd799439011",
-                            title: "New Node",
-                            label: "New Node",
+                            title: title, // Use the title from the input field
+                            label: label, // Use the label from the input field
                             elementValue: "",
                             elementValueType: "",
                             elementIsActive: true,
@@ -125,13 +126,13 @@ function App() {
                         };
                         addNode(newNode).then((node) => {
                             console.log("addNode() is called" + node);
-                            // setNodes([...nodes, toBlockNode(node)]);
+                            setNodes([...nodes, toBlockNode(node)]); // Update BlockCanvas with the new node
                         });
                     }
                     }>Add Node
                     </button>
                     <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                    <input type="text" placeholder="Label"/>
+                    <input type="text" placeholder="Label" value={label} onChange={(e) => setLabel(e.target.value)} />
                 </div>
                 <button onClick={() => {
                 }}>Remove (TBD)

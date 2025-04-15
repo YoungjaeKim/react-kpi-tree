@@ -1,6 +1,6 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const app = require('../app'); // Assuming your Express.js app is in app.js
+const app = require('../app');
 const expect = chai.expect;
 
 chai.use(chaiHttp);
@@ -23,11 +23,11 @@ describe('Element API', () => {
     it('should create a new resource', (done) => {
         chai.request(app)
             .post('/elements')
-            .send({ title: 'New Resource', description: 'Example description' })
+            .send({ title: 'New Resource', description: 'Example description' }) // Ensure payload matches backend expectations
             .end((err, res) => {
                 expect(res).to.have.status(201);
                 expect(res.body).to.be.an('object');
-                expect(res.body.title).to.equal('New Resource');
+                expect(res.body.title).to.equal('New Resource'); // Ensure response contains 'title'
                 done();
             });
     });

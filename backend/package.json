@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "seed": "node tests/seed.js",
-    "test": "mocha tests/*.test.js",
+    "test": "npx mocha tests/*.test.js",
     "start": "node app.js"
   },
   "keywords": [
@@ -16,14 +16,14 @@
   "author": "Youngjae",
   "license": "ISC",
   "dependencies": {
-    "chai": "^4.3.7",
-    "chai-http": "^4.3.0",
+    "chai": "^4.3.8",
+    "chai-http": "^4.3.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.6",
     "express": "^4.18.2",
-    "mocha": "^10.2.0",
-    "mongoose": "^7.1.0",
+    "mocha": "^10.2.2",
+    "mongoose": "^7.5.0",
     "mysql": "^2.18.1",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.1"
   }
 }

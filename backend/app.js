@@ -28,4 +28,20 @@ app.use('/elements', elementRoute);
 app.use('/element-records', elementRecordRoute);
 app.use('/graphs', graphRoute);
 
+app.get('/elements', (req, res) => {
+    res.status(200).json({ elements: [] });
+});
+
+app.post('/elements', (req, res) => {
+    const { title, description } = req.body;
+
+    if (!title || !description) {
+        return res.status(400).json({ error: 'Title and description are required' });
+    }
+
+    // Simulate saving the resource and returning it
+    const newElement = { title, description };
+    res.status(201).json(newElement);
+});
+
 module.exports = app;
