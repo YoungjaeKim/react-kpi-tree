@@ -39,7 +39,7 @@ exports.upsertNode = async (req, res) => {
             elementId: req.body.elementId
         });
         const savedKpiNode = await newKpiNode.save();
-        res.status(201).json(savedKpiNode);
+        res.status(201).json({...savedKpiNode.toObject(), id: savedKpiNode._id, _id: undefined}); // change _id to id.
     } catch (err) {
         console.error('Failed to save document:', err);
         res.status(500).send('Failed to save document');

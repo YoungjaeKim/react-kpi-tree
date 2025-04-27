@@ -10,7 +10,6 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 // convert API Node response scheme to BlockNode
 function toBlockNode(n: any) {
-    console.log("responseToNodes() is called");
     return {
         id: n.id,
         position: {x: n.position.x, y: n.position.y},
@@ -41,13 +40,13 @@ async function getNodesAndElements(url: string) {
 
 async function addNode(node: BlockNodeTransferForCreate) {
     console.log("addNode() is called");
-    await axios.post(`${API_URL}/graphs/node`, node)
-        .then((response) => {
-            return response.data as BlockNode;
-        })
-        .catch((error)  => {
-            console.log(error);
-        });
+    try {
+        const response = await axios.post(`${API_URL}/graphs/node`, node);
+        return response.data as BlockNode;
+    } catch (error) {
+        console.log(error);
+        throw error; // Re-throw the error to handle it in the calling function
+    }
 }
 
 async function addElement(element: BlockNodeTransferForCreate) {
@@ -117,7 +116,7 @@ function App() {
                             position: {x: 100, y: 100},
                             groupId: "507f1f77bcf86cd799439011",
                             title: title, // Use the title from the input field
-                            label: label, // Use the label from the input field
+                            label: label || title, // Use the label from the input field
                             elementValue: "",
                             elementValueType: "",
                             elementIsActive: true,
@@ -125,7 +124,7 @@ function App() {
                             elementId: ""
                         };
                         addNode(newNode).then((node) => {
-                            console.log("addNode() is called" + node);
+                            console.log("addNode().then() is called" + node);
                             setNodes([...nodes, toBlockNode(node)]); // Update BlockCanvas with the new node
                         });
                     }

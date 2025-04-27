@@ -38,7 +38,7 @@
     "build": "react-scripts --openssl-legacy-provider build",
     "test": "react-scripts --openssl-legacy-provider test",
     "eject": "react-scripts eject",
-    "dual": "concurrently \"cross-env PORT=3001 npm run start\" \"cd ../backend && npm run start\""
+    "dual": "concurrently \"cross-env PORT=3001 npm run start\" \"cd ../backend && cross-env PORT=8080 npm run start\""
   },
   "eslintConfig": {
     "extends": [
