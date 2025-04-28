@@ -78,17 +78,19 @@ function App() {
     const [edges, setEdges] = useState<BlockEdge[]>(initialEdges);
     const [title, setTitle] = useState<string>("");
     const [label, setLabel] = useState<string>("");
+    const [groupId, setGroupId] = useState<string>("507f1f77bcf86cd799439011");
 
     useEffect(() => {
-        getNodesAndElements(`${API_URL}/graphs?groupId=507f1f77bcf86cd799439011`)
+        getNodesAndElements(`${API_URL}/graphs?groupId=${groupId}`)
             .then((response) => {
+                console.log(`Total nodes: ${response.nodes.length}, Total edges: ${response.edges.length}`);
                 setNodes(response.nodes);
                 setEdges(response.edges);
             })
             .catch((error) => {
                 console.log(error);
             });
-    }, []);
+    }, [groupId]);
 
     console.log("return calling2");
 
@@ -106,15 +108,19 @@ function App() {
                 >
                     Learn React
                 </a>
+                <input type="text" placeholder="Title" value={groupId} onChange={(e) => setGroupId(e.target.value)}/>
+
                 <div style={blockCanvasSize}>
                     <BlockCanvas nodes={nodes} edges={edges}></BlockCanvas>
                 </div>
                 <div>
+                    <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)}/>
+                    <input type="text" placeholder="Label" value={label} onChange={(e) => setLabel(e.target.value)}/>
                     <button onClick={() => {
                         // create new Element, and then add it to the nodes
                         let newNode = {
                             position: {x: 100, y: 100},
-                            groupId: "507f1f77bcf86cd799439011",
+                            groupId: groupId, // Use the default or updated groupId
                             title: title, // Use the title from the input field
                             label: label || title, // Use the label from the input field
                             elementValue: "",
@@ -125,13 +131,16 @@ function App() {
                         };
                         addNode(newNode).then((node) => {
                             console.log("addNode().then() is called" + node);
-                            setNodes([...nodes, toBlockNode(node)]); // Update BlockCanvas with the new node
+                            const blockNode = toBlockNode(node);
+                            if (!blockNode.id) {
+                                console.error("Node ID is missing. Ensure the backend returns a valid ID.");
+                                return;
+                            }
+                            setNodes([...nodes, blockNode]); // Update BlockCanvas with the new node
                         });
                     }
                     }>Add Node
                     </button>
-                    <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                    <input type="text" placeholder="Label" value={label} onChange={(e) => setLabel(e.target.value)} />
                 </div>
                 <button onClick={() => {
                 }}>Remove (TBD)
