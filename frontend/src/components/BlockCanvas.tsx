@@ -1,13 +1,13 @@
 import {useEffect} from 'react';
-import ReactFlow, {
+import {
     MiniMap,
     Controls,
     Background,
     useNodesState,
     useEdgesState,
-} from 'reactflow';
+} from '@xyflow/react';
 
-import 'reactflow/dist/style.css';
+import '@xyflow/reactflow/dist/style.css';
 
 export type BlockEdge = {
     id: string;
@@ -43,7 +43,7 @@ interface BlockCanvasProps {
 function BlockCanvas(props: BlockCanvasProps) {
 
     const [blockNodes, setBlockNodes] = useNodesState(props.nodes);
-    const [blockEdges, setBlockEdges] = useEdgesState(props.edges);
+    const [blockEdges, setBlockEdges, onBlockEdgesChange] = useEdgesState(props.edges);
 
     useEffect(() => {
         setBlockNodes(props.nodes);
@@ -55,6 +55,7 @@ function BlockCanvas(props: BlockCanvasProps) {
             nodes={blockNodes}
             edges={blockEdges}
             nodesDraggable={true}
+            onEdgesChange={onBlockEdgesChange}
         >
             <MiniMap/>
             <Controls/>
