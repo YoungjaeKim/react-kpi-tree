@@ -5,6 +5,7 @@ import {
     Background,
     useNodesState,
     useEdgesState,
+    ReactFlow,
 } from '@xyflow/react';
 
 import '@xyflow/reactflow/dist/style.css';
