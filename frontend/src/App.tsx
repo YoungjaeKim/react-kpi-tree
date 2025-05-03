@@ -4,6 +4,7 @@ import BlockCanvas, {BlockEdge, BlockNode, BlockNodeTransferForCreate} from "./c
 import axios from 'axios';
 import {useEffect} from "react";
 import {useState} from "react";
+import {addEdge as addReactFlowEdge, Connection} from '@xyflow/react';
 
 let blockCanvasSize = {width: 800, height: 800}
 const API_URL = process.env.REACT_APP_API_URL;
@@ -91,22 +92,22 @@ function App() {
     const [label, setLabel] = useState<string>("");
     const [groupId, setGroupId] = useState<string>("507f1f77bcf86cd799439011");
 
-    const handleEdgesChange = async (changes: any[]) => {
-        for (const change of changes) {
-            if (change.type === 'add') {
-                const newEdge = {
-                    id: change.id,
-                    source: change.source,
-                    target: change.target,
-                    groupId: groupId
-                };
-                try {
-                    const addedEdge = await addEdge(newEdge);
-                    setEdges([...edges, addedEdge]);
-                } catch (error) {
-                    console.error('Failed to add edge:', error);
-                }
-            }
+    const handleConnect = async (connection: Connection) => {
+        console.log('Connecting:', connection);
+        const newEdge = {
+            id: generateGUID(),
+            source: connection.source,
+            target: connection.target,
+            groupId: groupId
+        };
+
+        try {
+            // Add the edge to ReactFlow's state
+            setEdges((eds) => addReactFlowEdge(connection, eds));
+            // Save to backend
+            await axios.post(`${API_URL}/graphs/edge`, newEdge);
+        } catch (error) {
+            console.error('Failed to add edge:', error);
         }
     };
 
@@ -144,7 +145,7 @@ function App() {
                     <BlockCanvas 
                         nodes={nodes} 
                         edges={edges}
-                        onEdgesChange={handleEdgesChange}
+                        onConnect={handleConnect}
                     ></BlockCanvas>
                 </div>
                 <div>

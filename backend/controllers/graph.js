@@ -47,14 +47,30 @@ exports.upsertNode = async (req, res) => {
 };
 
 exports.upsertEdge = async (req, res) => {
-    try {
-        const newKpiEdge = new KpiEdge(req.body);
-        const savedKpiEdge = await newKpiEdge.save();
-        res.status(201).json(savedKpiEdge);
-    } catch (err) {
-        console.error('Failed to save document:', err);
-        res.status(500).send('Failed to save document');
+    if (isNullOrEmpty(req.body.id)) {
+        try {
+            const newKpiEdge = new KpiEdge(req.body);
+            const savedKpiEdge = await newKpiEdge.save();
+
+            res.status(201).json(savedKpiEdge);
+        } catch (err) {
+            console.error('Failed to save document:', err);
+            res.status(500).send('Failed to save document');
+        }
+    } else {
+        // update record and return 200
+        const kpiEdge = await KpiEdge.findById(req.body.id);
+        if (!kpiEdge) {
+            res.status(404).json({error: "Resource not found"});
+            return;
+        }
+        kpiEdge.source = req.body.source;
+        kpiEdge.target = req.body.target;
+        kpiEdge.groupId = req.body.groupId;
+        kpiEdge.save();
+        res.status(200).json(kpiEdge);
     }
+
 };
 
 /**

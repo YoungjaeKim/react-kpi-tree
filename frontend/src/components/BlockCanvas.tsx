@@ -6,6 +6,9 @@ import {
     useNodesState,
     useEdgesState,
     ReactFlow,
+    addEdge,
+    Connection,
+    Edge,
 } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
@@ -39,11 +42,10 @@ export type BlockNode = {
 interface BlockCanvasProps {
     edges: BlockEdge[];
     nodes: BlockNode[];
-    onEdgesChange?: (changes: any[]) => void;
+    onConnect?: (connection: Connection) => void;
 }
 
 function BlockCanvas(props: BlockCanvasProps) {
-
     const [blockNodes, setBlockNodes] = useNodesState(props.nodes);
     const [blockEdges, setBlockEdges, onBlockEdgesChange] = useEdgesState(props.edges);
 
@@ -52,17 +54,18 @@ function BlockCanvas(props: BlockCanvasProps) {
         setBlockEdges(props.edges);
     }, [props.nodes, props.edges, setBlockNodes, setBlockEdges]);
 
+    const onConnect = (params: Connection) => {
+        if (props.onConnect) {
+            props.onConnect(params);
+        }
+    };
+
     return (
         <ReactFlow
             nodes={blockNodes}
             edges={blockEdges}
             nodesDraggable={true}
-            onEdgesChange={(changes) => {
-                onBlockEdgesChange(changes);
-                if (props.onEdgesChange) {
-                    props.onEdgesChange(changes);
-                }
-            }}
+            onConnect={onConnect}
         >
             <MiniMap/>
             <Controls/>
