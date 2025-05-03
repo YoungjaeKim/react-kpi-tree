@@ -60,6 +60,17 @@ async function addElement(element: BlockNodeTransferForCreate) {
         });
 }
 
+async function addEdge(edge: BlockEdge) {
+    console.log("addEdge() is called");
+    try {
+        const response = await axios.post(`${API_URL}/graphs/edge`, edge);
+        return response.data as BlockEdge;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
 function generateGUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0,
@@ -79,6 +90,25 @@ function App() {
     const [title, setTitle] = useState<string>("");
     const [label, setLabel] = useState<string>("");
     const [groupId, setGroupId] = useState<string>("507f1f77bcf86cd799439011");
+
+    const handleEdgesChange = async (changes: any[]) => {
+        for (const change of changes) {
+            if (change.type === 'add') {
+                const newEdge = {
+                    id: change.id,
+                    source: change.source,
+                    target: change.target,
+                    groupId: groupId
+                };
+                try {
+                    const addedEdge = await addEdge(newEdge);
+                    setEdges([...edges, addedEdge]);
+                } catch (error) {
+                    console.error('Failed to add edge:', error);
+                }
+            }
+        }
+    };
 
     useEffect(() => {
         getNodesAndElements(`${API_URL}/graphs?groupId=${groupId}`)
@@ -111,7 +141,11 @@ function App() {
                 <input type="text" placeholder="Title" value={groupId} onChange={(e) => setGroupId(e.target.value)}/>
 
                 <div style={blockCanvasSize}>
-                    <BlockCanvas nodes={nodes} edges={edges}></BlockCanvas>
+                    <BlockCanvas 
+                        nodes={nodes} 
+                        edges={edges}
+                        onEdgesChange={handleEdgesChange}
+                    ></BlockCanvas>
                 </div>
                 <div>
                     <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)}/>

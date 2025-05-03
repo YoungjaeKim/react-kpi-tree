@@ -8,7 +8,7 @@ import {
     ReactFlow,
 } from '@xyflow/react';
 
-import '@xyflow/reactflow/dist/style.css';
+import '@xyflow/react/dist/style.css';
 
 export type BlockEdge = {
     id: string;
@@ -39,6 +39,7 @@ export type BlockNode = {
 interface BlockCanvasProps {
     edges: BlockEdge[];
     nodes: BlockNode[];
+    onEdgesChange?: (changes: any[]) => void;
 }
 
 function BlockCanvas(props: BlockCanvasProps) {
@@ -56,7 +57,12 @@ function BlockCanvas(props: BlockCanvasProps) {
             nodes={blockNodes}
             edges={blockEdges}
             nodesDraggable={true}
-            onEdgesChange={onBlockEdgesChange}
+            onEdgesChange={(changes) => {
+                onBlockEdgesChange(changes);
+                if (props.onEdgesChange) {
+                    props.onEdgesChange(changes);
+                }
+            }}
         >
             <MiniMap/>
             <Controls/>
