@@ -72,14 +72,6 @@ async function addEdge(edge: BlockEdge) {
     }
 }
 
-function generateGUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        const r = Math.random() * 16 | 0,
-            v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
 function App() {
     console.log("App() is called");
     // call getNodesAndElements() to get nodes and edges and then assign them to initialNodes and initialEdges
@@ -95,17 +87,20 @@ function App() {
     const handleConnect = async (connection: Connection) => {
         console.log('Connecting:', connection);
         const newEdge = {
-            id: generateGUID(),
             source: connection.source,
             target: connection.target,
             groupId: groupId
         };
 
         try {
-            // Add the edge to ReactFlow's state
-            setEdges((eds) => addReactFlowEdge(connection, eds));
-            // Save to backend
-            await axios.post(`${API_URL}/graphs/edge`, newEdge);
+            // Save to backend first
+            const response = await axios.post(`${API_URL}/graphs/edge`, newEdge);
+            if (response.status === 200 || response.status === 201) {
+                // Only add the edge to ReactFlow's state if the API call was successful
+                setEdges((eds) => addReactFlowEdge(connection, eds));
+            } else {
+                console.error('Failed to add edge: Unexpected status code', response.status);
+            }
         } catch (error) {
             console.error('Failed to add edge:', error);
         }

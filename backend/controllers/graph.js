@@ -47,11 +47,11 @@ exports.upsertNode = async (req, res) => {
 };
 
 exports.upsertEdge = async (req, res) => {
+    console.error("upsertEdge called")
     if (isNullOrEmpty(req.body.id)) {
         try {
             const newKpiEdge = new KpiEdge(req.body);
             const savedKpiEdge = await newKpiEdge.save();
-
             res.status(201).json(savedKpiEdge);
         } catch (err) {
             console.error('Failed to save document:', err);
