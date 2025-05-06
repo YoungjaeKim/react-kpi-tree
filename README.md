@@ -25,3 +25,15 @@ MONGODB_PRODUCTION=mongodb://localhost:27017/production
 1. Go to `/backend` and run `npm install`.
 2. Go to `/frontend` and run `npm install`.
 3. Open your browser and go to `http://localhost:3000`.
+
+## To Do (as of 2025-05-05)
+- [ ] Node
+  - [ ] Hide Node
+  - [ ] Edit Node
+  - [ ] Unhide Node
+  - [ ] Reflect recent Element value on Node label
+- [ ] Edge
+  - [ ] Remove Edge
+  - [ ] Edit Edge
+- [ ] Change MongoDB to PostgreSQL
+- [ ] Add more test cases
