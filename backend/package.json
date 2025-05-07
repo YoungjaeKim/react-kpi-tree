@@ -6,7 +6,7 @@
   "scripts": {
     "seed": "node tests/seed.js",
     "test": "npx mocha tests/*.test.js",
-    "start": "node app.js"
+    "start": "node --no-deprecation app.js"
   },
   "keywords": [
     "node",

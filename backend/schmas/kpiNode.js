@@ -38,7 +38,7 @@ const kpiNodeSchema = new mongoose.Schema({
         ref: 'KpiElement',
         required: true
     },
-    isHidden: {
+    hidden: {
         type: Boolean,
         required: false,
         default: false

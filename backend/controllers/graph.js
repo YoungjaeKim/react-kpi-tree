@@ -39,7 +39,7 @@ exports.upsertNode = async (req, res) => {
                 description: req.body.description,
                 label: req.body.label,
                 elementId: req.body.elementId,
-                isHidden: req.body.isHidden
+                hidden: req.body.hidden
             });
             const savedKpiNode = await newKpiNode.save();
             res.status(201).json({ ...savedKpiNode.toObject(), id: savedKpiNode._id, _id: undefined }); // change _id to id.
@@ -60,7 +60,7 @@ exports.upsertNode = async (req, res) => {
             kpiNode.description = req.body.description || kpiNode.description;
             kpiNode.label = req.body.label !== undefined ? req.body.label : kpiNode.label;
             kpiNode.elementId = req.body.elementId || kpiNode.elementId;
-            kpiNode.isHidden = req.body.isHidden !== undefined ? req.body.isHidden : kpiNode.isHidden;
+            kpiNode.hidden = req.body.hidden !== undefined ? req.body.hidden : kpiNode.hidden;
 
             const savedKpiNode = await kpiNode.save();
             res.status(200).json({ ...savedKpiNode.toObject(), id: savedKpiNode._id, _id: undefined });

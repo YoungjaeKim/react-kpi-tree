@@ -4,9 +4,9 @@ import BlockCanvas, {BlockEdge, BlockNode, BlockNodeTransferForCreate} from "./c
 import axios from 'axios';
 import {useEffect} from "react";
 import {useState} from "react";
-import {addEdge as addReactFlowEdge, Connection} from '@xyflow/react';
+import {addEdge as addReactFlowEdge, Connection, Node} from '@xyflow/react';
 
-let blockCanvasSize = {width: 800, height: 800}
+let blockCanvasSize = {width: 800, height: 600}
 const API_URL = process.env.REACT_APP_API_URL;
 
 // convert API Node response scheme to BlockNode
@@ -15,7 +15,8 @@ function toBlockNode(n: any) {
         id: n.id,
         position: {x: n.position.x, y: n.position.y},
         groupId: n.groupId,
-        data: {label: `${n.title} (${n.label})`, elementId: n.elementId}
+        data: {label: `${n.title} (${n.label})`, elementId: n.elementId},
+        hidden: n.hidden ?? false
     } as BlockNode
 }
 
@@ -74,7 +75,6 @@ async function addEdge(edge: BlockEdge) {
 
 function App() {
     console.log("App() is called");
-    // call getNodesAndElements() to get nodes and edges and then assign them to initialNodes and initialEdges
     let initialNodes: BlockNode[] = [];
     let initialEdges: BlockEdge[] = [];
 
@@ -83,6 +83,43 @@ function App() {
     const [title, setTitle] = useState<string>("");
     const [label, setLabel] = useState<string>("");
     const [groupId, setGroupId] = useState<string>("507f1f77bcf86cd799439011");
+    const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+
+    // Handle node selection changes
+    const handleNodesChange = (changes: any[]) => {
+        changes.forEach((change) => {
+            if (change.type === 'select') {
+                const node = nodes.find(n => n.id === change.id);
+                setSelectedNode(change.selected ? node || null : null);
+            }
+        });
+    };
+
+    // Handle delete key press
+    useEffect(() => {
+        const handleKeyDown = async (event: KeyboardEvent) => {
+            if (event.key === 'Delete' && selectedNode) {
+                try {
+                    // Call upsertNode API to hide the node
+                    const response = await axios.post(`${API_URL}/graphs/node`, {
+                        id: selectedNode.id,
+                        hidden: true
+                    });
+                    
+                    if (response.status === 200 || response.status === 201) {
+                        // Update local state to remove the node
+                        setNodes(nodes.filter(node => node.id !== selectedNode.id));
+                        setSelectedNode(null);
+                    }
+                } catch (error) {
+                    console.error('Failed to hide node:', error);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedNode, nodes]);
 
     const handleConnect = async (connection: Connection) => {
         console.log('Connecting:', connection);
@@ -141,6 +178,7 @@ function App() {
                         nodes={nodes} 
                         edges={edges}
                         onConnect={handleConnect}
+                        onNodesChange={handleNodesChange}
                     ></BlockCanvas>
                 </div>
                 <div>

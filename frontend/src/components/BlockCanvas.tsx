@@ -37,17 +37,19 @@ export type BlockNode = {
     position: { x: number; y: number };
     groupId: string;
     data: { label: string, elementId: string };
+    hidden: boolean;
 };
 
 interface BlockCanvasProps {
     edges: BlockEdge[];
     nodes: BlockNode[];
     onConnect?: (connection: Connection) => void;
+    onNodesChange?: (changes: any[]) => void;
 }
 
 function BlockCanvas(props: BlockCanvasProps) {
     const [blockNodes, setBlockNodes] = useNodesState(props.nodes);
-    const [blockEdges, setBlockEdges, onBlockEdgesChange] = useEdgesState(props.edges);
+    const [blockEdges, setBlockEdges] = useEdgesState(props.edges);
 
     useEffect(() => {
         setBlockNodes(props.nodes);
@@ -60,12 +62,19 @@ function BlockCanvas(props: BlockCanvasProps) {
         }
     };
 
+    const onNodesChange = (changes: any[]) => {
+        if (props.onNodesChange) {
+            props.onNodesChange(changes);
+        }
+    };
+
     return (
         <ReactFlow
             nodes={blockNodes}
             edges={blockEdges}
             nodesDraggable={true}
             onConnect={onConnect}
+            onNodesChange={onNodesChange}
         >
             <MiniMap/>
             <Controls/>
