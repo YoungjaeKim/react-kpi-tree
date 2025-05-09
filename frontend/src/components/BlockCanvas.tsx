@@ -1,4 +1,4 @@
-import {useEffect} from 'react';
+import {useEffect, useCallback} from 'react';
 import {
     MiniMap,
     Controls,
@@ -7,6 +7,7 @@ import {
     useEdgesState,
     ReactFlow,
     addEdge,
+    applyNodeChanges,
     Connection,
     Edge,
 } from '@xyflow/react';
@@ -54,6 +55,7 @@ interface BlockCanvasProps {
     onNodesChange?: (changes: any[]) => void;
 }
 
+   
 function BlockCanvas(props: BlockCanvasProps) {
     const [blockNodes, setBlockNodes] = useNodesState(props.nodes);
     const [blockEdges, setBlockEdges] = useEdgesState(props.edges);
@@ -69,19 +71,18 @@ function BlockCanvas(props: BlockCanvasProps) {
         }
     };
 
-    const onNodesChange = (changes: any[]) => {
-        if (props.onNodesChange) {
-            props.onNodesChange(changes);
-        }
-    };
+    // ref; https://reactflow.dev/learn/concepts/core-concepts#controlled-or-uncontrolled
+    const onNodesChange = useCallback(
+        (changes: any[]) => setBlockNodes((nds: any[]) => applyNodeChanges(changes, nds)),
+        [setBlockNodes],
+      );
 
     return (
         <ReactFlow
             nodes={blockNodes}
             edges={blockEdges}
-            nodesDraggable={true}
-            onConnect={onConnect}
             onNodesChange={onNodesChange}
+            onConnect={onConnect}
             fitView
             style={{ background: '#f8f8f8' }}
         >
