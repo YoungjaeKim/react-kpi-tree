@@ -54,7 +54,7 @@ exports.upsertNode = async (req, res) => {
                 res.status(404).json({ error: `Node resource id '${req.body.id}' not found` });
                 return;
             }
-            kpiNode.position = req.body.position || kpiNode.position;
+            kpiNode.position = req.body.position !== undefined ? req.body.position : kpiNode.position;
             kpiNode.groupId = req.body.groupId || kpiNode.groupId;
             kpiNode.title = req.body.title || kpiNode.title;
             kpiNode.description = req.body.description || kpiNode.description;

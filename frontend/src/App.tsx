@@ -100,6 +100,18 @@ function App() {
                 const node = nodes.find(n => n.id === change.id);
                 setSelectedNode(change.selected ? node || null : null);
             }
+            // Handle position changes
+            if (change.type === 'position' && change.dragging === false) {
+                const node = nodes.find(n => n.id === change.id);
+                if (node) {
+                    axios.post(`${API_URL}/graphs/node`, {
+                        id: node.id,
+                        position: change.position
+                    }).catch((error) => {
+                        console.error('Failed to update node position:', error);
+                    });
+                }
+            }
         });
     };
 
@@ -179,6 +191,7 @@ function App() {
                 >
                     Learn React
                 </a>
+                <p>Group ID</p>
                 <input type="text" placeholder="Title" value={groupId} onChange={(e) => setGroupId(e.target.value)}/>
 
                 <div style={blockCanvasSize}>

@@ -73,9 +73,14 @@ function BlockCanvas(props: BlockCanvasProps) {
 
     // ref; https://reactflow.dev/learn/concepts/core-concepts#controlled-or-uncontrolled
     const onNodesChange = useCallback(
-        (changes: any[]) => setBlockNodes((nds: any[]) => applyNodeChanges(changes, nds)),
-        [setBlockNodes],
-      );
+        (changes: any[]) => {
+            setBlockNodes((nds: any[]) => applyNodeChanges(changes, nds));
+            if (props.onNodesChange) {
+                props.onNodesChange(changes);
+            }
+        },
+        [setBlockNodes, props.onNodesChange],
+    );
 
     return (
         <ReactFlow
