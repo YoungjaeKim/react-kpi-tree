@@ -57,6 +57,7 @@ interface BlockCanvasProps {
 
    
 function BlockCanvas(props: BlockCanvasProps) {
+    const { onNodesChange } = props;
     const [blockNodes, setBlockNodes] = useNodesState(props.nodes);
     const [blockEdges, setBlockEdges] = useEdgesState(props.edges);
 
@@ -72,21 +73,21 @@ function BlockCanvas(props: BlockCanvasProps) {
     };
 
     // ref; https://reactflow.dev/learn/concepts/core-concepts#controlled-or-uncontrolled
-    const onNodesChange = useCallback(
+    const handleNodesChange = useCallback(
         (changes: any[]) => {
             setBlockNodes((nds: any[]) => applyNodeChanges(changes, nds));
-            if (props.onNodesChange) {
-                props.onNodesChange(changes);
+            if (onNodesChange) {
+                onNodesChange(changes);
             }
         },
-        [setBlockNodes, props.onNodesChange],
+        [setBlockNodes, onNodesChange],
     );
 
     return (
         <ReactFlow
             nodes={blockNodes}
             edges={blockEdges}
-            onNodesChange={onNodesChange}
+            onNodesChange={handleNodesChange}
             onConnect={onConnect}
             fitView
             style={{ background: '#f8f8f8' }}
