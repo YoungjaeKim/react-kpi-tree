@@ -92,6 +92,23 @@ function App() {
     const [label, setLabel] = useState<string>("");
     const [groupId, setGroupId] = useState<string>("507f1f77bcf86cd799439011");
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+    const [hiddenNodes, setHiddenNodes] = useState<BlockNode[]>([]);
+    const [selectedHiddenNode, setSelectedHiddenNode] = useState<string>("");
+
+    // Function to fetch hidden nodes
+    const fetchHiddenNodes = async () => {
+        try {
+            const response = await axios.get(`${API_URL}/graphs/node?groupId=${groupId}&hidden=true`);
+            setHiddenNodes(response.data.nodes.map((node: any) => toBlockNode(node)));
+        } catch (error) {
+            console.error('Failed to fetch hidden nodes:', error);
+        }
+    };
+
+    // Fetch hidden nodes when groupId changes
+    useEffect(() => {
+        fetchHiddenNodes();
+    }, [groupId]);
 
     // Handle node selection changes
     const handleNodesChange = (changes: any[]) => {
@@ -201,9 +218,9 @@ function App() {
                         // create new Element, and then add it to the nodes
                         let newNode = {
                             position: { x: 100, y: 100 },
-                            groupId: groupId, // Use the default or updated groupId
-                            title: title, // Use the title from the input field
-                            label: label || title, // Use the label from the input field
+                            groupId: groupId,
+                            title: title,
+                            label: label || title,
                             elementValue: "",
                             elementValueType: "",
                             elementIsActive: true,
@@ -211,17 +228,29 @@ function App() {
                             elementId: ""
                         };
                         addNode(newNode).then((node) => {
-                            console.log("addNode().then() is called" + node);
                             const blockNode = toBlockNode(node);
                             if (!blockNode.id) {
                                 console.error("Node ID is missing. Ensure the backend returns a valid ID.");
                                 return;
                             }
-                            setNodes([...nodes, blockNode]); // Update BlockCanvas with the new node
+                            setNodes([...nodes, blockNode]);
                         });
-                    }
-                    }>Add Node
-                    </button>
+                    }}>Add Node</button>
+                </div>
+                <div>
+                    <select 
+                        value={selectedHiddenNode} 
+                        onChange={(e) => setSelectedHiddenNode(e.target.value)}
+                        aria-label="Select hidden node"
+                    >
+                        <option value="">Select Hidden Node</option>
+                        {hiddenNodes.map((node) => (
+                            <option key={node.id} value={node.id}>
+                                {node.data.label}
+                            </option>
+                        ))}
+                    </select>
+                    <button onClick={fetchHiddenNodes}>Refresh</button>
                 </div>
             </header>
         </div>
