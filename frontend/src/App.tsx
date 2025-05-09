@@ -223,9 +223,6 @@ function App() {
                     }>Add Node
                     </button>
                 </div>
-                <button onClick={() => {
-                }}>Remove (TBD)
-                </button>
             </header>
         </div>
     );

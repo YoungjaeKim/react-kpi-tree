@@ -151,3 +151,37 @@ exports.getNodeById = async (req, res) => {
         res.json(resource);
     }
 };
+
+exports.getNodes = async (req, res) => {
+    const groupId = req.query.groupId;
+    const hidden = req.query.hidden;
+
+    if (isNullOrEmpty(groupId)) {
+        res.status(404).json({ error: "groupId is required" });
+        return;
+    }
+
+    try {
+        // Build the query object
+        const query = { groupId: groupId };
+        if (hidden !== undefined) {
+            query.hidden = hidden.toLowerCase() === 'true';
+        }
+
+        // Find KpiNodes based on the query and populate KpiElement by elementId
+        const kpiNodes = await KpiNode.find(query).populate('elementId').exec();
+
+        res.json({
+            nodes: kpiNodes.map((node) => {
+                const nodeObject = node.toObject();
+                nodeObject.id = nodeObject._id;
+                delete nodeObject._id;
+                return nodeObject;
+            }),
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error at getNodes' });
+    }
+};
+
