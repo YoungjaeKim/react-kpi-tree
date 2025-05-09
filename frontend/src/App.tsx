@@ -96,23 +96,24 @@ function App() {
     // Handle node selection changes
     const handleNodesChange = (changes: any[]) => {
         changes.forEach((change) => {
-            const node = nodes.find(n => n.id === change.id);
-            setSelectedNode(change.selected ? node || null : null);
-
+            // Handle position changes
             if (change.type === 'select') {
-                // Handle position changes
-                if (change.type === 'position' && change.dragging === false) {
-                    if (node) {
-                        axios.post(`${API_URL}/graphs/node`, {
-                            id: node.id,
-                            position: change.position
-                        }).catch((error) => {
-                            console.error('Failed to update node position:', error);
-                        });
-                    }
+                const node = nodes.find(n => n.id === change.id);
+                setSelectedNode(change.selected ? node || null : null);
+            }
+            if (change.type === 'position' && change.dragging === false) {
+                const node = nodes.find(n => n.id === change.id);
+                if (node) {
+                    axios.post(`${API_URL}/graphs/node`, {
+                        id: node.id,
+                        position: change.position
+                    }).catch((error) => {
+                        console.error('Failed to update node position:', error);
+                    });
                 }
             }
-            else if (change.type === 'remove') {
+            if (change.type === 'remove') {
+                const node = nodes.find(n => n.id === change.id);
                 if (node) {
                     axios.post(`${API_URL}/graphs/node`, {
                         id: node.id,
