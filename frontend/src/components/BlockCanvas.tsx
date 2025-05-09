@@ -38,6 +38,13 @@ export type BlockNode = {
     groupId: string;
     data: { label: string, elementId: string };
     hidden: boolean;
+    style?: {
+        background: string;
+        border: string;
+        borderRadius: number;
+        padding: number;
+        color: string;
+    };
 };
 
 interface BlockCanvasProps {
@@ -75,6 +82,8 @@ function BlockCanvas(props: BlockCanvasProps) {
             nodesDraggable={true}
             onConnect={onConnect}
             onNodesChange={onNodesChange}
+            fitView
+            style={{ background: '#f8f8f8' }}
         >
             <MiniMap/>
             <Controls/>

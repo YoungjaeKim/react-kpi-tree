@@ -11,13 +11,21 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 // convert API Node response scheme to BlockNode
 function toBlockNode(n: any) {
-    return {
+    const blockNode = {
         id: n.id,
         position: {x: n.position.x, y: n.position.y},
         groupId: n.groupId,
         data: {label: `${n.title} (${n.label})`, elementId: n.elementId},
-        hidden: n.hidden ?? false
-    } as BlockNode
+        hidden: n.hidden ?? false,
+        style: {
+            background: '#fff',
+            border: '1px solid #777',
+            borderRadius: 5,
+            padding: 10,
+            color: '#000',
+        }
+    } as BlockNode;
+    return blockNode;
 }
 
 // download Nodes and Elements from backend
@@ -57,7 +65,7 @@ async function addElement(element: BlockNodeTransferForCreate) {
         .then((response) => {
             return response.data as BlockNode;
         })
-        .catch((error)  => {
+        .catch((error) => {
             console.log(error);
         });
 }
@@ -105,7 +113,7 @@ function App() {
                         id: selectedNode.id,
                         hidden: true
                     });
-                    
+
                     if (response.status === 200 || response.status === 201) {
                         // Update local state to remove the node
                         setNodes(nodes.filter(node => node.id !== selectedNode.id));
@@ -174,8 +182,8 @@ function App() {
                 <input type="text" placeholder="Title" value={groupId} onChange={(e) => setGroupId(e.target.value)}/>
 
                 <div style={blockCanvasSize}>
-                    <BlockCanvas 
-                        nodes={nodes} 
+                    <BlockCanvas
+                        nodes={nodes}
                         edges={edges}
                         onConnect={handleConnect}
                         onNodesChange={handleNodesChange}
