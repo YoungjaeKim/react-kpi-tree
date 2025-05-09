@@ -1,21 +1,21 @@
 import React from 'react';
 import './App.css';
-import BlockCanvas, {BlockEdge, BlockNode, BlockNodeTransferForCreate} from "./components/BlockCanvas";
+import BlockCanvas, { BlockEdge, BlockNode, BlockNodeTransferForCreate } from "./components/BlockCanvas";
 import axios from 'axios';
-import {useEffect} from "react";
-import {useState} from "react";
-import {addEdge as addReactFlowEdge, Connection, Node} from '@xyflow/react';
+import { useEffect } from "react";
+import { useState } from "react";
+import { addEdge as addReactFlowEdge, Connection, Node } from '@xyflow/react';
 
-let blockCanvasSize = {width: 800, height: 600}
+let blockCanvasSize = { width: 800, height: 600 }
 const API_URL = process.env.REACT_APP_API_URL;
 
 // convert API Node response scheme to BlockNode
 function toBlockNode(n: any) {
     const blockNode = {
         id: n.id,
-        position: {x: n.position.x, y: n.position.y},
+        position: { x: n.position.x, y: n.position.y },
         groupId: n.groupId,
-        data: {label: `${n.title} (${n.label})`, elementId: n.elementId},
+        data: { label: `${n.title} (${n.label})`, elementId: n.elementId },
         hidden: n.hidden ?? false,
         style: {
             background: '#fff',
@@ -45,7 +45,7 @@ async function getNodesAndElements(url: string) {
         .catch((error) => {
             console.log(error);
         });
-    return {nodes: nodes, edges: edges};
+    return { nodes: nodes, edges: edges };
 }
 
 async function addNode(node: BlockNodeTransferForCreate) {
@@ -96,50 +96,41 @@ function App() {
     // Handle node selection changes
     const handleNodesChange = (changes: any[]) => {
         changes.forEach((change) => {
+            const node = nodes.find(n => n.id === change.id);
+            setSelectedNode(change.selected ? node || null : null);
+
             if (change.type === 'select') {
-                const node = nodes.find(n => n.id === change.id);
-                setSelectedNode(change.selected ? node || null : null);
+                // Handle position changes
+                if (change.type === 'position' && change.dragging === false) {
+                    if (node) {
+                        axios.post(`${API_URL}/graphs/node`, {
+                            id: node.id,
+                            position: change.position
+                        }).catch((error) => {
+                            console.error('Failed to update node position:', error);
+                        });
+                    }
+                }
             }
-            // Handle position changes
-            if (change.type === 'position' && change.dragging === false) {
-                const node = nodes.find(n => n.id === change.id);
+            else if (change.type === 'remove') {
                 if (node) {
                     axios.post(`${API_URL}/graphs/node`, {
                         id: node.id,
-                        position: change.position
+                        hidden: true
+                    }).then((response) => {
+                        if (response.status === 200 || response.status === 201) {
+                            // Update local state to remove the node
+                            setSelectedNode(null);
+                        }
                     }).catch((error) => {
-                        console.error('Failed to update node position:', error);
+                        console.error('Failed to hide node:', error);
                     });
                 }
+                // Update local state to remove the node
+                setSelectedNode(null);
             }
         });
     };
-
-    // Handle delete key press
-    useEffect(() => {
-        const handleKeyDown = async (event: KeyboardEvent) => {
-            if (event.key === 'Delete' && selectedNode) {
-                try {
-                    // Call upsertNode API to hide the node
-                    const response = await axios.post(`${API_URL}/graphs/node`, {
-                        id: selectedNode.id,
-                        hidden: true
-                    });
-
-                    if (response.status === 200 || response.status === 201) {
-                        // Update local state to remove the node
-                        setNodes(nodes.filter(node => node.id !== selectedNode.id));
-                        setSelectedNode(null);
-                    }
-                } catch (error) {
-                    console.error('Failed to hide node:', error);
-                }
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedNode, nodes]);
 
     const handleConnect = async (connection: Connection) => {
         console.log('Connecting:', connection);
@@ -192,7 +183,7 @@ function App() {
                     Learn React
                 </a>
                 <p>Group ID</p>
-                <input type="text" placeholder="Title" value={groupId} onChange={(e) => setGroupId(e.target.value)}/>
+                <input type="text" placeholder="Title" value={groupId} onChange={(e) => setGroupId(e.target.value)} />
 
                 <div style={blockCanvasSize}>
                     <BlockCanvas
@@ -203,12 +194,12 @@ function App() {
                     ></BlockCanvas>
                 </div>
                 <div>
-                    <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)}/>
-                    <input type="text" placeholder="Label" value={label} onChange={(e) => setLabel(e.target.value)}/>
+                    <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                    <input type="text" placeholder="Label" value={label} onChange={(e) => setLabel(e.target.value)} />
                     <button onClick={() => {
                         // create new Element, and then add it to the nodes
                         let newNode = {
-                            position: {x: 100, y: 100},
+                            position: { x: 100, y: 100 },
                             groupId: groupId, // Use the default or updated groupId
                             title: title, // Use the title from the input field
                             label: label || title, // Use the label from the input field
