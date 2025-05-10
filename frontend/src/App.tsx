@@ -208,6 +208,22 @@ function App() {
         }
     };
 
+    const handleEdgesChange = async (changes: any[]) => {
+        changes.forEach(async (change) => {
+            if (change.type === 'remove') {
+                try {
+                    const response = await axios.delete(`${API_URL}/graphs/edge/${change.id}`);
+                    if (response.status === 200) {
+                        // Edge was successfully deleted from backend
+                        setEdges((eds) => eds.filter((e) => e.id !== change.id));
+                    }
+                } catch (error) {
+                    console.error('Failed to delete edge:', error);
+                }
+            }
+        });
+    };
+
     useEffect(() => {
         getNodesAndElements(`${API_URL}/graphs?groupId=${groupId}`)
             .then((response) => {
@@ -226,16 +242,8 @@ function App() {
         <div className="App">
             <header className="App-header">
                 <p>
-                    Edit <code>src/App.tsx</code> and save to reload.
+                    React KPI Tree
                 </p>
-                <a
-                    className="App-link"
-                    href="https://reactjs.org"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Learn React
-                </a>
                 <p>Group ID</p>
                 <input type="text" placeholder="Title" value={groupId} onChange={(e) => setGroupId(e.target.value)} />
 
@@ -245,6 +253,7 @@ function App() {
                         edges={edges}
                         onConnect={handleConnect}
                         onNodesChange={handleNodesChange}
+                        onEdgesChange={handleEdgesChange}
                     ></BlockCanvas>
                 </div>
                 <div>

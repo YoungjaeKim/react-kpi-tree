@@ -12,6 +12,7 @@ router.get('/node/:id', graphController.getNodeById);
 
 // Edge routes
 router.post('/edge', graphController.upsertEdge);
+router.delete('/edge/:id', graphController.deleteEdge);
 
 // Graph routes
 router.get('/', graphController.getNodeAndEdge);

@@ -10,6 +10,7 @@ import {
     applyNodeChanges,
     Connection,
     Edge,
+    applyEdgeChanges,
 } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
@@ -53,11 +54,12 @@ interface BlockCanvasProps {
     nodes: BlockNode[];
     onConnect?: (connection: Connection) => void;
     onNodesChange?: (changes: any[]) => void;
+    onEdgesChange?: (changes: any[]) => void;
 }
 
    
 function BlockCanvas(props: BlockCanvasProps) {
-    const { onNodesChange } = props;
+    const { onNodesChange, onEdgesChange } = props;
     const [blockNodes, setBlockNodes] = useNodesState(props.nodes);
     const [blockEdges, setBlockEdges] = useEdgesState(props.edges);
 
@@ -83,11 +85,22 @@ function BlockCanvas(props: BlockCanvasProps) {
         [setBlockNodes, onNodesChange],
     );
 
+    const handleEdgesChange = useCallback(
+        (changes: any[]) => {
+            setBlockEdges((eds) => applyEdgeChanges(changes, eds));
+            if (onEdgesChange) {
+                onEdgesChange(changes);
+            }
+        },
+        [setBlockEdges, onEdgesChange],
+    );
+
     return (
         <ReactFlow
             nodes={blockNodes}
             edges={blockEdges}
             onNodesChange={handleNodesChange}
+            onEdgesChange={handleEdgesChange}
             onConnect={onConnect}
             fitView
             style={{ background: '#f8f8f8' }}

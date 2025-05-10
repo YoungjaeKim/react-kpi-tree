@@ -185,3 +185,24 @@ exports.getNodes = async (req, res) => {
     }
 };
 
+exports.deleteEdge = async (req, res) => {
+    const edgeId = req.params.id;
+    
+    if (isNullOrEmpty(edgeId)) {
+        res.status(400).json({ error: "invalid id" });
+        return;
+    }
+
+    try {
+        const deletedEdge = await KpiEdge.findByIdAndDelete(edgeId);
+        if (!deletedEdge) {
+            res.status(404).json({ error: "Edge not found" });
+            return;
+        }
+        res.status(200).json({ message: "Edge deleted successfully" });
+    } catch (err) {
+        console.error('Failed to delete edge:', err);
+        res.status(500).json({ error: 'Server error at deleteEdge' });
+    }
+};
+
