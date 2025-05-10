@@ -81,6 +81,20 @@ async function addEdge(edge: BlockEdge) {
     }
 }
 
+async function updateNode(id: string, updates: { position?: { x: number, y: number }, hidden?: boolean }) {
+    console.log("updateNode() is called");
+    try {
+        const response = await axios.post(`${API_URL}/graphs/node`, {
+            id,
+            ...updates
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Failed to update node:', error);
+        throw error;
+    }
+}
+
 function App() {
     console.log("App() is called");
     let initialNodes: BlockNode[] = [];
@@ -94,6 +108,27 @@ function App() {
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
     const [hiddenNodes, setHiddenNodes] = useState<BlockNode[]>([]);
     const [selectedHiddenNode, setSelectedHiddenNode] = useState<string>("");
+
+    // Function to make a hidden node visible
+    const makeNodeVisible = async () => {
+        if (!selectedHiddenNode) return;
+        
+        try {
+            const response = await updateNode(selectedHiddenNode, { hidden: false });
+            
+            if (response) {
+                // Add the node to the visible nodes
+                const visibleNode = toBlockNode(response);
+                setNodes(prevNodes => [...prevNodes, visibleNode]);
+                // Clear the selection
+                setSelectedHiddenNode("");
+                // Refresh the hidden nodes list
+                fetchHiddenNodes();
+            }
+        } catch (error) {
+            console.error('Failed to make node visible:', error);
+        }
+    };
 
     // Function to fetch hidden nodes
     const fetchHiddenNodes = async () => {
@@ -121,31 +156,27 @@ function App() {
             if (change.type === 'position' && change.dragging === false) {
                 const node = nodes.find(n => n.id === change.id);
                 if (node) {
-                    axios.post(`${API_URL}/graphs/node`, {
-                        id: node.id,
-                        position: change.position
-                    }).catch((error) => {
-                        console.error('Failed to update node position:', error);
-                    });
+                    updateNode(node.id, { position: change.position })
+                        .catch((error) => {
+                            console.error('Failed to update node position:', error);
+                        });
                 }
             }
             if (change.type === 'remove') {
                 const node = nodes.find(n => n.id === change.id);
                 if (node) {
-                    axios.post(`${API_URL}/graphs/node`, {
-                        id: node.id,
-                        hidden: true
-                    }).then((response) => {
-                        if (response.status === 200 || response.status === 201) {
-                            // Update local state to remove the node
-                            setSelectedNode(null);
-                        }
-                    }).catch((error) => {
-                        console.error('Failed to hide node:', error);
-                    });
+                    updateNode(node.id, { hidden: true })
+                        .then((response) => {
+                            if (response) {
+                                // Update local state to remove the node
+                                setSelectedNode(null);
+                                fetchHiddenNodes();
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Failed to hide node:', error);
+                        });
                 }
-                // Update local state to remove the node
-                setSelectedNode(null);
             }
         });
     };
@@ -251,6 +282,12 @@ function App() {
                         ))}
                     </select>
                     <button onClick={fetchHiddenNodes}>Refresh</button>
+                    <button 
+                        onClick={makeNodeVisible}
+                        disabled={!selectedHiddenNode}
+                    >
+                        Add
+                    </button>
                 </div>
             </header>
         </div>
