@@ -11,11 +11,15 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 // convert API Node response scheme to BlockNode
 function toBlockNode(n: any) {
+    const kpiValue = n.elementId?.kpiValue || '';
     const blockNode = {
         id: n.id,
         position: { x: n.position.x, y: n.position.y },
         groupId: n.groupId,
-        data: { label: `${n.title} (${n.label})`, elementId: n.elementId },
+        data: { 
+            label: `${n.title} (${n.label})${kpiValue ? `\nvalue: ${kpiValue}` : ''}`, 
+            elementId: n.elementId?._id || n.elementId 
+        },
         hidden: n.hidden ?? false,
         style: {
             background: '#fff',
@@ -235,8 +239,6 @@ function App() {
                 console.log(error);
             });
     }, [groupId]);
-
-    console.log("return calling2");
 
     return (
         <div className="App">
