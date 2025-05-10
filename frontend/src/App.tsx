@@ -81,13 +81,21 @@ async function addEdge(edge: BlockEdge) {
     }
 }
 
-async function updateNode(id: string, updates: { position?: { x: number, y: number }, hidden?: boolean }) {
+async function updateNode(id: string, updates: { position?: { x: number, y: number }, hidden?: boolean }, setNodes?: React.Dispatch<React.SetStateAction<BlockNode[]>>) {
     console.log("updateNode() is called");
     try {
         const response = await axios.post(`${API_URL}/graphs/node`, {
             id,
             ...updates
         });
+        if ((response.status === 200 || response.status === 201) && setNodes) {
+            // Update the specific node in the nodes state
+            setNodes(prevNodes => 
+                prevNodes.map(node => 
+                    node.id === id ? toBlockNode(response.data) : node
+                )
+            );
+        }
         return response.data;
     } catch (error) {
         console.error('Failed to update node:', error);
@@ -114,12 +122,9 @@ function App() {
         if (!selectedHiddenNode) return;
         
         try {
-            const response = await updateNode(selectedHiddenNode, { hidden: false });
+            const response = await updateNode(selectedHiddenNode, { hidden: false }, setNodes);
             
             if (response) {
-                // Add the node to the visible nodes
-                const visibleNode = toBlockNode(response);
-                setNodes(prevNodes => [...prevNodes, visibleNode]);
                 // Clear the selection
                 setSelectedHiddenNode("");
                 // Refresh the hidden nodes list
@@ -156,7 +161,7 @@ function App() {
             if (change.type === 'position' && change.dragging === false) {
                 const node = nodes.find(n => n.id === change.id);
                 if (node) {
-                    updateNode(node.id, { position: change.position })
+                    updateNode(node.id, { position: change.position }, setNodes)
                         .catch((error) => {
                             console.error('Failed to update node position:', error);
                         });
@@ -165,7 +170,7 @@ function App() {
             if (change.type === 'remove') {
                 const node = nodes.find(n => n.id === change.id);
                 if (node) {
-                    updateNode(node.id, { hidden: true })
+                    updateNode(node.id, { hidden: true }, setNodes)
                         .then((response) => {
                             if (response) {
                                 // Update local state to remove the node
