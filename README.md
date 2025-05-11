@@ -28,12 +28,17 @@ MONGODB_PRODUCTION=mongodb://localhost:27017/production
 
 ## To Do (as of 2025-05-05)
 - [ ] Node
-  - [ ] Hide Node
+  - [v] Hide Node
   - [ ] Edit Node
-  - [ ] Unhide Node
-  - [ ] Reflect recent Element value on Node label
+  - [v] Unhide Node
+  - [v] Reflect recent Element value on Node label
 - [ ] Edge
-  - [ ] Remove Edge
-  - [ ] Edit Edge
+  - [v] Remove Edge
+- [ ] Element
+  - [ ] Update Element
+  - [ ] Show a newest Element value periodically
 - [ ] Change MongoDB to PostgreSQL
 - [ ] Add more test cases
+- [ ] Group
+  - [ ] Create new Group
+  - [ ] Archive a Group
