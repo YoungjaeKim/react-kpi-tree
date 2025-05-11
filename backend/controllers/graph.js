@@ -16,21 +16,21 @@ exports.createGroup = async (req, res) => {
 }
 
 exports.upsertNode = async (req, res) => {
-    // check elementId is empty
-    if (isNullOrEmpty(req.body.elementId)) {
-        // create Element first
-        const newKpiElement = new KpiElement({
-            kpiValue: req.body.elementValue,
-            kpiValueType: req.body.elementValueType,
-            isActive: req.body.elementIsActive,
-            expression: req.body.elementExpression,
-            lastUpdatedDateTime: Date.now()
-        });
-        const savedKpiElement = await newKpiElement.save();
-        req.body.elementId = savedKpiElement._id;
-    }
+    if (isNullOrEmpty(req.body.id)) { // create
+        // check elementId is empty
+        if (isNullOrEmpty(req.body.elementId)) {
+            // create Element first
+            const newKpiElement = new KpiElement({
+                kpiValue: req.body.elementValue,
+                kpiValueType: req.body.elementValueType,
+                isActive: req.body.elementIsActive,
+                expression: req.body.elementExpression,
+                lastUpdatedDateTime: Date.now()
+            });
+            const savedKpiElement = await newKpiElement.save();
+            req.body.elementId = savedKpiElement._id;
+        }
 
-    if (isNullOrEmpty(req.body.id)) {
         try {
             const newKpiNode = new KpiNode({
                 position: req.body.position,
@@ -42,12 +42,14 @@ exports.upsertNode = async (req, res) => {
                 hidden: req.body.hidden
             });
             const savedKpiNode = await newKpiNode.save();
-            res.status(201).json({ ...savedKpiNode.toObject(), id: savedKpiNode._id, _id: undefined }); // change _id to id.
+            // Populate the elementId before sending response
+            const populatedNode = await KpiNode.findById(savedKpiNode._id).populate('elementId');
+            res.status(201).json({ ...populatedNode.toObject(), id: populatedNode._id, _id: undefined }); // change _id to id.
         } catch (err) {
             console.error('Failed to save document:', err);
             res.status(500).send('Failed to save document');
         }
-    } else {
+    } else { // update
         try {
             const kpiNode = await KpiNode.findById(req.body.id);
             if (!kpiNode) {
@@ -63,7 +65,9 @@ exports.upsertNode = async (req, res) => {
             kpiNode.hidden = req.body.hidden !== undefined ? req.body.hidden : kpiNode.hidden;
 
             const savedKpiNode = await kpiNode.save();
-            res.status(200).json({ ...savedKpiNode.toObject(), id: savedKpiNode._id, _id: undefined });
+            // Populate the elementId before sending response
+            const populatedNode = await KpiNode.findById(savedKpiNode._id).populate('elementId');
+            res.status(200).json({ ...populatedNode.toObject(), id: populatedNode._id, _id: undefined });
         } catch (err) {
             console.error('Failed to update document:', err);
             res.status(500).send('Failed to update document');
