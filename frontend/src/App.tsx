@@ -116,10 +116,65 @@ function App() {
     const [edges, setEdges] = useState<BlockEdge[]>(initialEdges);
     const [title, setTitle] = useState<string>("");
     const [label, setLabel] = useState<string>("");
+    const [elementValueType, setElementValueType] = useState<string>("Integer");
+    const [elementValue, setElementValue] = useState<string>("0");
+    const [elementValueError, setElementValueError] = useState<string>("");
     const [groupId, setGroupId] = useState<string>("507f1f77bcf86cd799439011");
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
     const [hiddenNodes, setHiddenNodes] = useState<BlockNode[]>([]);
     const [selectedHiddenNode, setSelectedHiddenNode] = useState<string>("");
+
+    // Function to handle element value type change
+    const handleElementValueTypeChange = (type: string) => {
+        setElementValueType(type);
+        // Set default value based on type
+        switch (type) {
+            case "Integer":
+                setElementValue("0");
+                break;
+            case "Double":
+                setElementValue("0.0");
+                break;
+            case "String":
+                setElementValue("");
+                break;
+        }
+        setElementValueError(""); // Clear error when type changes
+    };
+
+    // Function to validate element value based on type
+    const validateElementValue = (value: string, type: string): boolean => {
+        let isValid = false;
+        switch (type) {
+            case "Integer":
+                isValid = /^-?\d+$/.test(value);
+                if (!isValid) {
+                    setElementValueError("Invalid Integer value");
+                } else {
+                    // Ensure integer value is properly formatted
+                    setElementValue(value.trim());
+                }
+                break;
+            case "Double":
+                isValid = /^-?\d*\.?\d+$/.test(value);
+                if (!isValid) {
+                    setElementValueError("Invalid Double value");
+                } else {
+                    // Ensure double value is properly formatted
+                    setElementValue(value.trim());
+                }
+                break;
+            case "String":
+                isValid = true; // Any string is valid
+                setElementValueError("");
+                setElementValue(value);
+                break;
+            default:
+                isValid = false;
+                setElementValueError("Invalid value type");
+        }
+        return isValid;
+    };
 
     // Function to make a hidden node visible
     const makeNodeVisible = async () => {
@@ -261,15 +316,49 @@ function App() {
                 <div>
                     <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
                     <input type="text" placeholder="Label" value={label} onChange={(e) => setLabel(e.target.value)} />
+                    <select 
+                        value={elementValueType} 
+                        onChange={(e) => handleElementValueTypeChange(e.target.value)}
+                        aria-label="Select element value type"
+                    >
+                        <option value="Integer">Integer</option>
+                        <option value="Double">Double</option>
+                        <option value="String">String</option>
+                    </select>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <input 
+                            type="text" 
+                            placeholder="Element Value" 
+                            value={elementValue} 
+                            onChange={(e) => {
+                                if (validateElementValue(e.target.value, elementValueType)) {
+                                    setElementValue(e.target.value);
+                                    setElementValueError("");
+                                } else {
+                                    setElementValue(e.target.value);
+                                }
+                            }}
+                            style={{ borderColor: elementValueError ? 'red' : undefined }}
+                        />
+                        {elementValueError && (
+                            <span style={{ color: 'red', fontSize: '0.8em', marginTop: '4px' }}>
+                                {elementValueError}
+                            </span>
+                        )}
+                    </div>
                     <button onClick={() => {
+                        // Validate the current value before creating the node
+                        if (!validateElementValue(elementValue, elementValueType)) {
+                            return; // Don't proceed if validation fails
+                        }
                         // create new Element, and then add it to the nodes
                         let newNode = {
                             position: { x: 100, y: 100 },
                             groupId: groupId,
                             title: title,
                             label: label || title,
-                            elementValue: "",
-                            elementValueType: "",
+                            elementValue: elementValue.trim(),
+                            elementValueType: elementValueType,
                             elementIsActive: true,
                             elementExpression: "",
                             elementId: ""
@@ -281,6 +370,11 @@ function App() {
                                 return;
                             }
                             setNodes([...nodes, blockNode]);
+                            // Reset form
+                            setTitle("");
+                            setLabel("");
+                            setElementValueType("Integer");
+                            setElementValue("0");
                         });
                     }}>Add Node</button>
                 </div>
