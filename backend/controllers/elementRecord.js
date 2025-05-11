@@ -1,53 +1,9 @@
 const KpiElement = require("../schmas/kpiElement");
-const KpiElementRecord = require("../schmas/kpiElementRecord");
+const KpiElementRecordInteger = require("../schmas/kpiElementRecordInteger");
+const KpiElementRecordDouble = require("../schmas/kpiElementRecordDouble");
+const KpiElementRecordString = require("../schmas/kpiElementRecordString");
 const {isNullOrEmpty} = require("../utils");
 
-/**
- * Create a new element record
- * @param req
- * @param res
- * @returns {Promise<void>}
- */
-exports.createElementRecords = async (req, res) => {
-    try {
-        const newKpiElementRecord = new KpiElementRecord(req.body);
-        const savedKpiElementRecord = await newKpiElementRecord.save();
-        res.status(201).json(savedKpiElementRecord);
-    } catch (err) {
-        console.error('Failed to save document:', err);
-        res.status(500).send('Failed to save document');
-    }
-};
-
-/**
- * Get all element records
- * @param req
- * @param res
- * @returns {Promise<void>}
- */
-exports.getElementRecords = async (req, res) => {
-    const pageSize = 50; // Number of records to fetch per page
-    const pageToken = parseInt(req.query.page, 10); // Token for the requested page
-
-    // Check if pageToken is not a valid number
-    const startIndex = (isNaN(pageToken) || pageToken < 0) ? 0 : pageToken;
-
-    try {
-        // Retrieve the resources with pagination
-        const elementRecords = await KpiElementRecord.find().skip(startIndex).limit(pageSize).exec();
-
-        // Determine the next page token
-        const nextPageToken = startIndex + pageSize;
-
-        res.json({
-            elements: elementRecords,
-            nextPageToken: nextPageToken
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({error: 'Server error'});
-    }
-};
 
 /**
  * Get element record by id
@@ -57,17 +13,188 @@ exports.getElementRecords = async (req, res) => {
  */
 exports.getElementRecordById = async (req, res) => {
     const resourceId = req.params.id;
-    if (isNullOrEmpty(resourceId))
+    if (isNullOrEmpty(resourceId)) {
         res.status(400).json({error: "invalid id"});
+        return;
+    }
 
-    // Find the resource with the matching ID
-    const resource = await KpiElementRecord.findById(resourceId);
+    try {
+        const record = await KpiElementRecordInteger.findById(resourceId).populate('elementId');
+        if (!record) {
+            res.status(404).json({error: "Integer record not found"});
+            return;
+        }
+        res.json(record);
+    } catch (err) {
+        console.error('Failed to fetch integer record:', err);
+        res.status(500).json({error: 'Server error'});
+    }
+};
 
-    if (!resource) {
-        // Return a 404 response if the resource is not found
-        res.status(404).json({error: "Resource not found"});
-    } else {
-        // Return the resource as the response
-        res.json(resource);
+// Integer Records
+exports.createIntegerRecord = async (req, res) => {
+    try {
+        const newRecord = new KpiElementRecordInteger(req.body);
+        const savedRecord = await newRecord.save();
+        res.status(201).json(savedRecord);
+    } catch (err) {
+        console.error('Failed to save integer record:', err);
+        res.status(500).json({error: 'Failed to save integer record'});
+    }
+};
+
+exports.getIntegerRecords = async (req, res) => {
+    const pageSize = 50;
+    const pageToken = parseInt(req.query.page, 10);
+    const startIndex = (isNaN(pageToken) || pageToken < 0) ? 0 : pageToken;
+
+    try {
+        const records = await KpiElementRecordInteger.find()
+            .skip(startIndex)
+            .limit(pageSize)
+            .populate('elementId')
+            .exec();
+
+        const nextPageToken = startIndex + pageSize;
+
+        res.json({
+            records: records,
+            nextPageToken: nextPageToken
+        });
+    } catch (err) {
+        console.error('Failed to fetch integer records:', err);
+        res.status(500).json({error: 'Server error'});
+    }
+};
+
+exports.getIntegerRecordById = async (req, res) => {
+    const resourceId = req.params.id;
+    if (isNullOrEmpty(resourceId)) {
+        res.status(400).json({error: "invalid id"});
+        return;
+    }
+
+    try {
+        const record = await KpiElementRecordInteger.findById(resourceId).populate('elementId');
+        if (!record) {
+            res.status(404).json({error: "Integer record not found"});
+            return;
+        }
+        res.json(record);
+    } catch (err) {
+        console.error('Failed to fetch integer record:', err);
+        res.status(500).json({error: 'Server error'});
+    }
+};
+
+// Double Records
+exports.createDoubleRecord = async (req, res) => {
+    try {
+        const newRecord = new KpiElementRecordDouble(req.body);
+        const savedRecord = await newRecord.save();
+        res.status(201).json(savedRecord);
+    } catch (err) {
+        console.error('Failed to save double record:', err);
+        res.status(500).json({error: 'Failed to save double record'});
+    }
+};
+
+exports.getDoubleRecords = async (req, res) => {
+    const pageSize = 50;
+    const pageToken = parseInt(req.query.page, 10);
+    const startIndex = (isNaN(pageToken) || pageToken < 0) ? 0 : pageToken;
+
+    try {
+        const records = await KpiElementRecordDouble.find()
+            .skip(startIndex)
+            .limit(pageSize)
+            .populate('elementId')
+            .exec();
+
+        const nextPageToken = startIndex + pageSize;
+
+        res.json({
+            records: records,
+            nextPageToken: nextPageToken
+        });
+    } catch (err) {
+        console.error('Failed to fetch double records:', err);
+        res.status(500).json({error: 'Server error'});
+    }
+};
+
+exports.getDoubleRecordById = async (req, res) => {
+    const resourceId = req.params.id;
+    if (isNullOrEmpty(resourceId)) {
+        res.status(400).json({error: "invalid id"});
+        return;
+    }
+
+    try {
+        const record = await KpiElementRecordDouble.findById(resourceId).populate('elementId');
+        if (!record) {
+            res.status(404).json({error: "Double record not found"});
+            return;
+        }
+        res.json(record);
+    } catch (err) {
+        console.error('Failed to fetch double record:', err);
+        res.status(500).json({error: 'Server error'});
+    }
+};
+
+// String Records
+exports.createStringRecord = async (req, res) => {
+    try {
+        const newRecord = new KpiElementRecordString(req.body);
+        const savedRecord = await newRecord.save();
+        res.status(201).json(savedRecord);
+    } catch (err) {
+        console.error('Failed to save string record:', err);
+        res.status(500).json({error: 'Failed to save string record'});
+    }
+};
+
+exports.getStringRecords = async (req, res) => {
+    const pageSize = 50;
+    const pageToken = parseInt(req.query.page, 10);
+    const startIndex = (isNaN(pageToken) || pageToken < 0) ? 0 : pageToken;
+
+    try {
+        const records = await KpiElementRecordString.find()
+            .skip(startIndex)
+            .limit(pageSize)
+            .populate('elementId')
+            .exec();
+
+        const nextPageToken = startIndex + pageSize;
+
+        res.json({
+            records: records,
+            nextPageToken: nextPageToken
+        });
+    } catch (err) {
+        console.error('Failed to fetch string records:', err);
+        res.status(500).json({error: 'Server error'});
+    }
+};
+
+exports.getStringRecordById = async (req, res) => {
+    const resourceId = req.params.id;
+    if (isNullOrEmpty(resourceId)) {
+        res.status(400).json({error: "invalid id"});
+        return;
+    }
+
+    try {
+        const record = await KpiElementRecordString.findById(resourceId).populate('elementId');
+        if (!record) {
+            res.status(404).json({error: "String record not found"});
+            return;
+        }
+        res.json(record);
+    } catch (err) {
+        console.error('Failed to fetch string record:', err);
+        res.status(500).json({error: 'Server error'});
     }
 };

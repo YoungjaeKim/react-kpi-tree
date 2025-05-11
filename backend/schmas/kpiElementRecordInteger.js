@@ -2,28 +2,25 @@ const mongoose = require('mongoose');
 const {Schema} = mongoose;
 
 /**
- * an ElementRecord which contains time-series data of an Element
+ * Record schema for Integer type KPI Element values
  */
-const kpiElementRecordSchema = new Schema({
+const kpiElementRecordIntegerSchema = new Schema({
     elementId: { // parent reference
         type: Schema.Types.ObjectId,
         ref: 'KpiElement',
         required: true
     },
-    recordKey: {
-        type: String,
-        require: true
-    },
     recordValue: {
         type: Number,
-        require: true
+        required: true,
+        default: 0
     },
     timestamp: {
         type: Date,
         default: Date.now
     }
-})
+});
 
-const KpiElementRecord = mongoose.model('KpiElementRecord', kpiElementRecordSchema);
+const KpiElementRecordInteger = mongoose.model('KpiElementRecordInteger', kpiElementRecordIntegerSchema);
 
-module.exports = KpiElementRecord;
+module.exports = KpiElementRecordInteger; 

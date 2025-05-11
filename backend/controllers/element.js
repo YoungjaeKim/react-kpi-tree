@@ -1,22 +1,59 @@
 const KpiElement = require("../schmas/kpiElement");
-const {isNullOrEmpty} = require("../utils");
+const KpiElementRecordInteger = require("../schmas/kpiElementRecordInteger");
+const KpiElementRecordDouble = require("../schmas/kpiElementRecordDouble");
+const KpiElementRecordString = require("../schmas/kpiElementRecordString");
+const { isNullOrEmpty } = require("../utils");
 
-
-exports.createElement = async (req, res) => {
+exports.pushElement = async (req, res) => {
     try {
-        const newKpiElement = new KpiElement(req.body);
-        const savedKpiElement = await newKpiElement.save();
-        res.status(201).json(savedKpiElement);
-
-        // update all nodes that reference this element
-        const nodes = await KpiNode.find({elementId: savedKpiElement._id}).exec();
-        for (const node of nodes) {
-            node.data = savedKpiElement;
-            await node.save();
+        const elementId = req.params.id;
+        if (isNullOrEmpty(elementId)) {
+            res.status(400).json({ error: "invalid elementId" });
+            return;
         }
+
+        // Find the current element
+        const currentElement = await KpiElement.findById(elementId);
+        if (!currentElement) {
+            res.status(404).json({ error: "Element not found" });
+            return;
+        }
+
+        // Create a record of the current value based on type
+        let newRecord;
+        switch (currentElement.kpiValueType) {
+            case 'Integer':
+                newRecord = new KpiElementRecordInteger({
+                    elementId: elementId,
+                    recordValue: parseInt(currentElement.kpiValue) || 0
+                });
+                break;
+            case 'Double':
+                newRecord = new KpiElementRecordDouble({
+                    elementId: elementId,
+                    recordValue: parseFloat(currentElement.kpiValue) || 0.0
+                });
+                break;
+            case 'String':
+                newRecord = new KpiElementRecordString({
+                    elementId: elementId,
+                    recordValue: currentElement.kpiValue || ""
+                });
+                break;
+            default:
+                throw new Error(`Unsupported value type: ${currentElement.kpiValueType}`);
+        }
+        await newRecord.save();
+
+        // Update the element with new values
+        currentElement.kpiValue = req.body.kpiValue;
+        currentElement.kpiValueType = req.body.kpiValueType;
+        const updatedElement = await currentElement.save();
+
+        res.status(200).json(updatedElement);
     } catch (err) {
-        console.error('Failed to save document:', err);
-        res.status(500).send('Failed to save document');
+        console.error('Failed to update element:', err);
+        res.status(500).json({ error: 'Server error at pushElement' });
     }
 };
 
