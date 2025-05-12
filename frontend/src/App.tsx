@@ -11,14 +11,14 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 // convert API Node response scheme to BlockNode
 function toBlockNode(n: any) {
-    const kpiValue = n.elementId?.kpiValue || '';
+    const kpiValue = n.element?.kpiValue || '';
     const blockNode = {
         id: n.id,
         position: { x: n.position.x, y: n.position.y },
         groupId: n.groupId,
         data: { 
             label: `${n.title} (${n.label})${kpiValue ? `\nvalue: ${kpiValue}` : ''}`, 
-            elementId: n.elementId?._id || n.elementId 
+            elementId: n.element?.id 
         },
         hidden: n.hidden ?? false,
         style: {
@@ -284,7 +284,7 @@ function App() {
     };
 
     useEffect(() => {
-        getNodesAndElements(`${API_URL}/graphs?groupId=${groupId}`)
+        getNodesAndElements(`${API_URL}/graphs?groupId=${groupId}&hidden=false`)
             .then((response) => {
                 console.log(`Total nodes: ${response.nodes.length}, Total edges: ${response.edges.length}`);
                 setNodes(response.nodes);

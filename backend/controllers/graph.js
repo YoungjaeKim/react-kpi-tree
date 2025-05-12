@@ -124,6 +124,17 @@ exports.getNodeAndEdge = async (req, res) => {
                 const nodeObject = node.toObject();
                 nodeObject.id = nodeObject._id;
                 delete nodeObject._id;
+                
+                // Rename elementId to element and modify its _id to id
+                if (nodeObject.elementId) {
+                    nodeObject.element = {
+                        ...nodeObject.elementId,
+                        id: nodeObject.elementId._id
+                    };
+                    delete nodeObject.element._id;
+                    delete nodeObject.elementId;
+                }
+                
                 return nodeObject;
             }),
             edges: kpiEdges.map((edge) => {
@@ -180,6 +191,17 @@ exports.getNodes = async (req, res) => {
                 const nodeObject = node.toObject();
                 nodeObject.id = nodeObject._id;
                 delete nodeObject._id;
+                
+                // Rename elementId to element and modify its _id to id
+                if (nodeObject.elementId) {
+                    nodeObject.element = {
+                        ...nodeObject.elementId,
+                        id: nodeObject.elementId._id
+                    };
+                    delete nodeObject.element._id;
+                    delete nodeObject.elementId;
+                }
+                
                 return nodeObject;
             }),
         });
