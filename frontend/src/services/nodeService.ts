@@ -14,14 +14,7 @@ function toBlockNode(n: any) {
             label: `${n.title} (${n.label})${kpiValue ? `\nvalue: ${kpiValue}` : ''}`, 
             elementId: n.element?.id 
         },
-        hidden: n.hidden ?? false,
-        style: {
-            background: '#fff',
-            border: '1px solid #777',
-            borderRadius: 5,
-            padding: 10,
-            color: '#000',
-        }
+        hidden: n.hidden ?? false
     } as BlockNode;
     return blockNode;
 }

@@ -7,13 +7,6 @@ export interface BlockNode extends Node {
         elementId: string;
     };
     hidden: boolean;
-    style?: {
-        background: string;
-        border: string;
-        borderRadius: number;
-        padding: number;
-        color: string;
-    };
 }
 
 export interface BlockEdge {

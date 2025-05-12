@@ -1,4 +1,4 @@
-import {useEffect, useCallback} from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
     MiniMap,
     Controls,
@@ -6,78 +6,50 @@ import {
     useNodesState,
     useEdgesState,
     ReactFlow,
-    addEdge,
     applyNodeChanges,
-    Connection,
-    Edge,
     applyEdgeChanges,
+    Node,
+    Edge,
+    Connection,
+    NodeChange,
+    EdgeChange
 } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
-
-export type BlockEdge = {
-    id: string;
-    source: string;
-    target: string;
-    groupId: string;
-};
-
-export type BlockNodeTransferForCreate = {
-    position: { x: number; y: number };
-    groupId: string;
-    title: string;
-    label: string;
-    elementValue: string;
-    elementValueType: string;
-    elementIsActive: boolean;
-    elementExpression: string;
-    elementId: string;
-};
-
-export type BlockNode = {
-    id: string;
-    position: { x: number; y: number };
-    groupId: string;
-    data: { label: string, elementId: string };
-    hidden: boolean;
-    style?: {
-        background: string;
-        border: string;
-        borderRadius: number;
-        padding: number;
-        color: string;
-    };
-};
+import { BlockNode, BlockEdge } from '../types';
 
 interface BlockCanvasProps {
     edges: BlockEdge[];
     nodes: BlockNode[];
     onConnect?: (connection: Connection) => void;
-    onNodesChange?: (changes: any[]) => void;
-    onEdgesChange?: (changes: any[]) => void;
+    onNodesChange?: (changes: NodeChange[]) => void;
+    onEdgesChange?: (changes: EdgeChange[]) => void;
 }
 
-   
-function BlockCanvas(props: BlockCanvasProps) {
-    const { onNodesChange, onEdgesChange } = props;
-    const [blockNodes, setBlockNodes] = useNodesState(props.nodes);
-    const [blockEdges, setBlockEdges] = useEdgesState(props.edges);
+const BlockCanvas: React.FC<BlockCanvasProps> = ({
+    edges,
+    nodes,
+    onConnect,
+    onNodesChange,
+    onEdgesChange
+}) => {
+    // Add minimal style for text color
+    const nodesWithStyle = nodes.map(node => ({
+        ...node,
+        style: { color: '#000' }
+    }));
+
+    const [blockNodes, setBlockNodes] = useNodesState(nodesWithStyle as Node[]);
+    const [blockEdges, setBlockEdges] = useEdgesState(edges as Edge[]);
 
     useEffect(() => {
-        setBlockNodes(props.nodes);
-        setBlockEdges(props.edges);
-    }, [props.nodes, props.edges, setBlockNodes, setBlockEdges]);
+        setBlockNodes(nodesWithStyle as Node[]);
+        setBlockEdges(edges as Edge[]);
+    }, [nodes, edges, setBlockNodes, setBlockEdges]);
 
-    const onConnect = (params: Connection) => {
-        if (props.onConnect) {
-            props.onConnect(params);
-        }
-    };
-
-    // ref; https://reactflow.dev/learn/concepts/core-concepts#controlled-or-uncontrolled
     const handleNodesChange = useCallback(
-        (changes: any[]) => {
-            setBlockNodes((nds: any[]) => applyNodeChanges(changes, nds));
+        (changes: NodeChange[]) => {
+            setBlockNodes(nds => applyNodeChanges(changes, nds));
             if (onNodesChange) {
                 onNodesChange(changes);
             }
@@ -86,8 +58,8 @@ function BlockCanvas(props: BlockCanvasProps) {
     );
 
     const handleEdgesChange = useCallback(
-        (changes: any[]) => {
-            setBlockEdges((eds) => applyEdgeChanges(changes, eds));
+        (changes: EdgeChange[]) => {
+            setBlockEdges(eds => applyEdgeChanges(changes, eds));
             if (onEdgesChange) {
                 onEdgesChange(changes);
             }
@@ -110,6 +82,6 @@ function BlockCanvas(props: BlockCanvasProps) {
             <Background/>
         </ReactFlow>
     );
-}
+};
 
 export default BlockCanvas;
