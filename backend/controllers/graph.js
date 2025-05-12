@@ -2,7 +2,7 @@ const KpiEdge = require("../schmas/kpiEdge");
 const KpiNode = require("../schmas/kpiNode");
 const KpiGroup = require("../schmas/kpiGroup");
 const KpiElement = require("../schmas/kpiElement");
-const { isNullOrEmpty } = require("../utils");
+const {isNullOrEmpty} = require("../utils");
 
 exports.createGroup = async (req, res) => {
     try {
@@ -44,7 +44,7 @@ exports.upsertNode = async (req, res) => {
             const savedKpiNode = await newKpiNode.save();
             // Populate the elementId before sending response
             const populatedNode = await KpiNode.findById(savedKpiNode._id).populate('elementId');
-            res.status(201).json({ ...populatedNode.toObject(), id: populatedNode._id, _id: undefined }); // change _id to id.
+            res.status(201).json({...populatedNode.toObject(), id: populatedNode._id, _id: undefined}); // change _id to id.
         } catch (err) {
             console.error('Failed to save document:', err);
             res.status(500).send('Failed to save document');
@@ -53,7 +53,7 @@ exports.upsertNode = async (req, res) => {
         try {
             const kpiNode = await KpiNode.findById(req.body.id);
             if (!kpiNode) {
-                res.status(404).json({ error: `Node resource id '${req.body.id}' not found` });
+                res.status(404).json({error: `Node resource id '${req.body.id}' not found`});
                 return;
             }
             kpiNode.position = req.body.position !== undefined ? req.body.position : kpiNode.position;
@@ -67,7 +67,16 @@ exports.upsertNode = async (req, res) => {
             const savedKpiNode = await kpiNode.save();
             // Populate the elementId before sending response
             const populatedNode = await KpiNode.findById(savedKpiNode._id).populate('elementId');
-            res.status(200).json({ ...populatedNode.toObject(), id: populatedNode._id, _id: undefined });
+            res.status(200).json({
+                ...populatedNode.toObject(),
+                id: populatedNode._id,
+                _id: undefined,
+                element: populatedNode.elementId ? {
+                    ...populatedNode.elementId.toObject(),
+                    id: populatedNode.elementId._id,
+                    _id: undefined
+                } : undefined
+            });
         } catch (err) {
             console.error('Failed to update document:', err);
             res.status(500).send('Failed to update document');
@@ -89,7 +98,7 @@ exports.upsertEdge = async (req, res) => {
         // update record and return 200
         const kpiEdge = await KpiEdge.findById(req.body.id);
         if (!kpiEdge) {
-            res.status(404).json({ error: `Edge resource id '${req.body.id}' not found` });
+            res.status(404).json({error: `Edge resource id '${req.body.id}' not found`});
             return;
         }
         kpiEdge.source = req.body.source;
@@ -110,21 +119,21 @@ exports.getNodeAndEdge = async (req, res) => {
     const groupId = req.query.groupId;
 
     if (isNullOrEmpty(groupId)) {
-        res.status(404).json({ error: "groupId is required" });
+        res.status(404).json({error: "groupId is required"});
         return;
     }
 
     try {
         // get KpiNodes by groupId and populate KpiElement by elementId.
-        const kpiNodes = await KpiNode.find({ groupId: groupId }).populate('elementId').exec();
-        const kpiEdges = await KpiEdge.find({ groupId: groupId }).exec();
+        const kpiNodes = await KpiNode.find({groupId: groupId}).populate('elementId').exec();
+        const kpiEdges = await KpiEdge.find({groupId: groupId}).exec();
 
         res.json({
             nodes: kpiNodes.map((node) => {
                 const nodeObject = node.toObject();
                 nodeObject.id = nodeObject._id;
                 delete nodeObject._id;
-                
+
                 // Rename elementId to element and modify its _id to id
                 if (nodeObject.elementId) {
                     nodeObject.element = {
@@ -134,7 +143,7 @@ exports.getNodeAndEdge = async (req, res) => {
                     delete nodeObject.element._id;
                     delete nodeObject.elementId;
                 }
-                
+
                 return nodeObject;
             }),
             edges: kpiEdges.map((edge) => {
@@ -146,21 +155,21 @@ exports.getNodeAndEdge = async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Server error at getNodeAndEdge' });
+        res.status(500).json({error: 'Server error at getNodeAndEdge'});
     }
 };
 
 exports.getNodeById = async (req, res) => {
     const resourceId = req.params.id;
     if (isNullOrEmpty(resourceId))
-        res.status(400).json({ error: "invalid id" });
+        res.status(400).json({error: "invalid id"});
 
     // Find the resource with the matching ID
     const resource = await KpiNode.findById(resourceId).populate('elementId');
 
     if (!resource) {
         // Return a 404 response if the resource is not found
-        res.status(404).json({ error: "Resource not found" });
+        res.status(404).json({error: "Resource not found"});
     } else {
         // Return the resource as the response
         res.json(resource);
@@ -172,13 +181,13 @@ exports.getNodes = async (req, res) => {
     const hidden = req.query.hidden;
 
     if (isNullOrEmpty(groupId)) {
-        res.status(404).json({ error: "groupId is required" });
+        res.status(404).json({error: "groupId is required"});
         return;
     }
 
     try {
         // Build the query object
-        const query = { groupId: groupId };
+        const query = {groupId: groupId};
         if (hidden !== undefined) {
             query.hidden = hidden.toLowerCase() === 'true';
         }
@@ -191,7 +200,7 @@ exports.getNodes = async (req, res) => {
                 const nodeObject = node.toObject();
                 nodeObject.id = nodeObject._id;
                 delete nodeObject._id;
-                
+
                 // Rename elementId to element and modify its _id to id
                 if (nodeObject.elementId) {
                     nodeObject.element = {
@@ -201,34 +210,34 @@ exports.getNodes = async (req, res) => {
                     delete nodeObject.element._id;
                     delete nodeObject.elementId;
                 }
-                
+
                 return nodeObject;
             }),
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Server error at getNodes' });
+        res.status(500).json({error: 'Server error at getNodes'});
     }
 };
 
 exports.deleteEdge = async (req, res) => {
     const edgeId = req.params.id;
-    
+
     if (isNullOrEmpty(edgeId)) {
-        res.status(400).json({ error: "invalid id" });
+        res.status(400).json({error: "invalid id"});
         return;
     }
 
     try {
         const deletedEdge = await KpiEdge.findByIdAndDelete(edgeId);
         if (!deletedEdge) {
-            res.status(404).json({ error: "Edge not found" });
+            res.status(404).json({error: "Edge not found"});
             return;
         }
-        res.status(200).json({ message: "Edge deleted successfully" });
+        res.status(200).json({message: "Edge deleted successfully"});
     } catch (err) {
         console.error('Failed to delete edge:', err);
-        res.status(500).json({ error: 'Server error at deleteEdge' });
+        res.status(500).json({error: 'Server error at deleteEdge'});
     }
 };
 

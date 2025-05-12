@@ -1,308 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
-import BlockCanvas, { BlockEdge, BlockNode, BlockNodeTransferForCreate } from "./components/BlockCanvas";
-import axios from 'axios';
-import { useEffect } from "react";
-import { useState } from "react";
-import { addEdge as addReactFlowEdge, Connection, Node } from '@xyflow/react';
+import BlockCanvas from "./components/BlockCanvas";
+import { NodeForm } from './components/NodeForm';
+import { NodesShowHidePanel } from './components/NodesShowHidePanel';
+import { useNodeManagement } from './hooks/useNodeManagement';
 
-let blockCanvasSize = { width: 800, height: 600 }
-const API_URL = process.env.REACT_APP_API_URL;
-
-// convert API Node response scheme to BlockNode
-function toBlockNode(n: any) {
-    const kpiValue = n.element?.kpiValue || '';
-    const blockNode = {
-        id: n.id,
-        position: { x: n.position.x, y: n.position.y },
-        groupId: n.groupId,
-        data: { 
-            label: `${n.title} (${n.label})${kpiValue ? `\nvalue: ${kpiValue}` : ''}`, 
-            elementId: n.element?.id 
-        },
-        hidden: n.hidden ?? false,
-        style: {
-            background: '#fff',
-            border: '1px solid #777',
-            borderRadius: 5,
-            padding: 10,
-            color: '#000',
-        }
-    } as BlockNode;
-    return blockNode;
-}
-
-// download Nodes and Elements from backend
-async function getNodesAndElements(url: string) {
-    console.log("getNodesAndElements() is called");
-    // assign an array of type KpiNode
-    let nodes: BlockNode[] = [];
-    let edges: BlockEdge[] = [];
-    await axios.get(url)
-        .then((response) => {
-            nodes = response.data["nodes"].map((node: any) => {
-                return toBlockNode(node);
-            });
-
-            edges = response.data["edges"];
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-    return { nodes: nodes, edges: edges };
-}
-
-async function addNode(node: BlockNodeTransferForCreate) {
-    console.log("addNode() is called");
-    try {
-        const response = await axios.post(`${API_URL}/graphs/node`, node);
-        return response.data as BlockNode;
-    } catch (error) {
-        console.log(error);
-        throw error; // Re-throw the error to handle it in the calling function
-    }
-}
-
-async function addElement(element: BlockNodeTransferForCreate) {
-    console.log("addElement() is called");
-    await axios.post(`${API_URL}/graphs/element`, element)
-        .then((response) => {
-            return response.data as BlockNode;
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-}
-
-async function addEdge(edge: BlockEdge) {
-    console.log("addEdge() is called");
-    try {
-        const response = await axios.post(`${API_URL}/graphs/edge`, edge);
-        return response.data as BlockEdge;
-    } catch (error) {
-        console.log(error);
-        throw error;
-    }
-}
-
-async function updateNode(id: string, updates: { position?: { x: number, y: number }, hidden?: boolean }, setNodes?: React.Dispatch<React.SetStateAction<BlockNode[]>>) {
-    console.log("updateNode() is called");
-    try {
-        const response = await axios.post(`${API_URL}/graphs/node`, {
-            id,
-            ...updates
-        });
-        if ((response.status === 200 || response.status === 201) && setNodes) {
-            // Update the specific node in the nodes state
-            setNodes(prevNodes => 
-                prevNodes.map(node => 
-                    node.id === id ? toBlockNode(response.data) : node
-                )
-            );
-        }
-        return response.data;
-    } catch (error) {
-        console.error('Failed to update node:', error);
-        throw error;
-    }
-}
+const blockCanvasSize = { width: 800, height: 600 };
 
 function App() {
-    console.log("App() is called");
-    let initialNodes: BlockNode[] = [];
-    let initialEdges: BlockEdge[] = [];
-
-    const [nodes, setNodes] = useState<BlockNode[]>(initialNodes);
-    const [edges, setEdges] = useState<BlockEdge[]>(initialEdges);
-    const [title, setTitle] = useState<string>("");
-    const [label, setLabel] = useState<string>("");
-    const [elementValueType, setElementValueType] = useState<string>("Integer");
-    const [elementValue, setElementValue] = useState<string>("0");
-    const [elementValueError, setElementValueError] = useState<string>("");
     const [groupId, setGroupId] = useState<string>("507f1f77bcf86cd799439011");
-    const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-    const [hiddenNodes, setHiddenNodes] = useState<BlockNode[]>([]);
-    const [selectedHiddenNode, setSelectedHiddenNode] = useState<string>("");
-
-    // Function to handle element value type change
-    const handleElementValueTypeChange = (type: string) => {
-        setElementValueType(type);
-        // Set default value based on type
-        switch (type) {
-            case "Integer":
-                setElementValue("0");
-                break;
-            case "Double":
-                setElementValue("0.0");
-                break;
-            case "String":
-                setElementValue("");
-                break;
-        }
-        setElementValueError(""); // Clear error when type changes
-    };
-
-    // Function to validate element value based on type
-    const validateElementValue = (value: string, type: string): boolean => {
-        let isValid = false;
-        switch (type) {
-            case "Integer":
-                isValid = /^-?\d+$/.test(value);
-                if (!isValid) {
-                    setElementValueError("Invalid Integer value");
-                } else {
-                    // Ensure integer value is properly formatted
-                    setElementValue(value.trim());
-                }
-                break;
-            case "Double":
-                isValid = /^-?\d*\.?\d+$/.test(value);
-                if (!isValid) {
-                    setElementValueError("Invalid Double value");
-                } else {
-                    // Ensure double value is properly formatted
-                    setElementValue(value.trim());
-                }
-                break;
-            case "String":
-                isValid = true; // Any string is valid
-                setElementValueError("");
-                setElementValue(value);
-                break;
-            default:
-                isValid = false;
-                setElementValueError("Invalid value type");
-        }
-        return isValid;
-    };
-
-    // Function to make a hidden node visible
-    const makeNodeVisible = async () => {
-        if (!selectedHiddenNode) return;
-        
-        try {
-            const response = await updateNode(selectedHiddenNode, { hidden: false }, setNodes);
-            
-            if (response) {
-                // Clear the selection
-                setSelectedHiddenNode("");
-                // Refresh the hidden nodes list
-                fetchHiddenNodes();
-            }
-        } catch (error) {
-            console.error('Failed to make node visible:', error);
-        }
-    };
-
-    // Function to fetch hidden nodes
-    const fetchHiddenNodes = async () => {
-        try {
-            const response = await axios.get(`${API_URL}/graphs/node?groupId=${groupId}&hidden=true`);
-            setHiddenNodes(response.data.nodes.map((node: any) => toBlockNode(node)));
-        } catch (error) {
-            console.error('Failed to fetch hidden nodes:', error);
-        }
-    };
-
-    // Fetch hidden nodes when groupId changes
-    useEffect(() => {
-        fetchHiddenNodes();
-    }, [groupId]);
-
-    // Handle node selection changes
-    const handleNodesChange = (changes: any[]) => {
-        changes.forEach((change) => {
-            // Handle position changes
-            if (change.type === 'select') {
-                const node = nodes.find(n => n.id === change.id);
-                setSelectedNode(change.selected ? node || null : null);
-            }
-            if (change.type === 'position' && change.dragging === false) {
-                const node = nodes.find(n => n.id === change.id);
-                if (node) {
-                    updateNode(node.id, { position: change.position }, setNodes)
-                        .catch((error) => {
-                            console.error('Failed to update node position:', error);
-                        });
-                }
-            }
-            if (change.type === 'remove') {
-                const node = nodes.find(n => n.id === change.id);
-                if (node) {
-                    updateNode(node.id, { hidden: true }, setNodes)
-                        .then((response) => {
-                            if (response) {
-                                // Update local state to remove the node
-                                setSelectedNode(null);
-                                fetchHiddenNodes();
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Failed to hide node:', error);
-                        });
-                }
-            }
-        });
-    };
-
-    const handleConnect = async (connection: Connection) => {
-        console.log('Connecting:', connection);
-        const newEdge = {
-            source: connection.source,
-            target: connection.target,
-            groupId: groupId
-        };
-
-        try {
-            // Save to backend first
-            const response = await axios.post(`${API_URL}/graphs/edge`, newEdge);
-            if (response.status === 200 || response.status === 201) {
-                // Only add the edge to ReactFlow's state if the API call was successful
-                setEdges((eds) => addReactFlowEdge(connection, eds));
-            } else {
-                console.error('Failed to add edge: Unexpected status code', response.status);
-            }
-        } catch (error) {
-            console.error('Failed to add edge:', error);
-        }
-    };
-
-    const handleEdgesChange = async (changes: any[]) => {
-        changes.forEach(async (change) => {
-            if (change.type === 'remove') {
-                try {
-                    const response = await axios.delete(`${API_URL}/graphs/edge/${change.id}`);
-                    if (response.status === 200) {
-                        // Edge was successfully deleted from backend
-                        setEdges((eds) => eds.filter((e) => e.id !== change.id));
-                    }
-                } catch (error) {
-                    console.error('Failed to delete edge:', error);
-                }
-            }
-        });
-    };
-
-    useEffect(() => {
-        getNodesAndElements(`${API_URL}/graphs?groupId=${groupId}&hidden=false`)
-            .then((response) => {
-                console.log(`Total nodes: ${response.nodes.length}, Total edges: ${response.edges.length}`);
-                setNodes(response.nodes);
-                setEdges(response.edges);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
-    }, [groupId]);
+    const {
+        nodes,
+        edges,
+        hiddenNodes,
+        selectedHiddenNode,
+        setSelectedHiddenNode,
+        handleNodesChange,
+        handleConnect,
+        handleEdgesChange,
+        fetchHiddenNodes,
+        makeNodeVisible
+    } = useNodeManagement(groupId);
 
     return (
         <div className="App">
             <header className="App-header">
-                <p>
-                    React KPI Tree
-                </p>
+                <p>React KPI Tree</p>
                 <p>Group ID</p>
-                <input type="text" placeholder="Title" value={groupId} onChange={(e) => setGroupId(e.target.value)} />
+                <input 
+                    type="text" 
+                    placeholder="Title" 
+                    value={groupId} 
+                    onChange={(e) => setGroupId(e.target.value)} 
+                />
 
                 <div style={blockCanvasSize}>
                     <BlockCanvas
@@ -311,94 +41,21 @@ function App() {
                         onConnect={handleConnect}
                         onNodesChange={handleNodesChange}
                         onEdgesChange={handleEdgesChange}
-                    ></BlockCanvas>
+                    />
                 </div>
-                <div>
-                    <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                    <input type="text" placeholder="Label" value={label} onChange={(e) => setLabel(e.target.value)} />
-                    <select 
-                        value={elementValueType} 
-                        onChange={(e) => handleElementValueTypeChange(e.target.value)}
-                        aria-label="Select element value type"
-                    >
-                        <option value="Integer">Integer</option>
-                        <option value="Double">Double</option>
-                        <option value="String">String</option>
-                    </select>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <input 
-                            type="text" 
-                            placeholder="Element Value" 
-                            value={elementValue} 
-                            onChange={(e) => {
-                                if (validateElementValue(e.target.value, elementValueType)) {
-                                    setElementValue(e.target.value);
-                                    setElementValueError("");
-                                } else {
-                                    setElementValue(e.target.value);
-                                }
-                            }}
-                            style={{ borderColor: elementValueError ? 'red' : undefined }}
-                        />
-                        {elementValueError && (
-                            <span style={{ color: 'red', fontSize: '0.8em', marginTop: '4px' }}>
-                                {elementValueError}
-                            </span>
-                        )}
-                    </div>
-                    <button onClick={() => {
-                        // Validate the current value before creating the node
-                        if (!validateElementValue(elementValue, elementValueType)) {
-                            return; // Don't proceed if validation fails
-                        }
-                        // create new Element, and then add it to the nodes
-                        let newNode = {
-                            position: { x: 100, y: 100 },
-                            groupId: groupId,
-                            title: title,
-                            label: label || title,
-                            elementValue: elementValue.trim(),
-                            elementValueType: elementValueType,
-                            elementIsActive: true,
-                            elementExpression: "",
-                            elementId: ""
-                        };
-                        addNode(newNode).then((node) => {
-                            const blockNode = toBlockNode(node);
-                            if (!blockNode.id) {
-                                console.error("Node ID is missing. Ensure the backend returns a valid ID.");
-                                return;
-                            }
-                            setNodes([...nodes, blockNode]);
-                            // Reset form
-                            setTitle("");
-                            setLabel("");
-                            setElementValueType("Integer");
-                            setElementValue("0");
-                        });
-                    }}>Add Node</button>
-                </div>
-                <div>
-                    <select 
-                        value={selectedHiddenNode} 
-                        onChange={(e) => setSelectedHiddenNode(e.target.value)}
-                        aria-label="Select hidden node"
-                    >
-                        <option value="">Select Hidden Node</option>
-                        {hiddenNodes.map((node) => (
-                            <option key={node.id} value={node.id}>
-                                {node.data.label}
-                            </option>
-                        ))}
-                    </select>
-                    <button onClick={fetchHiddenNodes}>Refresh</button>
-                    <button 
-                        onClick={makeNodeVisible}
-                        disabled={!selectedHiddenNode}
-                    >
-                        Add
-                    </button>
-                </div>
+
+                <NodeForm 
+                    groupId={groupId}
+                    onNodeAdded={fetchHiddenNodes}
+                />
+
+                <NodesShowHidePanel
+                    hiddenNodes={hiddenNodes}
+                    selectedHiddenNode={selectedHiddenNode}
+                    onSelectedHiddenNodeChange={setSelectedHiddenNode}
+                    onRefresh={fetchHiddenNodes}
+                    onMakeVisible={makeNodeVisible}
+                />
             </header>
         </div>
     );

@@ -1,0 +1,98 @@
+import axios from 'axios';
+import { BlockNode, BlockEdge, BlockNodeTransferForCreate } from '../types';
+
+const API_URL = process.env.REACT_APP_API_URL;
+
+// convert API Node response scheme to BlockNode
+function toBlockNode(n: any) {
+    const kpiValue = n.element?.kpiValue || '';
+    const blockNode = {
+        id: n.id,
+        position: { x: n.position.x, y: n.position.y },
+        groupId: n.groupId,
+        data: { 
+            label: `${n.title} (${n.label})${kpiValue ? `\nvalue: ${kpiValue}` : ''}`, 
+            elementId: n.element?.id 
+        },
+        hidden: n.hidden ?? false,
+        style: {
+            background: '#fff',
+            border: '1px solid #777',
+            borderRadius: 5,
+            padding: 10,
+            color: '#000',
+        }
+    } as BlockNode;
+    return blockNode;
+}
+
+export async function getNodesAndElements(url: string) {
+    console.log("getNodesAndElements() is called");
+    let nodes: BlockNode[] = [];
+    let edges: BlockEdge[] = [];
+    await axios.get(url)
+        .then((response) => {
+            nodes = response.data["nodes"].map((node: any) => {
+                return toBlockNode(node);
+            });
+            edges = response.data["edges"];
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+    return { nodes: nodes, edges: edges };
+}
+
+export async function addNode(node: BlockNodeTransferForCreate) {
+    console.log("addNode() is called");
+    try {
+        const response = await axios.post(`${API_URL}/graphs/node`, node);
+        return response.data as BlockNode;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
+export async function addElement(element: BlockNodeTransferForCreate) {
+    console.log("addElement() is called");
+    await axios.post(`${API_URL}/graphs/element`, element)
+        .then((response) => {
+            return response.data as BlockNode;
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+}
+
+export async function addEdge(edge: BlockEdge) {
+    console.log("addEdge() is called");
+    try {
+        const response = await axios.post(`${API_URL}/graphs/edge`, edge);
+        return response.data as BlockEdge;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
+export async function updateNode(id: string, updates: { position?: { x: number, y: number }, hidden?: boolean }, setNodes?: React.Dispatch<React.SetStateAction<BlockNode[]>>) {
+    console.log("updateNode() is called");
+    try {
+        const response = await axios.post(`${API_URL}/graphs/node`, {
+            id,
+            ...updates
+        });
+        if ((response.status === 200 || response.status === 201) && setNodes) {
+            setNodes(prevNodes => 
+                prevNodes.map(node => 
+                    node.id === id ? toBlockNode(response.data) : node
+                )
+            );
+        }
+        return response.data;
+    } catch (error) {
+        console.error('Failed to update node:', error);
+        throw error;
+    }
+} 

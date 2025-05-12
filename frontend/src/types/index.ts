@@ -1,0 +1,49 @@
+import { Node } from '@xyflow/react';
+
+export interface BlockNode extends Node {
+    groupId: string;
+    data: {
+        label: string;
+        elementId: string;
+    };
+    hidden: boolean;
+    style?: {
+        background: string;
+        border: string;
+        borderRadius: number;
+        padding: number;
+        color: string;
+    };
+}
+
+export interface BlockEdge {
+    id: string;
+    source: string;
+    target: string;
+    groupId: string;
+}
+
+export interface BlockNodeTransferForCreate {
+    position: { x: number; y: number };
+    groupId: string;
+    title: string;
+    label: string;
+    elementValue: string;
+    elementValueType: string;
+    elementIsActive: boolean;
+    elementExpression: string;
+    elementId: string;
+}
+
+export interface NodeFormData {
+    title: string;
+    label: string;
+    elementValueType: string;
+    elementValue: string;
+}
+
+export interface NodeManagementState {
+    nodes: BlockNode[];
+    edges: BlockEdge[];
+    selectedNode: Node | null;
+} 
