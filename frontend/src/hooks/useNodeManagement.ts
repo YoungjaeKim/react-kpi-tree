@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Node } from '@xyflow/react';
 import { BlockNode, BlockEdge } from '../types';
 import { getNodesAndElements, updateNode, addEdge } from '../services/nodeService';
+import { toBlockNode } from '../utils/nodeUtils';
 
 export const useNodeManagement = (groupId: string) => {
     const [nodes, setNodes] = useState<BlockNode[]>([]);
@@ -93,7 +94,8 @@ export const useNodeManagement = (groupId: string) => {
         try {
             const response = await fetch(`${process.env.REACT_APP_API_URL}/graphs/node?groupId=${groupId}&hidden=true`);
             const data = await response.json();
-            setHiddenNodes(data.nodes);
+            const blockNodes = data.nodes.map((node: any) => toBlockNode(node));
+            setHiddenNodes(blockNodes);
         } catch (error) {
             console.error('Failed to fetch hidden nodes:', error);
         }

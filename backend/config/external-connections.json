@@ -1,0 +1,32 @@
+{
+    "connections": [
+      {
+        "name": "ElasticSearch Example",
+        "elementId": "682033882dc6d8422bde498f",
+        "type": "OpenSearch",
+        "parameters": {
+          "query": {
+            "match": {
+              "description": "delivery"
+            }
+          }
+        },
+        "url": "http://localhost:9200",
+        "username": "",
+        "authToken": "",
+        "pollingPeriodSeconds": 20
+      },
+      {
+        "name": "JsonExample",
+        "elementId": "682033882dc6d8422bde498f",
+        "type": "Json",
+        "parameters": {
+          "jsonPath": "$.products[0].name"
+        },
+        "url": "http://example.com/api/products",
+        "username": "",
+        "authToken": "",
+        "pollingPeriodSeconds": 60
+      }
+    ]
+  } 

@@ -1,12 +1,15 @@
 {
   "name": "react-kpi-tree-backend",
   "version": "1.0.0",
-  "description": "This package is for putting data for react-kpi-tree",
-  "main": "app.js",
+  "description": "Backend for KPI Tree application",
+  "main": "dist/server.js",
   "scripts": {
-    "seed": "node tests/seed.js",
-    "test": "npx mocha tests/*.test.js",
-    "start": "node --no-deprecation app.js"
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc && npm run copy-config",
+    "copy-config": "copyfiles config/**/* dist",
+    "test": "mocha -r ts-node/register tests/**/*.test.ts",
+    "seed": "ts-node tests/seed.ts"
   },
   "keywords": [
     "node",
@@ -16,14 +19,31 @@
   "author": "Youngjae",
   "license": "ISC",
   "dependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/jsonpath": "^0.2.4",
+    "axios": "^1.9.0",
     "chai": "^4.3.8",
     "chai-http": "^4.3.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.6",
     "express": "^4.18.2",
+    "jsonpath": "^1.1.1",
     "mocha": "^10.2.2",
-    "mongoose": "^7.5.0",
+    "mongoose": "^7.0.3",
     "mysql": "^2.18.1",
     "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.11",
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/mocha": "^10.0.6",
+    "@types/mongoose": "^5.11.97",
+    "@types/node": "^18.15.11",
+    "@types/uuid": "^9.0.8",
+    "copyfiles": "^2.4.1",
+    "nodemon": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.3"
   }
 }

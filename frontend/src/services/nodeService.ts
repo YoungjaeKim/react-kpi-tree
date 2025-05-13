@@ -1,23 +1,8 @@
 import axios from 'axios';
 import { BlockNode, BlockEdge, BlockNodeTransferForCreate } from '../types';
+import { toBlockNode } from '../utils/nodeUtils';
 
 const API_URL = process.env.REACT_APP_API_URL;
-
-// convert API Node response scheme to BlockNode
-function toBlockNode(n: any) {
-    const kpiValue = n.element?.kpiValue || '';
-    const blockNode = {
-        id: n.id,
-        position: { x: n.position.x, y: n.position.y },
-        groupId: n.groupId,
-        data: { 
-            label: `${n.title} (${n.label})${kpiValue ? `\nvalue: ${kpiValue}` : ''}`, 
-            elementId: n.element?.id 
-        },
-        hidden: n.hidden ?? false
-    } as BlockNode;
-    return blockNode;
-}
 
 export async function getNodesAndElements(url: string) {
     console.log("getNodesAndElements() is called");
@@ -25,9 +10,7 @@ export async function getNodesAndElements(url: string) {
     let edges: BlockEdge[] = [];
     await axios.get(url)
         .then((response) => {
-            nodes = response.data["nodes"].map((node: any) => {
-                return toBlockNode(node);
-            });
+            nodes = response.data["nodes"].map((node: any) => toBlockNode(node));
             edges = response.data["edges"];
         })
         .catch((error) => {

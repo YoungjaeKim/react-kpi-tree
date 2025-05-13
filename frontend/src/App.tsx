@@ -26,7 +26,7 @@ function App() {
         <div className="App">
             <header className="App-header">
                 <p>React KPI Tree</p>
-                <p>Group ID</p>
+                Group ID
                 <input 
                     type="text" 
                     placeholder="Title" 

@@ -1,11 +1,19 @@
-const mongoose = require('mongoose');
-const {Schema} = require("mongoose");
+import mongoose, { Document, Schema } from 'mongoose';
 
-/**
- * a visual tree structure data to represent each node(dot or leaf).
- * Data layer is defined in kpiElement.js
- */
-const kpiNodeSchema = new mongoose.Schema({
+export interface IKpiNode extends Document {
+    position: {
+        x: number;
+        y: number;
+    };
+    groupId: mongoose.Types.ObjectId;
+    title?: string;
+    description?: string;
+    label?: string;
+    elementId: mongoose.Types.ObjectId;
+    hidden: boolean;
+}
+
+const kpiNodeSchema = new Schema<IKpiNode>({
     position: {
         x: {
             type: Number,
@@ -16,10 +24,10 @@ const kpiNodeSchema = new mongoose.Schema({
             required: true
         }
     },
-    groupId: { // same value as kpiEdge.groupId in order to group nodes and edges
+    groupId: {
         type: Schema.Types.ObjectId,
         required: true,
-        index: true,
+        index: true
     },
     title: {
         type: String,
@@ -27,11 +35,11 @@ const kpiNodeSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        require: false
+        required: false
     },
-    label:{
+    label: {
         type: String,
-        require: false
+        required: false
     },
     elementId: {
         type: Schema.Types.ObjectId,
@@ -45,6 +53,4 @@ const kpiNodeSchema = new mongoose.Schema({
     }
 });
 
-const KpiNode = mongoose.model('KpiNode', kpiNodeSchema);
-
-module.exports = KpiNode;
+export default mongoose.model<IKpiNode>('KpiNode', kpiNodeSchema); 

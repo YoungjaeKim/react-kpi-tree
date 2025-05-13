@@ -5,13 +5,20 @@ This project is just my teatime coding to train Javascript realm (React.js, Type
 The `kpi-tree` is widely used KPI(Key Performance Index) management dashboard in order to track required business achievements.
 
 ## Dependencies
+- React.js
 - https://github.com/wbkd/react-flow
+- Node.js + MongoDB
 
 ## How to Config
-1. Go to `/backend` and Copy `.env.example` file to `.env`.
-2. Change the following environment variables if you want.
-
+1. Frontend (/frontend) - React.js
+   - Go to [/frontend](/frontend) and Copy `.env.example` file to `.env`.
+```dotenv
+REACT_APP_API_URL=http://localhost:8080
 ```
+
+2. Backend (/backend) - express.js
+   - Go to [/backend](/backend) and Copy `.env.example` file to `.env`.
+```dotenv
 PORT=8080
 MONGODB_DEV=mongodb://localhost:27017/dev
 MONGODB_PRODUCTION=mongodb://localhost:27017/production
