@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import { ExternalConnectionConfig, ExternalConnectionsConfig } from '../types/external-connection';
 import { ExternalConnectionAdapter } from '../adapters/external-connection-adapter';
 import { OpenSearchAdapter } from '../adapters/opensearch-adapter';
@@ -8,32 +6,44 @@ import { JsonAdapter } from '../adapters/json-adapter';
 export class ExternalConnectionService {
     private connections: Map<string, NodeJS.Timeout> = new Map();
     private adapters: Map<string, ExternalConnectionAdapter> = new Map();
+    private config?: ExternalConnectionsConfig;
 
-    constructor() {
+    constructor(config?: ExternalConnectionsConfig) {
+        this.config = config;
+        
         // Register adapters
         this.adapters.set('OpenSearch', new OpenSearchAdapter());
         this.adapters.set('Json', new JsonAdapter());
     }
 
     public async start(): Promise<void> {
-        const config = this.loadConfig();
-        
-        for (const connection of config.connections) {
-            await this.startConnection(connection);
+        try {
+            if (!this.config) {
+                console.log('No external connections configuration provided. Service will not start.');
+                return;
+            }
+
+            console.log(`Starting external connection service with ${this.config.connections.length} connection(s)`);
+            
+            for (const connection of this.config.connections) {
+                await this.startConnection(connection);
+            }
+        } catch (error) {
+            console.error('Failed to start external connection service:', error);
+            // Don't throw - let the app continue without external connections
         }
     }
 
     public stop(): void {
+        if (this.connections.size === 0) {
+            return;
+        }
+
+        console.log(`Stopping ${this.connections.size} external connection(s)`);
         for (const [name, interval] of this.connections.entries()) {
             clearInterval(interval);
             this.connections.delete(name);
         }
-    }
-
-    private loadConfig(): ExternalConnectionsConfig {
-        const configPath = path.join(__dirname, '../config/external-connections.json');
-        const configContent = fs.readFileSync(configPath, 'utf-8');
-        return JSON.parse(configContent);
     }
 
     private async startConnection(config: ExternalConnectionConfig): Promise<void> {
