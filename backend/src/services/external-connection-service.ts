@@ -37,6 +37,12 @@ export class ExternalConnectionService {
     }
 
     private async startConnection(config: ExternalConnectionConfig): Promise<void> {
+        // Skip if connection is disabled
+        if (!config.enable) {
+            console.log(`Connection '${config.name}' is disabled, skipping...`);
+            return;
+        }
+
         const adapter = this.adapters.get(config.type);
         if (!adapter) {
             console.error(`No adapter found for type: ${config.type}`);

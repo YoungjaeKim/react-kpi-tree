@@ -14,7 +14,8 @@
         "url": "http://localhost:9200",
         "username": "",
         "authToken": "",
-        "pollingPeriodSeconds": 20
+        "pollingPeriodSeconds": 20,
+        "enable": true
       },
       {
         "name": "JsonExample",
@@ -26,7 +27,8 @@
         "url": "http://example.com/api/products",
         "username": "",
         "authToken": "",
-        "pollingPeriodSeconds": 60
+        "pollingPeriodSeconds": 60,
+        "enable": true
       }
     ]
   } 

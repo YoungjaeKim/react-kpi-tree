@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Node } from '@xyflow/react';
-import { BlockNode, BlockEdge } from '../types';
-import { getNodesAndElements, updateNode, addEdge } from '../services/nodeService';
-import { toBlockNode } from '../utils/nodeUtils';
+import {useState, useEffect} from 'react';
+import {Node} from '@xyflow/react';
+import {BlockNode, BlockEdge} from '../types';
+import {getNodesAndElements, updateNode, addEdge} from '../services/nodeService';
+import {toBlockNode} from '../utils/nodeUtils';
 
 export const useNodeManagement = (groupId: string) => {
     const [nodes, setNodes] = useState<BlockNode[]>([]);
@@ -32,7 +32,7 @@ export const useNodeManagement = (groupId: string) => {
             if (change.type === 'position' && change.dragging === false) {
                 const node = nodes.find(n => n.id === change.id);
                 if (node) {
-                    updateNode(node.id, { position: change.position }, setNodes)
+                    updateNode(node.id, {position: change.position}, setNodes)
                         .catch((error) => {
                             console.error('Failed to update node position:', error);
                         });
@@ -41,7 +41,7 @@ export const useNodeManagement = (groupId: string) => {
             if (change.type === 'remove') {
                 const node = nodes.find(n => n.id === change.id);
                 if (node) {
-                    updateNode(node.id, { hidden: true }, setNodes)
+                    updateNode(node.id, {hidden: true}, setNodes)
                         .then(() => {
                             setSelectedNode(null);
                             fetchHiddenNodes();
@@ -74,7 +74,7 @@ export const useNodeManagement = (groupId: string) => {
     };
 
     const handleEdgesChange = async (changes: any[]) => {
-        changes.forEach(async (change) => {
+        for (const change of changes) {
             if (change.type === 'remove') {
                 try {
                     const response = await fetch(`${process.env.REACT_APP_API_URL}/graphs/edge/${change.id}`, {
@@ -87,7 +87,7 @@ export const useNodeManagement = (groupId: string) => {
                     console.error('Failed to delete edge:', error);
                 }
             }
-        });
+        }
     };
 
     const fetchHiddenNodes = async () => {
@@ -103,9 +103,9 @@ export const useNodeManagement = (groupId: string) => {
 
     const makeNodeVisible = async () => {
         if (!selectedHiddenNode) return;
-        
+
         try {
-            const response = await updateNode(selectedHiddenNode, { hidden: false }, setNodes);
+            const response = await updateNode(selectedHiddenNode, {hidden: false}, setNodes);
             if (response) {
                 setSelectedHiddenNode("");
                 fetchHiddenNodes();

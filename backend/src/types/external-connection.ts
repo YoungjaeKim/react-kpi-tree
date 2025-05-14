@@ -7,6 +7,7 @@ export interface ExternalConnectionConfig {
     username: string;
     authToken: string;
     pollingPeriodSeconds: number;
+    enable: boolean;
 }
 
 export interface ExternalConnectionsConfig {
