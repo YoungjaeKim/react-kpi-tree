@@ -25,7 +25,9 @@ const kpiElementSchema = new Schema<IKpiElement>({
         default: true
     },
     expression: {
-        type: String
+        type: String,
+        required: false,
+        default: ""
     },
     lastUpdatedDateTime: {
         type: Date,
