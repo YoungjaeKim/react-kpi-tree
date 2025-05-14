@@ -1,26 +1,11 @@
 import dotenv from 'dotenv';
 import app from './app';
 import { connect, disconnect } from './db';
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import elementRoutes from './routes/element';
-import elementRecordRoutes from './routes/element-records';
-import graphRoutes from './routes/graph';
 
 // Load environment variables
 dotenv.config();
 
 const PORT = process.env.PORT || 8080;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Routes
-app.use('/elements', elementRoutes);
-app.use('/element-records', elementRecordRoutes);
-app.use('/graphs', graphRoutes);
 
 // MongoDB connection and server startup
 const startServer = async () => {

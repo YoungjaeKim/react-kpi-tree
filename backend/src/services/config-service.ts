@@ -24,7 +24,7 @@ export class ConfigurationService {
 
             const configContent = fs.readFileSync(configPath, 'utf-8');
             this.externalConnections = JSON.parse(configContent);
-            console.error(`External connections config loaded at ${configPath}`);
+            console.log(`External connections config loaded at ${configPath}`);
             return this.externalConnections;
         } catch (error) {
             console.error('Failed to load external connections config:', error);

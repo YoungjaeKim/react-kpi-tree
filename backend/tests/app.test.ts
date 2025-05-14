@@ -7,9 +7,9 @@ describe('API Endpoints', () => {
             const response = await request(app)
                 .get('/')
                 .expect(200);
-            
+            console.log(response.body);
             expect(response.body).toHaveProperty('currentTime');
             expect(new Date(response.body.currentTime)).toBeInstanceOf(Date);
         });
     });
-}); 
+});
