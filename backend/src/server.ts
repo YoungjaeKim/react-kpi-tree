@@ -6,12 +6,13 @@ import { connect, disconnect } from './db';
 dotenv.config();
 
 const PORT = process.env.PORT || 8080;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/dev';
 
 // MongoDB connection and server startup
 const startServer = async () => {
     try {
         // Connect to MongoDB
-        await connect();
+        await connect(MONGODB_URI);
         console.log('Connected to MongoDB');
 
         // Start the server

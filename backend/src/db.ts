@@ -3,12 +3,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/dev';
-
-export const connect = async (): Promise<void> => {
+export const connect = async (uri: string): Promise<void> => {
     try {
-        await mongoose.connect(MONGODB_URI);
-        console.log('Connected to MongoDB');
+        await mongoose.connect(uri);
+        console.log(`Connected to MongoDB at ${uri}`);
     } catch (error) {
         console.error('MongoDB connection error:', error);
         process.exit(1);
