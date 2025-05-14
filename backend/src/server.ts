@@ -13,7 +13,6 @@ const startServer = async () => {
     try {
         // Connect to MongoDB
         await connect(MONGODB_URI);
-        console.log('Connected to MongoDB');
 
         // Start the server
         const server = app.listen(PORT, () => {
