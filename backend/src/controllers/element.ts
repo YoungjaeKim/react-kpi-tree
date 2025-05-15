@@ -1,8 +1,5 @@
 import { Request, Response } from '../types/express';
 import KpiElement from '../schemas/kpiElement';
-import KpiElementRecordInteger from '../schemas/kpiElementRecordInteger';
-import KpiElementRecordDouble from '../schemas/kpiElementRecordDouble';
-import KpiElementRecordString from '../schemas/kpiElementRecordString';
 import { isNullOrEmpty } from '../utils';
 import { ElementService } from '../services/element-service';
 
@@ -85,24 +82,3 @@ export const getElementById = async (req: Request, res: Response): Promise<void>
         res.status(500).json({ error: 'Server error' });
     }
 };
-
-export const createElement = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { title, label, kpiValue, kpiValueType, isActive, expression } = req.body;
-        
-        const element = new KpiElement({
-            title,
-            label,
-            kpiValue,
-            kpiValueType,
-            isActive,
-            expression
-        });
-
-        await element.save();
-        res.status(201).json(element);
-    } catch (error) {
-        console.error('Error creating element:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-}; 
