@@ -9,7 +9,7 @@ The `kpi-tree` is widely used KPI(Key Performance Index) management dashboard in
 - https://github.com/wbkd/react-flow
 - Node.js + MongoDB
 
-## How to Config
+## How to Build and Config
 1. Frontend (/frontend) - React.js
    - Go to [/frontend](/frontend) and Copy `.env.example` file to `.env`.
 ```dotenv
@@ -19,15 +19,56 @@ REACT_APP_API_URL=http://localhost:8080
 2. Backend (/backend) - express.js
    - Go to [/backend](/backend) and Copy `.env.example` file to `.env`.
 ```dotenv
-PORT=8080
-MONGODB_DEV=mongodb://localhost:27017/dev
-MONGODB_PRODUCTION=mongodb://localhost:27017/production
+PORT=8080  # Port for express.js (exposed for frontend)
+MONGODB_URI=mongodb://localhost:27017/dev
+EXTERNAL_CONNECTIONS_CONFIG_PATH=./config/external-connections.json  # external connections config file
 ```
 
-## Tech Stack
-- React + express.js + MongoDB
+3. External Connections (/backend/config)
 
-## How to Build
+  - Go to [/backend/config](/backend/config)
+
+The external connection is an adapter to pull data from external sources. Currently, we are supporting OpenSearch and http json.
+Each `connection` put a data to an `Element` (data object of Node).
+
+Below is an example of `external-connections.json` file.
+
+```json
+{
+  "connections": [
+    {
+      "name": "Daily Sales OpenSearch",
+      "elementId": "682033882dc6d8422bde498a",
+      "type": "OpenSearch",
+      "parameters": {
+        "query": {
+          "match": {
+            "description": "delivery"
+          }
+        }
+      },
+      "url": "http://localhost:9200",
+      "username": "",
+      "authToken": "",
+      "pollingPeriodSeconds": 20,
+      "enable": true
+    },
+    {
+      "name": "Service uptime",
+      "elementId": "682033882dc6d8422bde438f",
+      "type": "Json",
+      "parameters": {
+        "jsonPath": "$.products[0].name"
+      },
+      "url": "http://example.com/api/health",
+      "username": "",
+      "authToken": "",
+      "pollingPeriodSeconds": 60,
+      "enable": true
+    }
+  ]
+}
+```
 
 1. Go to `/backend` and run `npm install`.
 2. Go to `/frontend` and run `npm install`.

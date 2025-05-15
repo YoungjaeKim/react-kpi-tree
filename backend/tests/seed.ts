@@ -6,7 +6,7 @@ import KpiNode from '../src/schemas/kpiNode';
 import KpiEdge from '../src/schemas/kpiEdge';
 import KpiGroup from '../src/schemas/kpiGroup';
 
-const mongoURI = process.env.MONGODB_DEV || 'mongodb://localhost:27017/dev';
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/dev';
 
 interface SeedData {
     kpiGroup: any[];
