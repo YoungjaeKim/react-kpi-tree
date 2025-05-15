@@ -2,13 +2,16 @@ import { ExternalConnectionConfig, ExternalConnectionsConfig } from '../types/ex
 import { ExternalConnectionAdapter } from '../adapters/external-connection-adapter';
 import { OpenSearchAdapter } from '../adapters/opensearch-adapter';
 import { JsonAdapter } from '../adapters/json-adapter';
+import { ElementService } from './element-service';
 
 export class ExternalConnectionService {
     private connections: Map<string, NodeJS.Timeout> = new Map();
     private adapters: Map<string, ExternalConnectionAdapter> = new Map();
     private config?: ExternalConnectionsConfig;
+    private elementService: ElementService;
 
-    constructor(config?: ExternalConnectionsConfig) {
+    constructor(elementService: ElementService, config?: ExternalConnectionsConfig) {
+        this.elementService = elementService;
         this.config = config;
         
         // Register adapters
@@ -76,15 +79,20 @@ export class ExternalConnectionService {
     ): Promise<void> {
         try {
             const response = await adapter.fetch(config);
-            if (response.success) {
-                // Update the element value in your database
-                // This is where you'd call your existing element update logic
-                console.log(`Updated value for ${config.name}: ${response.value}`);
+            if (response.success && response.value !== undefined && response.value !== null) {
+                const updatedElement = await this.elementService.recordAndUpdateKpiValue(config.elementId, String(response.value));
+                if (updatedElement) {
+                    console.log(`Successfully updated element ${config.elementId} for connection ${config.name} with value: ${response.value}`);
+                } else {
+                    console.error(`Failed to update element ${config.elementId} for connection ${config.name} via ElementService.`);
+                }
+            } else if (!response.success) {
+                console.error(`Error fetching data for connection ${config.name}: ${response.error}`);
             } else {
-                console.error(`Error fetching ${config.name}: ${response.error}`);
+                console.warn(`No value received from adapter for connection ${config.name}. Element ${config.elementId} not updated.`);
             }
         } catch (error) {
-            console.error(`Unexpected error for ${config.name}:`, error);
+            console.error(`Unexpected error during fetchAndUpdate for connection ${config.name}:`, error);
         }
     }
 } 

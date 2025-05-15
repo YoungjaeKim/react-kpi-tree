@@ -5,7 +5,7 @@ import { NodeForm } from './components/NodeForm';
 import { NodesShowHidePanel } from './components/NodesShowHidePanel';
 import { useNodeManagement } from './hooks/useNodeManagement';
 
-const blockCanvasSize = { width: 800, height: 600 };
+const blockCanvasSize = { width: 1000, height: 600 };
 
 function App() {
     const [groupId, setGroupId] = useState<string>("507f1f77bcf86cd799439011");
