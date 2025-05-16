@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import BlockCanvas from "./components/BlockCanvas";
 import { NodeForm } from './components/NodeForm';
@@ -14,12 +14,22 @@ import {
     DialogActions, 
     TextField, 
     IconButton,
-    Stack
+    Stack,
+    Autocomplete
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 
 const blockCanvasSize = { width: 1000, height: 600 };
+
+interface Group {
+    id: string;
+    title: string;
+    nodeCount: number;
+    edgeCount: number;
+    archived: boolean;
+    timestamp: Date;
+}
 
 interface CreateGroupDialogProps {
     open: boolean;
@@ -77,7 +87,8 @@ const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ open, onClose, on
 };
 
 function App() {
-    const [groupId, setGroupId] = useState<string>("507f1f77bcf86cd799439011");
+    const [groups, setGroups] = useState<Group[]>([]);
+    const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
     const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
     const {
         nodes,
@@ -90,7 +101,24 @@ function App() {
         handleEdgesChange,
         fetchHiddenNodes,
         makeNodeVisible
-    } = useNodeManagement(groupId);
+    } = useNodeManagement(selectedGroup?.id || '');
+
+    useEffect(() => {
+        fetchGroups();
+    }, []);
+
+    const fetchGroups = async () => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/graphs/group?archived=false`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch groups');
+            }
+            const data = await response.json();
+            setGroups(data);
+        } catch (error) {
+            console.error('Error fetching groups:', error);
+        }
+    };
 
     const handleCreateGroup = async (title: string) => {
         try {
@@ -106,8 +134,8 @@ function App() {
                 throw new Error('Failed to create group');
             }
             
-            // You might want to refresh the node data here
-            console.log('Group created successfully');
+            // Refresh the groups list after creating a new one
+            await fetchGroups();
         } catch (error) {
             console.error('Error creating group:', error);
         }
@@ -118,12 +146,16 @@ function App() {
             <header className="App-header">
                 <p>React KPI Tree</p>
                 <Stack direction="row" spacing={2} alignItems="center">
-                    <div>Group ID</div>
-                    <input 
-                        type="text" 
-                        placeholder="Title" 
-                        value={groupId} 
-                        onChange={(e) => setGroupId(e.target.value)} 
+                    <div>Group</div>
+                    <Autocomplete
+                        value={selectedGroup}
+                        onChange={(event, newValue) => {
+                            setSelectedGroup(newValue);
+                        }}
+                        options={groups}
+                        getOptionLabel={(option) => `${option.title} (nodes: ${option.nodeCount})`}
+                        sx={{ width: 300 }}
+                        renderInput={(params) => <TextField {...params} />}
                     />
                     <Button
                         variant="contained"
@@ -150,7 +182,7 @@ function App() {
                 </ReactFlowProvider>
 
                 <NodeForm 
-                    groupId={groupId}
+                    groupId={selectedGroup?.id || ''}
                     onNodeAdded={fetchHiddenNodes}
                 />
 
