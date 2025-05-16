@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import BlockCanvas from "./components/BlockCanvas";
-import { NodeForm } from './components/NodeForm';
-import { NodesShowHidePanel } from './components/NodesShowHidePanel';
 import { NodePropertiesPanel } from './components/NodePropertiesPanel';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useNodeManagement } from './hooks/useNodeManagement';
-import { 
-    Button, 
-    Dialog, 
-    DialogTitle, 
-    DialogContent, 
-    DialogActions, 
-    TextField, 
+import {
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
     IconButton,
     Stack,
     Autocomplete
@@ -131,11 +129,11 @@ function App() {
                 },
                 body: JSON.stringify({ title }),
             });
-            
+
             if (!response.ok) {
                 throw new Error('Failed to create group');
             }
-            
+
             // Refresh the groups list after creating a new one
             await fetchGroups();
         } catch (error) {
@@ -146,36 +144,46 @@ function App() {
     return (
         <div className="App">
             <header className="App-header">
-                <p>React KPI Tree</p>
-                <Stack direction="row" spacing={2} alignItems="center">
-                    <div>Group</div>
-                    <Autocomplete
-                        value={selectedGroup}
-                        onChange={(event, newValue) => {
-                            setSelectedGroup(newValue);
-                        }}
-                        options={groups}
-                        getOptionLabel={(option) => `${option.title} (nodes: ${option.nodeCount})`}
-                        sx={{ width: 300 }}
-                        renderInput={(params) => <TextField {...params} />}
-                    />
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setCreateGroupDialogOpen(true)}
-                    >
-                        Create Group
-                    </Button>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setNodeManagementDialogOpen(true)}
-                        disabled={!selectedGroup}
-                    >
-                        Add Node
-                    </Button>
-                </Stack>
+                <div style={{ 
+                    width: '100%', 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    padding: '0 20px'
+                }}>
+                    <p>React KPI Tree</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                            <div>Group</div>
+                            <Autocomplete
+                                value={selectedGroup}
+                                onChange={(event, newValue) => {
+                                    setSelectedGroup(newValue);
+                                }}
+                                options={groups}
+                                getOptionLabel={(option) => `${option.title} (nodes: ${option.nodeCount})`}
+                                sx={{ width: 300 }}
+                                renderInput={(params) => <TextField {...params} />}
+                            />
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                onClick={() => setCreateGroupDialogOpen(true)}
+                            >
+                                Create Group
+                            </Button>
+                        </Stack>
 
+                    </div>
+                </div>
+                <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => setNodeManagementDialogOpen(true)}
+                            disabled={!selectedGroup}
+                        >
+                            Add Node
+                        </Button>
                 <ReactFlowProvider>
                     <div style={{ display: 'flex', gap: '20px' }}>
                         <div style={blockCanvasSize}>
