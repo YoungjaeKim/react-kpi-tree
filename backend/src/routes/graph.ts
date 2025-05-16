@@ -4,16 +4,19 @@ import {
     getNodes, 
     upsertNode,
     upsertEdge, 
-    getNode,
+    getNodeById,
     createGroup,
-    deleteEdge
+    deleteEdge,
+    getGroupById
 } from '../controllers/graph';
 
 const router = express.Router();
 
 router.get('/', getGraphs);
 router.get('/node', getNodes);
-router.get('/node/:id', getNode);
+router.get('/node/:id', getNodeById);
+router.post('/group', createGroup);
+router.post('/group/:id', getGroupById);
 router.post('/node', upsertNode);
 router.post('/edge', upsertEdge);
 router.post('/group', createGroup);

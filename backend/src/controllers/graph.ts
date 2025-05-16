@@ -32,7 +32,6 @@ interface EdgeResponse {
     groupId: string;
 }
 
-
 export const createGroup = async (req: Request, res: Response): Promise<void> => {
     try {
         const { title, archived } = req.body;
@@ -49,6 +48,46 @@ export const createGroup = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
+export const getGroups = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { archived } = req.query;
+        const query: any = {};
+
+        if (archived !== undefined) {
+            query.archived = archived.toLowerCase() === 'true';
+        }
+
+        const groups = await KpiGroup.find(query);
+        res.json(groups.map(group => {
+            const groupObject = group.toObject();
+            return { ...groupObject, id: groupObject._id, _id: undefined };
+        }));
+    } catch (err) {
+        console.error('Failed to fetch groups:', err);
+        res.status(500).json({ error: 'Failed to fetch groups' });
+    }
+};
+
+export const getGroupById = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    if (isNullOrEmpty(id)) {
+        res.status(400).json({ error: "Invalid ID" });
+        return;
+    }
+
+    try {
+        const group = await KpiGroup.findById(id);
+        if (!group) {
+            res.status(404).json({ error: "Group not found" });
+        } else {
+            const groupObject = group.toObject();
+            res.json({ ...groupObject, id: groupObject._id, _id: undefined });
+        }
+    } catch (err) {
+        console.error('Failed to fetch group:', err);
+        res.status(500).json({ error: 'Failed to fetch group' });
+    }
+};
 
 export const getGraphs = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -157,7 +196,7 @@ export const getNodes = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-export const getNode = async (req: Request, res: Response): Promise<void> => {
+export const getNodeById = async (req: Request, res: Response): Promise<void> => {
     const resourceId = req.params.id;
     if (isNullOrEmpty(resourceId)) {
         res.status(400).json({ error: "invalid id" });
@@ -181,7 +220,6 @@ export const getNode = async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({ error: 'Server error at getNode' });
     }
 };
-
 
 export const upsertNode = async (req: Request, res: Response): Promise<void> => {
     if (isNullOrEmpty(req.body.id)) { // create
@@ -291,7 +329,6 @@ export const upsertEdge = async (req: Request, res: Response): Promise<void> => 
         }
     }
 };
-
 
 export const updateNode = async (req: Request, res: Response): Promise<void> => {
     try {
