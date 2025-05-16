@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import { NodeManagementDialog } from './components/NodeManagementDialog';
 
 const blockCanvasSize = { width: 1000, height: 600 };
 
@@ -90,6 +91,7 @@ function App() {
     const [groups, setGroups] = useState<Group[]>([]);
     const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
     const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
+    const [nodeManagementDialogOpen, setNodeManagementDialogOpen] = useState(false);
     const {
         nodes,
         edges,
@@ -164,6 +166,14 @@ function App() {
                     >
                         Create Group
                     </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setNodeManagementDialogOpen(true)}
+                        disabled={!selectedGroup}
+                    >
+                        Add Node
+                    </Button>
                 </Stack>
 
                 <ReactFlowProvider>
@@ -181,17 +191,16 @@ function App() {
                     </div>
                 </ReactFlowProvider>
 
-                <NodeForm 
+                <NodeManagementDialog
+                    open={nodeManagementDialogOpen}
+                    onClose={() => setNodeManagementDialogOpen(false)}
                     groupId={selectedGroup?.id || ''}
-                    onNodeAdded={fetchHiddenNodes}
-                />
-
-                <NodesShowHidePanel
                     hiddenNodes={hiddenNodes}
                     selectedHiddenNode={selectedHiddenNode}
                     onSelectedHiddenNodeChange={setSelectedHiddenNode}
                     onRefresh={fetchHiddenNodes}
                     onMakeVisible={makeNodeVisible}
+                    onNodeAdded={fetchHiddenNodes}
                 />
             </header>
 

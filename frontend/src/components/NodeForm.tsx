@@ -1,13 +1,24 @@
 import React from 'react';
 import { useNodeForm } from '../hooks/useNodeForm';
 import { addNode } from '../services/nodeService';
+import {
+    TextField,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Box,
+    FormHelperText,
+    Typography
+} from '@mui/material';
 
 interface NodeFormProps {
     groupId: string;
     onNodeAdded: () => void;
+    onTitleChange?: (isValid: boolean) => void;
 }
 
-export const NodeForm: React.FC<NodeFormProps> = ({ groupId, onNodeAdded }) => {
+export const NodeForm: React.FC<NodeFormProps> = ({ groupId, onNodeAdded, onTitleChange }) => {
     const {
         title,
         setTitle,
@@ -21,6 +32,12 @@ export const NodeForm: React.FC<NodeFormProps> = ({ groupId, onNodeAdded }) => {
         validateElementValue,
         resetForm
     } = useNodeForm();
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newTitle = e.target.value;
+        setTitle(newTitle);
+        onTitleChange?.(newTitle.trim().length > 0);
+    };
 
     const handleSubmit = async () => {
         if (!validateElementValue(elementValue, elementValueType)) {
@@ -49,47 +66,50 @@ export const NodeForm: React.FC<NodeFormProps> = ({ groupId, onNodeAdded }) => {
     };
 
     return (
-        <div>
-            <input 
-                type="text" 
-                placeholder="Title" 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box>
+                <Typography component="span" sx={{ color: 'error.main', mr: 0.5 }}>* Required</Typography>
+                <TextField
+                    label="Title"
+                    value={title}
+                    onChange={handleTitleChange}
+                    fullWidth
+                    required
+                />
+            </Box>
+            <TextField
+                label="Label"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                fullWidth
             />
-            <input 
-                type="text" 
-                placeholder="Label" 
-                value={label} 
-                onChange={(e) => setLabel(e.target.value)} 
-            />
-            <select 
-                value={elementValueType} 
-                onChange={(e) => handleElementValueTypeChange(e.target.value)}
-                aria-label="Select element value type"
-            >
-                <option value="Integer">Integer</option>
-                <option value="Double">Double</option>
-                <option value="String">String</option>
-            </select>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <input 
-                    type="text" 
-                    placeholder="Element Value" 
-                    value={elementValue} 
+            <FormControl fullWidth>
+                <InputLabel>Element Value Type</InputLabel>
+                <Select
+                    value={elementValueType}
+                    onChange={(e) => handleElementValueTypeChange(e.target.value)}
+                    label="Element Value Type"
+                >
+                    <MenuItem value="Integer">Integer</MenuItem>
+                    <MenuItem value="Double">Double</MenuItem>
+                    <MenuItem value="String">String</MenuItem>
+                </Select>
+            </FormControl>
+            <FormControl fullWidth error={!!elementValueError}>
+                <TextField
+                    label="Element Value"
+                    value={elementValue}
                     onChange={(e) => {
                         if (validateElementValue(e.target.value, elementValueType)) {
                             setElementValue(e.target.value);
                         }
                     }}
-                    style={{ borderColor: elementValueError ? 'red' : undefined }}
+                    error={!!elementValueError}
                 />
                 {elementValueError && (
-                    <span style={{ color: 'red', fontSize: '0.8em', marginTop: '4px' }}>
-                        {elementValueError}
-                    </span>
+                    <FormHelperText>{elementValueError}</FormHelperText>
                 )}
-            </div>
-            <button onClick={handleSubmit}>Add Node</button>
-        </div>
+            </FormControl>
+        </Box>
     );
 }; 

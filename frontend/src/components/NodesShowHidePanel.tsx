@@ -6,7 +6,7 @@ interface NodesShowHidePanelProps {
     selectedHiddenNode: string;
     onSelectedHiddenNodeChange: (nodeId: string) => void;
     onRefresh: () => void;
-    onMakeVisible: () => void;
+    onMakeVisible: (nodeId: string) => void;
 }
 
 export const NodesShowHidePanel: React.FC<NodesShowHidePanelProps> = ({
@@ -23,7 +23,7 @@ export const NodesShowHidePanel: React.FC<NodesShowHidePanelProps> = ({
                 onChange={(e) => onSelectedHiddenNodeChange(e.target.value)}
                 aria-label="Select hidden node"
             >
-                <option value="">Select Hidden Node</option>
+                <option value="">Select Hidden Node ({hiddenNodes.length})</option>
                 {hiddenNodes.map((node) => (
                     <option key={node.id} value={node.id}>
                         {node.data.label}
@@ -31,12 +31,6 @@ export const NodesShowHidePanel: React.FC<NodesShowHidePanelProps> = ({
                 ))}
             </select>
             <button onClick={onRefresh}>Refresh</button>
-            <button 
-                onClick={onMakeVisible}
-                disabled={!selectedHiddenNode}
-            >
-                Add
-            </button>
         </div>
     );
 }; 
