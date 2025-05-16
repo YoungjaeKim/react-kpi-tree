@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BlockNode, BlockEdge, BlockNodeTransferForCreate } from '../types';
+import { BlockNode, BlockEdge, BlockNodeTransferForCreate, BlockEdgeTransferForCreate } from '../types';
 import { toBlockNode } from '../utils/nodeUtils';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -41,7 +41,7 @@ export async function addElement(element: BlockNodeTransferForCreate) {
         });
 }
 
-export async function addEdge(edge: BlockEdge) {
+export async function addEdge(edge: BlockEdgeTransferForCreate) {
     console.log("addEdge() is called");
     try {
         const response = await axios.post(`${API_URL}/graphs/edge`, edge);

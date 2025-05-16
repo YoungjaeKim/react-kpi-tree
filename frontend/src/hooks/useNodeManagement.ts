@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react';
 import {Node} from '@xyflow/react';
-import {BlockNode, BlockEdge} from '../types';
+import {BlockNode, BlockEdge, BlockEdgeTransferForCreate} from '../types';
 import {getNodesAndElements, updateNode, addEdge} from '../services/nodeService';
 import {toBlockNode} from '../utils/nodeUtils';
 
@@ -56,8 +56,7 @@ export const useNodeManagement = (groupId: string) => {
 
     const handleConnect = async (connection: any) => {
         console.log('Connecting:', connection);
-        const newEdge: BlockEdge = {
-            id: `${connection.source}-${connection.target}`, // Generate a temporary ID
+        const newEdge: BlockEdgeTransferForCreate = {
             source: connection.source,
             target: connection.target,
             groupId: groupId
