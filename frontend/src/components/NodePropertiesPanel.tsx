@@ -1,11 +1,51 @@
 import React, { useState, useCallback } from 'react';
 import { useOnSelectionChange, useNodes } from '@xyflow/react';
-import { Paper, Typography, Box, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { Paper, Typography, Box, List, ListItem, ListItemText, Divider, IconButton } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { BlockNode } from '../types';
 
 interface NodePropertiesPanelProps {
     style?: React.CSSProperties;
 }
+
+interface PropertyListItemProps {
+    primary: string;
+    secondary: string;
+}
+
+const PropertyListItem: React.FC<PropertyListItemProps> = ({ primary, secondary }) => {
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+    };
+
+    return (
+        <ListItem
+            sx={{
+                '&:hover .copy-button': {
+                    opacity: 1,
+                },
+            }}
+        >
+            <ListItemText 
+                primary={primary} 
+                secondary={secondary}
+            />
+            <IconButton
+                className="copy-button"
+                size="small"
+                onClick={() => handleCopy(secondary)}
+                sx={{
+                    opacity: 0,
+                    transition: 'opacity 0.2s',
+                    position: 'absolute',
+                    right: 8,
+                }}
+            >
+                <ContentCopyIcon fontSize="small" />
+            </IconButton>
+        </ListItem>
+    );
+};
 
 export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style }) => {
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -65,54 +105,40 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style 
                 Node Properties
             </Typography>
             <List>
-                <ListItem>
-                    <ListItemText 
-                        primary="ID" 
-                        secondary={String(selectedNode.id)}
-                    />
-                </ListItem>
+                <PropertyListItem 
+                    primary="ID" 
+                    secondary={String(selectedNode.id)}
+                />
                 <Divider />
-                <ListItem>
-                    <ListItemText 
-                        primary="Label" 
-                        secondary={String(selectedNode.data.label)}
-                    />
-                </ListItem>
+                <PropertyListItem 
+                    primary="Label" 
+                    secondary={String(selectedNode.data.label)}
+                />
                 <Divider />
-                <ListItem>
-                    <ListItemText 
-                        primary="Element ID" 
-                        secondary={String(selectedNode.data.elementId)}
-                    />
-                </ListItem>
+                <PropertyListItem 
+                    primary="Element ID" 
+                    secondary={String(selectedNode.data.elementId)}
+                />
                 <Divider />
-                <ListItem>
-                    <ListItemText 
-                        primary="Group ID" 
-                        secondary={String(selectedNode.groupId)}
-                    />
-                </ListItem>
+                <PropertyListItem 
+                    primary="Group ID" 
+                    secondary={String(selectedNode.groupId)}
+                />
                 <Divider />
-                <ListItem>
-                    <ListItemText 
-                        primary="Position" 
-                        secondary={`X: ${formatPosition(selectedNode.position?.x)}, Y: ${formatPosition(selectedNode.position?.y)}`}
-                    />
-                </ListItem>
+                <PropertyListItem 
+                    primary="Position" 
+                    secondary={`X: ${formatPosition(selectedNode.position?.x)}, Y: ${formatPosition(selectedNode.position?.y)}`}
+                />
                 <Divider />
-                <ListItem>
-                    <ListItemText 
-                        primary="Hidden" 
-                        secondary={selectedNode.hidden ? 'Yes' : 'No'}
-                    />
-                </ListItem>
+                <PropertyListItem 
+                    primary="Hidden" 
+                    secondary={selectedNode.hidden ? 'Yes' : 'No'}
+                />
                 <Divider />
-                <ListItem>
-                    <ListItemText 
-                        primary="Type" 
-                        secondary={selectedNode.type || 'default'}
-                    />
-                </ListItem>
+                <PropertyListItem 
+                    primary="Type" 
+                    secondary={selectedNode.type || 'default'}
+                />
             </List>
         </Paper>
     );
