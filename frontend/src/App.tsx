@@ -3,6 +3,8 @@ import './App.css';
 import BlockCanvas from "./components/BlockCanvas";
 import { NodeForm } from './components/NodeForm';
 import { NodesShowHidePanel } from './components/NodesShowHidePanel';
+import { NodePropertiesPanel } from './components/NodePropertiesPanel';
+import { ReactFlowProvider } from '@xyflow/react';
 import { useNodeManagement } from './hooks/useNodeManagement';
 
 const blockCanvasSize = { width: 1000, height: 600 };
@@ -34,15 +36,20 @@ function App() {
                     onChange={(e) => setGroupId(e.target.value)} 
                 />
 
-                <div style={blockCanvasSize}>
-                    <BlockCanvas
-                        nodes={nodes}
-                        edges={edges}
-                        onConnect={handleConnect}
-                        onNodesChange={handleNodesChange}
-                        onEdgesChange={handleEdgesChange}
-                    />
-                </div>
+                <ReactFlowProvider>
+                    <div style={{ display: 'flex', gap: '20px' }}>
+                        <div style={blockCanvasSize}>
+                            <BlockCanvas
+                                nodes={nodes}
+                                edges={edges}
+                                onConnect={handleConnect}
+                                onNodesChange={handleNodesChange}
+                                onEdgesChange={handleEdgesChange}
+                            />
+                        </div>
+                        <NodePropertiesPanel style={{ height: blockCanvasSize.height }} />
+                    </div>
+                </ReactFlowProvider>
 
                 <NodeForm 
                     groupId={groupId}

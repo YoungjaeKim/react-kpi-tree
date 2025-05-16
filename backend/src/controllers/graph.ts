@@ -35,8 +35,13 @@ interface EdgeResponse {
 
 export const createGroup = async (req: Request, res: Response): Promise<void> => {
     try {
-        const newKpiGroup = new KpiGroup(req.body);
-        const savedKpiGroup = await newKpiGroup.save();
+        const { title, archived } = req.body;
+        const group = new KpiGroup({
+            title,
+            archived
+        });
+
+        const savedKpiGroup = await group.save();
         res.status(201).json(savedKpiGroup);
     } catch (err) {
         console.error('Failed to save document:', err);
