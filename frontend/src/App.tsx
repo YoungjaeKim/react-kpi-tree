@@ -264,8 +264,9 @@ function App() {
                                         sx={{
                                             position: 'absolute',
                                             top: 16,
-                                            right: 16,
-                                            zIndex: 2
+                                            right: isPropertiesExpanded ? 16 : 48,
+                                            zIndex: 2,
+                                            transition: 'right'
                                         }}
                                     >
                                         <AddIcon />
@@ -276,7 +277,7 @@ function App() {
                                     <Box
                                         sx={{
                                             position: 'absolute',
-                                            top: '50%',
+                                            top: '10%',
                                             right: 0,
                                             transform: 'translateY(-50%)',
                                             zIndex: 3,
