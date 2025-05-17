@@ -3,13 +3,23 @@ import { Node } from '@xyflow/react';
 export interface BlockNode extends Node {
     groupId: string;
     data: {
-        label: string;
+        title: string;
+        label?: string;
         elementId: string;
-        title?: string;
         kpiValue?: string;
         kpiValueType?: string;
+        element?: BlockElement;
     };
     hidden: boolean;
+}
+
+export interface BlockElement {
+    id: string;
+    kpiValue: string;
+    kpiValueType: string;
+    isActive: boolean;
+    expression?: string;
+    lastUpdatedDateTime: Date;
 }
 
 export interface BlockNodeTransferForCreate {

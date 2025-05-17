@@ -12,6 +12,9 @@ export const useAddNode = (groupId: string) => {
     const [selectedHiddenNode, setSelectedHiddenNode] = useState<string>("");
 
     useEffect(() => {
+        if (!groupId) {
+            return;
+        }
         getNodesAndElements(`${process.env.REACT_APP_API_URL}/graphs?groupId=${groupId}&hidden=false`)
             .then((response) => {
                 console.log(`Total nodes: ${response.nodes.length}, Total edges: ${response.edges.length}`);

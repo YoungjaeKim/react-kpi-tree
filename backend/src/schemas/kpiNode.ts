@@ -6,7 +6,7 @@ export interface IKpiNode extends Document {
         y: number;
     };
     groupId: mongoose.Types.ObjectId;
-    title?: string;
+    title: string;
     description?: string;
     label?: string;
     elementId: mongoose.Types.ObjectId;

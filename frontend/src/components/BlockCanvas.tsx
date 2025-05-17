@@ -12,7 +12,8 @@ import {
     Edge,
     Connection,
     NodeChange,
-    EdgeChange
+    EdgeChange,
+    NodeTypes
 } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
@@ -24,6 +25,7 @@ interface BlockCanvasProps {
     onConnect?: (connection: Connection) => void;
     onNodesChange?: (changes: NodeChange[]) => void;
     onEdgesChange?: (changes: EdgeChange[]) => void;
+    nodeTypes: NodeTypes;
 }
 
 const BlockCanvas: React.FC<BlockCanvasProps> = ({
@@ -31,7 +33,8 @@ const BlockCanvas: React.FC<BlockCanvasProps> = ({
     nodes,
     onConnect,
     onNodesChange,
-    onEdgesChange
+    onEdgesChange,
+    nodeTypes
 }) => {
     // Add minimal style for text color
     const nodesWithStyle = nodes.map(node => ({
@@ -76,6 +79,7 @@ const BlockCanvas: React.FC<BlockCanvasProps> = ({
             onConnect={onConnect}
             fitView
             style={{ background: '#f8f8f8' }}
+            nodeTypes={nodeTypes}
         >
             <MiniMap/>
             <Controls/>

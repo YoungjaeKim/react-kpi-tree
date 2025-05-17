@@ -260,6 +260,11 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style 
                 />
                 <Divider />
                 <PropertyListItem 
+                    primary="Title" 
+                    secondary={String(selectedNode.data.title)}
+                />
+                <Divider />
+                <PropertyListItem 
                     primary="Label" 
                     secondary={String(selectedNode.data.label)}
                 />
@@ -285,7 +290,7 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style 
                 />
                 <Divider />
                 <PropertyListItem 
-                    primary="Type" 
+                    primary="Node Type" 
                     secondary={selectedNode.type || 'default'}
                 />
             </List>

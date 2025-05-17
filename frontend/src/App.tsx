@@ -23,6 +23,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { AddNodeDialog } from './components/AddNodeDialog';
+import KpiDisplayNodeType from './components/KpiDisplayNodeType';
 
 // Minimum screen resolution
 const MIN_SCREEN_WIDTH = 1280;
@@ -48,6 +49,8 @@ interface CreateGroupDialogProps {
     onClose: () => void;
     onConfirm: (title: string) => void;
 }
+
+const nodeTypes = { kpiDisplayNodeType: KpiDisplayNodeType };
 
 const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ open, onClose, onConfirm }) => {
     const [title, setTitle] = useState('');
@@ -253,6 +256,7 @@ function App() {
                                     onConnect={handleConnect}
                                     onNodesChange={handleNodesChange}
                                     onEdgesChange={handleEdgesChange}
+                                    nodeTypes={nodeTypes}
                                 />
                                 {/* Floating Add Node Button */}
                                 {selectedGroup && (
