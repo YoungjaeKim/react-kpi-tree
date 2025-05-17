@@ -3,7 +3,7 @@ import './App.css';
 import BlockCanvas from "./components/BlockCanvas";
 import { NodePropertiesPanel } from './components/NodePropertiesPanel';
 import { ReactFlowProvider } from '@xyflow/react';
-import { useNodeManagement } from './hooks/useNodeManagement';
+import { useAddNode } from './hooks/useAddNode';
 import {
     Button,
     Dialog,
@@ -22,7 +22,7 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { NodeManagementDialog } from './components/NodeManagementDialog';
+import { AddNodeDialog } from './components/AddNodeDialog';
 
 // Minimum screen resolution
 const MIN_SCREEN_WIDTH = 1280;
@@ -102,7 +102,7 @@ function App() {
     const [groups, setGroups] = useState<Group[]>([]);
     const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
     const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
-    const [nodeManagementDialogOpen, setNodeManagementDialogOpen] = useState(false);
+    const [addNodeDialogOpen, setAddNodeDialogOpen] = useState(false);
     const [propertiesWidth, setPropertiesWidth] = useState(DEFAULT_PROPERTIES_WIDTH);
     const [isPropertiesExpanded, setIsPropertiesExpanded] = useState(true);
     const {
@@ -116,7 +116,7 @@ function App() {
         handleEdgesChange,
         fetchHiddenNodes,
         makeNodeVisible
-    } = useNodeManagement(selectedGroup?.id || '');
+    } = useAddNode(selectedGroup?.id || '');
 
     useEffect(() => {
         fetchGroups();
@@ -259,7 +259,7 @@ function App() {
                                     <Fab
                                         color="primary"
                                         aria-label="add"
-                                        onClick={() => setNodeManagementDialogOpen(true)}
+                                        onClick={() => setAddNodeDialogOpen(true)}
                                         title="Add a Node"
                                         sx={{
                                             position: 'absolute',
@@ -350,9 +350,9 @@ function App() {
             </main>
 
             {/* Dialogs */}
-            <NodeManagementDialog
-                open={nodeManagementDialogOpen}
-                onClose={() => setNodeManagementDialogOpen(false)}
+            <AddNodeDialog
+                open={addNodeDialogOpen}
+                onClose={() => setAddNodeDialogOpen(false)}
                 groupId={selectedGroup?.id || ''}
                 hiddenNodes={hiddenNodes}
                 selectedHiddenNode={selectedHiddenNode}

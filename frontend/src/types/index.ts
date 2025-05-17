@@ -44,9 +44,3 @@ export interface NodeFormData {
     elementValueType: string;
     elementValue: string;
 }
-
-export interface NodeManagementState {
-    nodes: BlockNode[];
-    edges: BlockEdge[];
-    selectedNode: Node | null;
-} 

@@ -16,7 +16,7 @@ import { NewNodeForm } from './NewNodeForm';
 import { NodesShowHidePanel } from './NodesShowHidePanel';
 import { BlockNode } from '../types';
 
-interface NodeManagementDialogProps {
+interface AddNodeDialogProps {
     open: boolean;
     onClose: () => void;
     groupId: string;
@@ -28,7 +28,7 @@ interface NodeManagementDialogProps {
     onNodeAdded: () => void;
 }
 
-export const NodeManagementDialog: React.FC<NodeManagementDialogProps> = ({
+export const AddNodeDialog: React.FC<AddNodeDialogProps> = ({
     open,
     onClose,
     groupId,

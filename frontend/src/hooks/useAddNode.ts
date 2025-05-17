@@ -4,7 +4,7 @@ import {BlockNode, BlockEdge, BlockEdgeTransferForCreate} from '../types';
 import {getNodesAndElements, updateNode, addEdge} from '../services/nodeService';
 import {toBlockNode} from '../utils/nodeUtils';
 
-export const useNodeManagement = (groupId: string) => {
+export const useAddNode = (groupId: string) => {
     const [nodes, setNodes] = useState<BlockNode[]>([]);
     const [edges, setEdges] = useState<BlockEdge[]>([]);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
