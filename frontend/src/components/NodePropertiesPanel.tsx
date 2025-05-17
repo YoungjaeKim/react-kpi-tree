@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useOnSelectionChange, useNodes } from '@xyflow/react';
 import { 
     Paper, Typography, Box, List, ListItem, ListItemText, Divider, IconButton,
@@ -67,13 +67,21 @@ const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node }) 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Update form values when node changes
+    useEffect(() => {
+        setTitle(node.data.title || '');
+        setLabel(node.data.label || '');
+        setKpiValue(node.data.kpiValue || '');
+        setError(null);
+    }, [node]);
+
     const validateKpiValue = (value: string, type: string): boolean => {
-        switch (type) {
-            case 'Integer':
+        switch (type.toLowerCase()) {
+            case 'integer':
                 return Number.isInteger(Number(value));
-            case 'Double':
+            case 'double':
                 return !isNaN(Number(value));
-            case 'String':
+            case 'string':
                 return true;
             default:
                 return false;
@@ -101,8 +109,9 @@ const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node }) 
             }
 
             if (kpiValue !== node.data.kpiValue) {
-                if (!validateKpiValue(kpiValue, node.data.kpiValueType)) {
-                    setError(`${kpiValue} is not ${node.data.kpiValueType}`);
+                const valueType = node.data.kpiValueType || 'String';
+                if (!validateKpiValue(kpiValue, valueType)) {
+                    setError(`${kpiValue} is not ${valueType}`);
                     setLoading(false);
                     return;
                 }
@@ -232,15 +241,16 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style 
                 ...style
             }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <Typography variant="h6">
                     Node Properties
                 </Typography>
                 <IconButton 
                     onClick={() => setEditDialogOpen(true)}
                     title="Edit node"
+                    size="small"
                 >
-                    <EditIcon />
+                    <EditIcon fontSize="small" />
                 </IconButton>
             </Box>
             <List>
