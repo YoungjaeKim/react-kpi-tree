@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNodeForm } from '../hooks/useNodeForm';
+import { useNewNodeForm } from '../hooks/useNewNodeForm';
 import { addNode } from '../services/nodeService';
 import {
     TextField,
@@ -12,13 +12,13 @@ import {
     Typography
 } from '@mui/material';
 
-interface NodeFormProps {
+interface NewNodeFormProps {
     groupId: string;
     onNodeAdded: () => void;
     onTitleChange?: (isValid: boolean) => void;
 }
 
-export const NodeForm: React.FC<NodeFormProps> = ({ groupId, onNodeAdded, onTitleChange }) => {
+export const NewNodeForm: React.FC<NewNodeFormProps> = ({ groupId, onNodeAdded, onTitleChange }) => {
     const {
         title,
         setTitle,
@@ -31,7 +31,7 @@ export const NodeForm: React.FC<NodeFormProps> = ({ groupId, onNodeAdded, onTitl
         handleElementValueTypeChange,
         validateElementValue,
         resetForm
-    } = useNodeForm();
+    } = useNewNodeForm();
 
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newTitle = e.target.value;
@@ -83,33 +83,35 @@ export const NodeForm: React.FC<NodeFormProps> = ({ groupId, onNodeAdded, onTitl
                 onChange={(e) => setLabel(e.target.value)}
                 fullWidth
             />
-            <FormControl fullWidth>
-                <InputLabel>Element Value Type</InputLabel>
-                <Select
-                    value={elementValueType}
-                    onChange={(e) => handleElementValueTypeChange(e.target.value)}
-                    label="Element Value Type"
-                >
-                    <MenuItem value="Integer">Integer</MenuItem>
-                    <MenuItem value="Double">Double</MenuItem>
-                    <MenuItem value="String">String</MenuItem>
-                </Select>
-            </FormControl>
-            <FormControl fullWidth error={!!elementValueError}>
-                <TextField
-                    label="Element Value"
-                    value={elementValue}
-                    onChange={(e) => {
-                        if (validateElementValue(e.target.value, elementValueType)) {
-                            setElementValue(e.target.value);
-                        }
-                    }}
-                    error={!!elementValueError}
-                />
-                {elementValueError && (
-                    <FormHelperText>{elementValueError}</FormHelperText>
-                )}
-            </FormControl>
+            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+                <FormControl sx={{ flex: 1 }}>
+                    <InputLabel>Element Value Type</InputLabel>
+                    <Select
+                        value={elementValueType}
+                        onChange={(e) => handleElementValueTypeChange(e.target.value)}
+                        label="Element Value Type"
+                    >
+                        <MenuItem value="Integer">Integer</MenuItem>
+                        <MenuItem value="Double">Double</MenuItem>
+                        <MenuItem value="String">String</MenuItem>
+                    </Select>
+                </FormControl>
+                <FormControl sx={{ flex: 2 }} error={!!elementValueError}>
+                    <TextField
+                        label="Element Value"
+                        value={elementValue}
+                        onChange={(e) => {
+                            if (validateElementValue(e.target.value, elementValueType)) {
+                                setElementValue(e.target.value);
+                            }
+                        }}
+                        error={!!elementValueError}
+                    />
+                    {elementValueError && (
+                        <FormHelperText>{elementValueError}</FormHelperText>
+                    )}
+                </FormControl>
+            </Box>
         </Box>
     );
 }; 

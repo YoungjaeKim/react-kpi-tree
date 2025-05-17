@@ -1,4 +1,6 @@
 import React from 'react';
+import { Select, MenuItem, IconButton, FormControl, InputLabel, Box } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { BlockNode } from '../types';
 
 interface NodesShowHidePanelProps {
@@ -17,20 +19,38 @@ export const NodesShowHidePanel: React.FC<NodesShowHidePanelProps> = ({
     onMakeVisible
 }) => {
     return (
-        <div>
-            <select 
-                value={selectedHiddenNode} 
-                onChange={(e) => onSelectedHiddenNodeChange(e.target.value)}
-                aria-label="Select hidden node"
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <FormControl fullWidth>
+                <InputLabel id="hidden-node-select-label">Select Hidden Node ({hiddenNodes.length} items)</InputLabel>
+                <Select
+                    labelId="hidden-node-select-label"
+                    value={selectedHiddenNode}
+                    label={`Select Hidden Node (${hiddenNodes.length} items)`}
+                    onChange={(e) => onSelectedHiddenNodeChange(e.target.value)}
+                >
+                    <MenuItem value="">
+                        <em>Select Hidden Node ({hiddenNodes.length} items)</em>
+                    </MenuItem>
+                    {hiddenNodes.map((node) => (
+                        <MenuItem key={node.id} value={node.id}>
+                            {node.data.label}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+            <IconButton 
+                onClick={onRefresh}
+                title="Refresh hidden nodes"
+                sx={{ 
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    '&:hover': {
+                        bgcolor: 'primary.dark',
+                    }
+                }}
             >
-                <option value="">Select Hidden Node ({hiddenNodes.length})</option>
-                {hiddenNodes.map((node) => (
-                    <option key={node.id} value={node.id}>
-                        {node.data.label}
-                    </option>
-                ))}
-            </select>
-            <button onClick={onRefresh}>Refresh</button>
-        </div>
+                <RefreshIcon />
+            </IconButton>
+        </Box>
     );
 }; 

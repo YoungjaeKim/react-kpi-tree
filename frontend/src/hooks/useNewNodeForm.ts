@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NodeFormData } from '../types';
 
-export const useNodeForm = () => {
+export const useNewNodeForm = () => {
     const [title, setTitle] = useState<string>("");
     const [label, setLabel] = useState<string>("");
     const [elementValueType, setElementValueType] = useState<string>("Integer");

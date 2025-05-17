@@ -39,7 +39,9 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ primary, secondary 
                     transition: 'opacity 0.2s',
                     position: 'absolute',
                     right: 8,
+                    marginRight: 2
                 }}
+                title="Copy content"
             >
                 <ContentCopyIcon fontSize="small" />
             </IconButton>

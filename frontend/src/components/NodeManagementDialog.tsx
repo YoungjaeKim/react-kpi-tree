@@ -12,7 +12,7 @@ import {
     IconButton
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { NodeForm } from './NodeForm';
+import { NewNodeForm } from './NewNodeForm';
 import { NodesShowHidePanel } from './NodesShowHidePanel';
 import { BlockNode } from '../types';
 
@@ -74,7 +74,7 @@ export const NodeManagementDialog: React.FC<NodeManagementDialogProps> = ({
             fullWidth
         >
             <DialogTitle>
-                Node Management
+                Add a Node
                 <IconButton
                     aria-label="close"
                     onClick={handleClose}
@@ -107,7 +107,7 @@ export const NodeManagementDialog: React.FC<NodeManagementDialogProps> = ({
                 </RadioGroup>
 
                 <Box sx={{ display: mode === 'add' ? 'block' : 'none' }}>
-                    <NodeForm
+                    <NewNodeForm
                         groupId={groupId}
                         onNodeAdded={onNodeAdded}
                         onTitleChange={setIsTitleValid}

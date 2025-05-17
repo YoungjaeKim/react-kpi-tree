@@ -13,13 +13,26 @@ import {
     TextField,
     IconButton,
     Stack,
-    Autocomplete
+    Autocomplete,
+    Typography,
+    Box,
+    Fab
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { NodeManagementDialog } from './components/NodeManagementDialog';
 
-const blockCanvasSize = { width: 1000, height: 600 };
+// Minimum screen resolution
+const MIN_SCREEN_WIDTH = 1280;
+const MIN_SCREEN_HEIGHT = 1024;
+// Default properties panel width
+const DEFAULT_PROPERTIES_WIDTH = 300;
+// Minimum properties panel width
+const MIN_PROPERTIES_WIDTH = 200;
+// Maximum properties panel width
+const MAX_PROPERTIES_WIDTH = 600;
 
 interface Group {
     id: string;
@@ -90,6 +103,8 @@ function App() {
     const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
     const [createGroupDialogOpen, setCreateGroupDialogOpen] = useState(false);
     const [nodeManagementDialogOpen, setNodeManagementDialogOpen] = useState(false);
+    const [propertiesWidth, setPropertiesWidth] = useState(DEFAULT_PROPERTIES_WIDTH);
+    const [isPropertiesExpanded, setIsPropertiesExpanded] = useState(true);
     const {
         nodes,
         edges,
@@ -141,76 +156,211 @@ function App() {
         }
     };
 
+    const handlePropertiesResize = (newWidth: number) => {
+        setPropertiesWidth(Math.min(Math.max(newWidth, MIN_PROPERTIES_WIDTH), MAX_PROPERTIES_WIDTH));
+    };
+
+    const togglePropertiesPanel = () => {
+        setIsPropertiesExpanded(!isPropertiesExpanded);
+    };
+
     return (
-        <div className="App">
-            <header className="App-header">
+        <div className="App" style={{ minWidth: MIN_SCREEN_WIDTH, minHeight: MIN_SCREEN_HEIGHT, height: '100vh', display: 'flex', flexDirection: 'column' }}>
+            {/* Header Section */}
+            <header className="App-header" style={{ 
+                padding: '16px 24px',
+                borderBottom: '1px solid #e0e0e0',
+                backgroundColor: '#fff'
+            }}>
                 <div style={{ 
                     width: '100%', 
                     display: 'flex', 
                     justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    padding: '0 20px'
+                    alignItems: 'center'
                 }}>
-                    <p>React KPI Tree</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                        <Stack direction="row" spacing={2} alignItems="center">
-                            <div>Group</div>
-                            <Autocomplete
-                                value={selectedGroup}
-                                onChange={(event, newValue) => {
-                                    setSelectedGroup(newValue);
-                                }}
-                                options={groups}
-                                getOptionLabel={(option) => `${option.title} (nodes: ${option.nodeCount})`}
-                                sx={{ width: 300 }}
-                                renderInput={(params) => <TextField {...params} />}
-                            />
-                            <Button
-                                variant="contained"
-                                startIcon={<AddIcon />}
-                                onClick={() => setCreateGroupDialogOpen(true)}
-                            >
-                                Create Group
-                            </Button>
-                        </Stack>
-
-                    </div>
-                </div>
-                <Button
+                    <Typography variant="h5" component="h1">
+                        React KPI Tree
+                    </Typography>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        <Autocomplete
+                            value={selectedGroup}
+                            onChange={(event, newValue) => setSelectedGroup(newValue)}
+                            options={groups}
+                            getOptionLabel={(option) => option ? `${option.title} (nodes: ${option.nodeCount})` : ""}
+                            sx={{ width: 300 }}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    size="small"
+                                    placeholder="Select a Group"
+                                />
+                            )}
+                        />
+                        <Button
                             variant="contained"
                             startIcon={<AddIcon />}
-                            onClick={() => setNodeManagementDialogOpen(true)}
-                            disabled={!selectedGroup}
+                            onClick={() => setCreateGroupDialogOpen(true)}
+                            size="small"
                         >
-                            Add Node
+                            Create Group
                         </Button>
-                <ReactFlowProvider>
-                    <div style={{ display: 'flex', gap: '20px' }}>
-                        <div style={blockCanvasSize}>
-                            <BlockCanvas
-                                nodes={nodes}
-                                edges={edges}
-                                onConnect={handleConnect}
-                                onNodesChange={handleNodesChange}
-                                onEdgesChange={handleEdgesChange}
-                            />
-                        </div>
-                        <NodePropertiesPanel style={{ height: blockCanvasSize.height }} />
-                    </div>
-                </ReactFlowProvider>
-
-                <NodeManagementDialog
-                    open={nodeManagementDialogOpen}
-                    onClose={() => setNodeManagementDialogOpen(false)}
-                    groupId={selectedGroup?.id || ''}
-                    hiddenNodes={hiddenNodes}
-                    selectedHiddenNode={selectedHiddenNode}
-                    onSelectedHiddenNodeChange={setSelectedHiddenNode}
-                    onRefresh={fetchHiddenNodes}
-                    onMakeVisible={makeNodeVisible}
-                    onNodeAdded={fetchHiddenNodes}
-                />
+                    </Stack>
+                </div>
             </header>
+
+            {/* Main Content Section */}
+            <main style={{ 
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '24px',
+                height: 0,
+                overflow: 'hidden',
+                padding: '24px'
+            }}>
+                {/* Canvas and Properties Section */}
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '24px',
+                    flex: 1,
+                    minHeight: 0,
+                    position: 'relative',
+                }}>
+                    <ReactFlowProvider>
+                        {/* Canvas Section */}
+                        <div style={{ 
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '16px',
+                            minWidth: 0,
+                            position: 'relative',
+                            height: '100%'
+                        }}>
+                            <div style={{ 
+                                flex: 1,
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '4px',
+                                overflow: 'hidden',
+                                minHeight: 0,
+                                position: 'relative',
+                                background: '#fff',
+                                height: '100%'
+                            }}>
+                                <BlockCanvas
+                                    nodes={nodes}
+                                    edges={edges}
+                                    onConnect={handleConnect}
+                                    onNodesChange={handleNodesChange}
+                                    onEdgesChange={handleEdgesChange}
+                                />
+                                {/* Floating Add Node Button */}
+                                {selectedGroup && (
+                                    <Fab
+                                        color="primary"
+                                        aria-label="add"
+                                        onClick={() => setNodeManagementDialogOpen(true)}
+                                        title="Add a Node"
+                                        sx={{
+                                            position: 'absolute',
+                                            top: 16,
+                                            right: 16,
+                                            zIndex: 2
+                                        }}
+                                    >
+                                        <AddIcon />
+                                    </Fab>
+                                )}
+                                {/* Collapsed Properties Panel Button */}
+                                {!isPropertiesExpanded && (
+                                    <Box
+                                        sx={{
+                                            position: 'absolute',
+                                            top: '50%',
+                                            right: 0,
+                                            transform: 'translateY(-50%)',
+                                            zIndex: 3,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            cursor: 'pointer',
+                                            background: '#fff',
+                                            border: '1px solid #e0e0e0',
+                                            borderRadius: '8px 0 0 8px',
+                                            boxShadow: 1,
+                                            px: 1,
+                                            py: 2
+                                        }}
+                                        onClick={togglePropertiesPanel}
+                                    >
+                                        <ChevronLeftIcon />
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                writingMode: 'vertical-rl',
+                                                textOrientation: 'mixed',
+                                                letterSpacing: '0.1em',
+                                                mt: 1
+                                            }}
+                                        >
+                                            Node Properties
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Properties Panel */}
+                        <Box sx={{
+                            width: isPropertiesExpanded ? propertiesWidth : 0,
+                            transition: 'width 0.3s ease',
+                            position: 'relative',
+                            border: isPropertiesExpanded ? '1px solid #e0e0e0' : 'none',
+                            borderRadius: '4px',
+                            overflow: 'hidden',
+                            minWidth: 0,
+                            background: '#fff',
+                            boxShadow: isPropertiesExpanded ? 1 : 'none',
+                            display: isPropertiesExpanded ? 'block' : 'none',
+                        }}>
+                            {isPropertiesExpanded && (
+                                <IconButton
+                                    onClick={togglePropertiesPanel}
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 8,
+                                        right: 8,
+                                        zIndex: 1,
+                                        backgroundColor: 'white',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(255, 255, 255, 0.9)'
+                                        }
+                                    }}
+                                >
+                                    <ChevronRightIcon />
+                                </IconButton>
+                            )}
+                            <NodePropertiesPanel style={{ 
+                                width: '100%',
+                                height: '100%'
+                            }} />
+                        </Box>
+                    </ReactFlowProvider>
+                </div>
+            </main>
+
+            {/* Dialogs */}
+            <NodeManagementDialog
+                open={nodeManagementDialogOpen}
+                onClose={() => setNodeManagementDialogOpen(false)}
+                groupId={selectedGroup?.id || ''}
+                hiddenNodes={hiddenNodes}
+                selectedHiddenNode={selectedHiddenNode}
+                onSelectedHiddenNodeChange={setSelectedHiddenNode}
+                onRefresh={fetchHiddenNodes}
+                onMakeVisible={makeNodeVisible}
+                onNodeAdded={fetchHiddenNodes}
+            />
 
             <CreateGroupDialog
                 open={createGroupDialogOpen}
