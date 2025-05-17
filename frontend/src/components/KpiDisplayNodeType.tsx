@@ -1,4 +1,4 @@
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, NodeProps } from '@xyflow/react';
 
 interface KpiDisplayNodeData {
     title: string;
@@ -6,12 +6,15 @@ interface KpiDisplayNodeData {
     elementId: string;
     kpiValue?: string;
     kpiValueType?: string;
+    element?: {
+        kpiValue?: string;
+    };
 }
 
-function KpiDisplayNodeType(node: any) {
-    // Safely access data with optional chaining and default values
-    const data = node?.data;
+function KpiDisplayNodeType(props: NodeProps) {
+    const data = props.data as unknown as KpiDisplayNodeData;
     const label = data?.label;
+    const isSelected = props.selected;
 
     return (
         <div className="kpi-display-node" style={{
@@ -21,11 +24,11 @@ function KpiDisplayNodeType(node: any) {
             fontSize: '12px',
             color: '#222',
             textAlign: 'center',
-            borderWidth: '1px',
+            borderWidth: isSelected ? '1px' : '0.5px',
             borderStyle: 'solid',
             backgroundColor: 'white',
-            borderColor: '#1a192b',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            borderColor: isSelected ? '#1a192b' : '#cccccc',
+            boxShadow: isSelected ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
             position: 'relative'
         }}>
             <Handle
