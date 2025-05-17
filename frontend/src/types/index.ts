@@ -5,6 +5,9 @@ export interface BlockNode extends Node {
     data: {
         label: string;
         elementId: string;
+        title?: string;
+        kpiValue?: string;
+        kpiValueType?: string;
     };
     hidden: boolean;
 }

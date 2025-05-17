@@ -1,7 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { useOnSelectionChange, useNodes } from '@xyflow/react';
-import { Paper, Typography, Box, List, ListItem, ListItemText, Divider, IconButton } from '@mui/material';
+import { 
+    Paper, Typography, Box, List, ListItem, ListItemText, Divider, IconButton,
+    Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
+    CircularProgress, Alert
+} from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import EditIcon from '@mui/icons-material/Edit';
 import { BlockNode } from '../types';
 
 interface NodePropertiesPanelProps {
@@ -49,8 +54,132 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ primary, secondary 
     );
 };
 
+interface EditNodeDialogProps {
+    open: boolean;
+    onClose: () => void;
+    node: BlockNode;
+}
+
+const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node }) => {
+    const [title, setTitle] = useState(node.data.title || '');
+    const [label, setLabel] = useState(node.data.label || '');
+    const [kpiValue, setKpiValue] = useState(node.data.kpiValue || '');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const validateKpiValue = (value: string, type: string): boolean => {
+        switch (type) {
+            case 'Integer':
+                return Number.isInteger(Number(value));
+            case 'Double':
+                return !isNaN(Number(value));
+            case 'String':
+                return true;
+            default:
+                return false;
+        }
+    };
+
+    const handleSubmit = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const promises = [];
+
+            if (title !== node.data.title || label !== node.data.label) {
+                promises.push(
+                    fetch('/graphs/node', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: node.id,
+                            title,
+                            label
+                        })
+                    })
+                );
+            }
+
+            if (kpiValue !== node.data.kpiValue) {
+                if (!validateKpiValue(kpiValue, node.data.kpiValueType)) {
+                    setError(`${kpiValue} is not ${node.data.kpiValueType}`);
+                    setLoading(false);
+                    return;
+                }
+
+                promises.push(
+                    fetch('/elements', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: node.data.elementId,
+                            kpiValue
+                        })
+                    })
+                );
+            }
+
+            await Promise.all(promises);
+            onClose();
+        } catch (err) {
+            setError('Failed to update node');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+            <DialogTitle>Edit Node</DialogTitle>
+            <DialogContent>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                    <TextField
+                        label="Title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Label"
+                        value={label}
+                        onChange={(e) => setLabel(e.target.value)}
+                        fullWidth
+                    />
+                    <Divider />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Typography>KPI ValueType: {node.data.kpiValueType}</Typography>
+                        <TextField
+                            label="KPI Value"
+                            value={kpiValue}
+                            onChange={(e) => setKpiValue(e.target.value)}
+                            fullWidth
+                        />
+                    </Box>
+                    {error && (
+                        <Alert severity="error" sx={{ mt: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
+                </Box>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Cancel</Button>
+                <Button 
+                    onClick={handleSubmit} 
+                    variant="contained"
+                    disabled={loading}
+                    startIcon={loading ? <CircularProgress size={20} /> : null}
+                >
+                    OK
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
+
 export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style }) => {
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
     const nodes = useNodes<BlockNode>();
 
     const onSelectionChange = useCallback(({ nodes }: { nodes: BlockNode[] }) => {
@@ -103,9 +232,17 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style 
                 ...style
             }}
         >
-            <Typography variant="h6" gutterBottom>
-                Node Properties
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                    Node Properties
+                </Typography>
+                <IconButton 
+                    onClick={() => setEditDialogOpen(true)}
+                    title="Edit node"
+                >
+                    <EditIcon />
+                </IconButton>
+            </Box>
             <List>
                 <PropertyListItem 
                     primary="ID" 
@@ -142,6 +279,11 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style 
                     secondary={selectedNode.type || 'default'}
                 />
             </List>
+            <EditNodeDialog
+                open={editDialogOpen}
+                onClose={() => setEditDialogOpen(false)}
+                node={selectedNode}
+            />
         </Paper>
     );
 }; 
