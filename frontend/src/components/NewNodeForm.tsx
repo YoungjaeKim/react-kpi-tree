@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNewNodeForm } from '../hooks/useNewNodeForm';
-import { addNode } from '../services/nodeService';
+import { addNode } from '../services/blockGraphService';
 import {
     TextField,
     Select,

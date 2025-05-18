@@ -3,7 +3,7 @@ import './App.css';
 import BlockCanvas from "./components/BlockCanvas";
 import { NodePropertiesPanel } from './components/NodePropertiesPanel';
 import { ReactFlowProvider } from '@xyflow/react';
-import { useAddNode } from './hooks/useAddNode';
+import { useBlockGraph } from './hooks/useBlockGraph';
 import {
     Button,
     Dialog,
@@ -119,7 +119,7 @@ function App() {
         handleEdgesChange,
         fetchHiddenNodes,
         makeNodeVisible
-    } = useAddNode(selectedGroup?.id || '');
+    } = useBlockGraph(selectedGroup?.id || '');
 
     useEffect(() => {
         fetchGroups();

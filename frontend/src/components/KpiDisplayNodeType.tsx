@@ -9,6 +9,7 @@ interface KpiDisplayNodeData {
     element?: {
         kpiValue?: string;
     };
+    connectionStatus?: boolean | null;
 }
 
 function KpiDisplayNodeType(props: NodeProps) {
@@ -55,6 +56,21 @@ function KpiDisplayNodeType(props: NodeProps) {
                 title="Label (optional)">
                     {label}
                 </div>
+            )}
+
+            {data.connectionStatus !== null && (
+                <div style={{
+                    position: 'absolute',
+                    top: '5px',
+                    right: '5px',
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: data.connectionStatus ? '#4CAF50' : '#9E9E9E',
+                    boxShadow: '0 0 2px rgba(0,0,0,0.2)'
+                }}
+                title={data.connectionStatus ? 'Connection Enabled' : 'Connection Disabled'}
+                />
             )}
 
             <div className="kpi-display-node-content" style={{

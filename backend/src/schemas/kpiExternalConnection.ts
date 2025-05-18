@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IKpiExternalConnection extends Document {
     name: string;
-    elementId: string;
+    elementId: mongoose.Types.ObjectId;
     type: string;
     parameters: Record<string, any>;
     url: string;
@@ -12,9 +12,9 @@ export interface IKpiExternalConnection extends Document {
     enable: boolean;
 }
 
-const kpiExternalConnectionSchema: Schema = new Schema({
+const kpiExternalConnectionSchema: Schema = new Schema<IKpiExternalConnection>({
     name: { type: String, required: true },
-    elementId: { type: String, required: true },
+    elementId: { type: Schema.Types.ObjectId, required: true },
     type: { type: String, required: true },
     parameters: { type: Schema.Types.Mixed, required: true },
     url: { type: String, required: true },

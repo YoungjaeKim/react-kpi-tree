@@ -1,10 +1,10 @@
 import {useState, useEffect} from 'react';
 import {Node} from '@xyflow/react';
 import {BlockNode, BlockEdge, BlockEdgeTransferForCreate} from '../types';
-import {getNodesAndElements, updateNode, addEdge} from '../services/nodeService';
+import {getNodesAndElements, updateNode, addEdge} from '../services/blockGraphService';
 import {toBlockNode} from '../utils/nodeUtils';
 
-export const useAddNode = (groupId: string) => {
+export const useBlockGraph = (groupId: string) => {
     const [nodes, setNodes] = useState<BlockNode[]>([]);
     const [edges, setEdges] = useState<BlockEdge[]>([]);
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -16,10 +16,38 @@ export const useAddNode = (groupId: string) => {
             return;
         }
         getNodesAndElements(`${process.env.REACT_APP_API_URL}/graphs?groupId=${groupId}&hidden=false`)
-            .then((response) => {
+            .then(async (response) => {
                 console.log(`Total nodes: ${response.nodes.length}, Total edges: ${response.edges.length}`);
                 setNodes(response.nodes);
                 setEdges(response.edges);
+
+                // Get all element IDs from nodes
+                const elementIds = response.nodes
+                    .map(node => node.data.elementId)
+                    .filter((id): id is string => id !== undefined);
+
+                if (elementIds.length > 0) {
+                    try {
+                        // Fetch connection statuses
+                        const statusResponse = await fetch(
+                            `${process.env.REACT_APP_API_URL}/connections/status?elementIds=${elementIds.join(',')}`
+                        );
+                        const statuses = await statusResponse.json();
+
+                        // Update nodes with connection statuses
+                        setNodes(prevNodes => 
+                            prevNodes.map(node => ({
+                                ...node,
+                                data: {
+                                    ...node.data,
+                                    connectionStatus: node.data.elementId ? statuses[node.data.elementId] ?? null : null
+                                }
+                            }))
+                        );
+                    } catch (error) {
+                        console.error('Failed to fetch connection statuses:', error);
+                    }
+                }
             })
             .catch((error) => {
                 console.log(error);

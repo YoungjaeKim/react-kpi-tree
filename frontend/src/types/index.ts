@@ -9,6 +9,7 @@ export interface BlockNode extends Node {
         kpiValue?: string;
         kpiValueType?: string;
         element?: BlockElement;
+        connectionStatus?: boolean | null;
     };
     hidden: boolean;
 }

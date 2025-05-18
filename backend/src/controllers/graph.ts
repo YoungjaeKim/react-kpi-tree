@@ -92,14 +92,21 @@ export const getGroupById = async (req: Request, res: Response): Promise<void> =
 export const getGraphs = async (req: Request, res: Response): Promise<void> => {
     try {
         const groupId = req.query.groupId as string;
+        const hidden = req.query.hidden as string;
 
         if (isNullOrEmpty(groupId)) {
             res.status(404).json({ error: "groupId is required" });
             return;
         }
 
+        // Build the query object
+        const query: { groupId: string; hidden?: boolean } = { groupId };
+        if (hidden !== undefined) {
+            query.hidden = hidden.toLowerCase() === 'true';
+        }
+
         const [nodes, edges] = await Promise.all([
-            KpiNode.find({ groupId: groupId }).populate<{ element: IKpiElement }>('elementId'),
+            KpiNode.find(query).populate<{ element: IKpiElement }>('elementId'),
             KpiEdge.find({ groupId: groupId })
         ]);
 
