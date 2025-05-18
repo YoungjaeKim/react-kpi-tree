@@ -348,11 +348,8 @@ function App() {
                             )}
                             <NodePropertiesPanel 
                                 style={{
-                                    position: 'absolute',
-                                    right: 0,
-                                    top: 0,
-                                    bottom: 0,
-                                    zIndex: 1000
+                                    width: '100%',
+                                    height: '100%'
                                 }}
                                 setNodes={setNodes}
                             />
