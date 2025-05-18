@@ -1,8 +1,8 @@
 import { Request, Response } from '../types/express';
-import KpiNode, { IKpiNode } from '../schemas/kpiNode';
-import KpiEdge, { IKpiEdge } from '../schemas/kpiEdge';
+import KpiNode from '../schemas/kpiNode';
+import KpiEdge from '../schemas/kpiEdge';
 import KpiElement, { IKpiElement } from '../schemas/kpiElement';
-import KpiGroup, { IKpiGroup } from '../schemas/kpiGroup';
+import KpiGroup from '../schemas/kpiGroup';
 import { isNullOrEmpty } from '../utils';
 
 interface NodeResponse {

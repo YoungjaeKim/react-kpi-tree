@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import elementRoute from './routes/element';
 import elementRecordRoute from './routes/element-records';
 import graphRoute from './routes/graph';
+import externalConnectionsRoute from './routes/external-connections';
 import { ExternalConnectionService } from './services/external-connection-service';
 import { ConfigurationService } from './services/config-service';
 import { ElementService } from './services/element-service';
@@ -58,6 +59,7 @@ configService.loadExternalConnectionsConfig(configPath)
 app.use('/elements', elementRoute);
 app.use('/element-records', elementRecordRoute);
 app.use('/graphs', graphRoute);
+app.use('/connections', externalConnectionsRoute);
 
 // Health check endpoint
 app.get('/', (_req, res) => {
@@ -76,4 +78,4 @@ const gracefulShutdown = async () => {
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
-export default app; 
+export default app;

@@ -43,6 +43,7 @@ function KpiDisplayNodeType(props: NodeProps) {
 
             {label && (
                 <div style={{
+                    borderRadius: '5px',
                     position: 'absolute',
                     top: '-8px',
                     left: '10px',
@@ -50,7 +51,8 @@ function KpiDisplayNodeType(props: NodeProps) {
                     padding: '0 4px',
                     fontSize: '10px',
                     color: '#666'
-                }}>
+                }}
+                title="Label (optional)">
                     {label}
                 </div>
             )}
