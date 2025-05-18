@@ -63,7 +63,8 @@ interface EditNodeDialogProps {
 const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node }) => {
     const [title, setTitle] = useState(node.data.title || '');
     const [label, setLabel] = useState(node.data.label || '');
-    const [kpiValue, setKpiValue] = useState(node.data.kpiValue || '');
+    const [kpiValue, setKpiValue] = useState(node.data.element?.kpiValue || '');
+    const [kpiValueType, setKpiValueType] = useState(node.data.element?.kpiValueType || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -71,7 +72,8 @@ const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node }) 
     useEffect(() => {
         setTitle(node.data.title || '');
         setLabel(node.data.label || '');
-        setKpiValue(node.data.kpiValue || '');
+        setKpiValue(node.data.element?.kpiValue || '');
+        setKpiValueType(node.data.element?.kpiValueType || '');
         setError(null);
     }, [node]);
 
@@ -156,7 +158,7 @@ const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node }) 
                     />
                     <Divider />
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography>KPI ValueType: {node.data.kpiValueType}</Typography>
+                        <Typography>{node.data.element?.kpiValueType || 'String'}</Typography>
                         <TextField
                             label="KPI Value"
                             value={kpiValue}
@@ -272,6 +274,21 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style 
                 <PropertyListItem 
                     primary="Element ID" 
                     secondary={String(selectedNode.data.elementId)}
+                />
+                <Divider />
+                <PropertyListItem 
+                    primary="KPI ValueType" 
+                    secondary={String(selectedNode.data.element?.kpiValueType)}
+                />
+                <Divider />
+                <PropertyListItem 
+                    primary="KPI Value" 
+                    secondary={String(selectedNode.data.element?.kpiValue)}
+                />
+                <Divider />
+                <PropertyListItem 
+                    primary="Connection Status" 
+                    secondary={String(selectedNode.data.connectionStatus)}
                 />
                 <Divider />
                 <PropertyListItem 
