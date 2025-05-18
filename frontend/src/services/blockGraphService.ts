@@ -52,7 +52,16 @@ export async function addEdge(edge: BlockEdgeTransferForCreate) {
     }
 }
 
-export async function updateNode(id: string, updates: { position?: { x: number, y: number }, hidden?: boolean }, setNodes?: React.Dispatch<React.SetStateAction<BlockNode[]>>) {
+export async function updateNode(
+    id: string, 
+    updates: { 
+        position?: { x: number, y: number }, 
+        hidden?: boolean,
+        title?: string,
+        label?: string
+    }, 
+    setNodes?: React.Dispatch<React.SetStateAction<BlockNode[]>>
+) {
     console.log("updateNode() is called");
     try {
         const response = await axios.post(`${API_URL}/graphs/node`, {

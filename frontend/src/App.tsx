@@ -118,7 +118,8 @@ function App() {
         handleConnect,
         handleEdgesChange,
         fetchHiddenNodes,
-        makeNodeVisible
+        makeNodeVisible,
+        setNodes
     } = useBlockGraph(selectedGroup?.id || '');
 
     useEffect(() => {
@@ -345,10 +346,16 @@ function App() {
                                     <ChevronRightIcon />
                                 </IconButton>
                             )}
-                            <NodePropertiesPanel style={{ 
-                                width: '100%',
-                                height: '100%'
-                            }} />
+                            <NodePropertiesPanel 
+                                style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    zIndex: 1000
+                                }}
+                                setNodes={setNodes}
+                            />
                         </Box>
                     </ReactFlowProvider>
                 </div>

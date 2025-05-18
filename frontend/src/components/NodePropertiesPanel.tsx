@@ -8,9 +8,12 @@ import {
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import { BlockNode } from '../types';
+import axios from 'axios';
+import { updateNode } from '../services/blockGraphService';
 
 interface NodePropertiesPanelProps {
     style?: React.CSSProperties;
+    setNodes: React.Dispatch<React.SetStateAction<BlockNode[]>>;
 }
 
 interface PropertyListItemProps {
@@ -58,9 +61,10 @@ interface EditNodeDialogProps {
     open: boolean;
     onClose: () => void;
     node: BlockNode;
+    setNodes: React.Dispatch<React.SetStateAction<BlockNode[]>>;
 }
 
-const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node }) => {
+const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node, setNodes }) => {
     const [title, setTitle] = useState(node.data.title || '');
     const [label, setLabel] = useState(node.data.label || '');
     const [kpiValue, setKpiValue] = useState(node.data.element?.kpiValue || '');
@@ -98,20 +102,15 @@ const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node }) 
 
             if (title !== node.data.title || label !== node.data.label) {
                 promises.push(
-                    fetch('/graphs/node', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            id: node.id,
-                            title,
-                            label
-                        })
-                    })
+                    updateNode(node.id, {
+                        title,
+                        label
+                    }, setNodes)
                 );
             }
 
-            if (kpiValue !== node.data.kpiValue) {
-                const valueType = node.data.kpiValueType || 'String';
+            if (kpiValue !== node.data.element?.kpiValue) {
+                const valueType = node.data.element?.kpiValueType || 'String';
                 if (!validateKpiValue(kpiValue, valueType)) {
                     setError(`${kpiValue} is not ${valueType}`);
                     setLoading(false);
@@ -119,13 +118,9 @@ const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node }) 
                 }
 
                 promises.push(
-                    fetch('/elements', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            id: node.data.elementId,
-                            kpiValue
-                        })
+                    axios.post(`${process.env.REACT_APP_API_URL}/elements`, {
+                        id: node.data.elementId,
+                        kpiValue
                     })
                 );
             }
@@ -188,7 +183,7 @@ const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node }) 
     );
 };
 
-export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style }) => {
+export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style, setNodes }) => {
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const nodes = useNodes<BlockNode>();
@@ -315,6 +310,7 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style 
                 open={editDialogOpen}
                 onClose={() => setEditDialogOpen(false)}
                 node={selectedNode}
+                setNodes={setNodes}
             />
         </Paper>
     );

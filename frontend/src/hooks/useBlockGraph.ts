@@ -156,6 +156,7 @@ export const useBlockGraph = (groupId: string) => {
         handleConnect,
         handleEdgesChange,
         fetchHiddenNodes,
-        makeNodeVisible
+        makeNodeVisible,
+        setNodes
     };
 }; 
