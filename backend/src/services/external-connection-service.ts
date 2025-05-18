@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { ExternalConnectionConfig, ExternalConnectionsConfig } from '../types/external-connection';
 import { ExternalConnectionAdapter } from '../adapters/external-connection-adapter';
 import { OpenSearchAdapter } from '../adapters/opensearch-adapter';
@@ -47,6 +48,78 @@ export class ExternalConnectionService {
             clearInterval(interval);
             this.connections.delete(name);
         }
+   }
+
+    // Fetch connections from API by elementId
+    public async getExternalConnections(elementId: string): Promise<ExternalConnectionConfig[]> {
+        try {
+            const apiUrl = process.env.EXTERNAL_CONNECTIONS_API_URL || 'http://localhost:5000/connections';
+            const response = await axios.get(apiUrl, { params: { elementId } });
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch external connections from API:', error);
+            return [];
+        }
+    }
+
+    // New start method for MongoDB-based config
+    public async startForElement(elementId: string): Promise<void> {
+        try {
+            const connections = await this.getExternalConnections(elementId);
+            if (!connections.length) {
+                console.log('No external connections found for elementId:', elementId);
+                return;
+            }
+            console.log(`Starting external connection service with ${connections.length} connection(s) for elementId ${elementId}`);
+            for (const connection of connections) {
+                await this.startConnection(connection);
+            }
+        } catch (error) {
+            console.error('Failed to start external connection service:', error);
+        }
+    }
+
+    // Fetch all enabled connections from API
+    public async getAllEnabledConnections(): Promise<ExternalConnectionConfig[]> {
+        try {
+            const apiUrl = process.env.EXTERNAL_CONNECTIONS_API_URL || 'http://localhost:8080/connections';
+            const response = await axios.get(apiUrl, { params: { enable: true } });
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch enabled external connections from API:', error);
+            return [];
+        }
+    }
+
+    // Start polling for all enabled connections
+    public async startAllEnabled(): Promise<void> {
+        try {
+            const connections = await this.getAllEnabledConnections();
+            if (!connections.length) {
+                console.log('No enabled external connections found.');
+                return;
+            }
+            console.log(`Starting external connection service with ${connections.length} enabled connection(s)`);
+            for (const connection of connections) {
+                await this.startConnection(connection);
+            }
+        } catch (error) {
+            console.error('Failed to start external connection service:', error);
+        }
+    }
+
+    // Add a public method to start polling for a single connection
+    public async startSingleConnection(config: ExternalConnectionConfig): Promise<void> {
+        await this.startConnection(config);
+    }
+
+    // Add a public method to stop polling for a single connection by name
+    public stopSingleConnection(name: string): void {
+        if (this.connections.has(name)) {
+            clearInterval(this.connections.get(name)!);
+            this.connections.delete(name);
+            console.log(`Stopped polling for connection: ${name}`);
+        }
     }
 
     private async startConnection(config: ExternalConnectionConfig): Promise<void> {
@@ -95,4 +168,4 @@ export class ExternalConnectionService {
             console.error(`Unexpected error during fetchAndUpdate for connection ${config.name}:`, error);
         }
     }
-} 
+}

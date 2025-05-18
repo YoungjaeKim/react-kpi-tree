@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import KpiExternalConnection from '../schemas/kpiExternalConnection';
+import { ExternalConnectionService } from '../services/external-connection-service';
 
 // POST /connections
 export const createConnection = async (req: Request, res: Response) => {
@@ -33,6 +34,39 @@ export const getConnectionById = async (req: Request, res: Response) => {
     const connection = await KpiExternalConnection.findById(id);
     if (!connection) {
       return res.status(404).json({ error: 'Connection not found' });
+    }
+    res.json(connection);
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// POST /connections/:id (update connection)
+export const updateConnection = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updateFields = (({ username, authToken, url, pollingPeriodSeconds, enable }) => ({ username, authToken, url, pollingPeriodSeconds, enable }))(req.body);
+    const connection = await KpiExternalConnection.findByIdAndUpdate(id, updateFields, { new: true });
+    if (!connection) {
+      return res.status(404).json({ error: 'Connection not found' });
+    }
+
+    // Dynamically start/stop polling for this connection
+    const app = req.app as any;
+    const elementService = app.locals.elementService;
+    if (!app.locals.activeExternalConnectionService) {
+      app.locals.activeExternalConnectionService = new ExternalConnectionService(elementService);
+    }
+    const service: ExternalConnectionService = app.locals.activeExternalConnectionService;
+    if (typeof updateFields.enable === 'boolean') {
+      if (updateFields.enable) {
+        // Start polling for this connection only
+        await service.startSingleConnection(connection.toObject());
+      } else {
+        // Stop polling for this connection only
+        service.stopSingleConnection(connection.name);
+      }
     }
     res.json(connection);
   } catch (error) {

@@ -19,6 +19,9 @@ const startServer = async () => {
             console.log(`Server is running on port ${PORT}`);
         });
 
+        // Initialize ExternalConnectionService after MongoDB connection
+        app.locals.initializeExternalConnectionService();
+
         // Handle graceful shutdown
         const gracefulShutdown = async () => {
             console.log('Shutdown signal received: closing HTTP server');
