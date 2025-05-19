@@ -8,8 +8,6 @@ import {
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import { BlockNode } from '../types';
-import axios from 'axios';
-import { updateNode } from '../services/blockGraphService';
 import { EditNodeDialog } from './EditNodeDialog';
 
 interface NodePropertiesPanelProps {
