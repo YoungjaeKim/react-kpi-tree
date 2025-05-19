@@ -1,6 +1,8 @@
-# react-kpi-tree
+# React KPI Tree
 
-This project is just my teatime coding to train Javascript realm (React.js, Typescript, express.js, etc).
+This project is my teatime coding to train Javascript realm (React.js, Typescript, express.js, etc).
+
+![First View](./assets/image_firstview.png)
 
 The `kpi-tree` is widely used KPI(Key Performance Index) management dashboard in order to track required business achievements.
 
