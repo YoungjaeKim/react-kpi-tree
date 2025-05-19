@@ -8,6 +8,7 @@ interface KpiDisplayNodeData {
     kpiValueType?: string;
     element?: {
         kpiValue?: string;
+        kpiValueType?: string;
     };
     connectionStatus?: boolean | null;
 }
@@ -85,7 +86,9 @@ function KpiDisplayNodeType(props: NodeProps) {
                 borderRadius: '3px',
                 fontSize: '11px'
             }}>
-                {data?.element?.kpiValue || '-'}
+                {data?.element?.kpiValueType === 'Integer' 
+                    ? Number(data?.element?.kpiValue).toLocaleString()
+                    : data?.element?.kpiValue || '-'}
             </div>
             <Handle
                 type='source'

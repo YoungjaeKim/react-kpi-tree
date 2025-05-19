@@ -102,15 +102,12 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
                         fullWidth
                     />
                     <Divider />
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography>{node.data.element?.kpiValueType || 'String'}</Typography>
-                        <TextField
-                            label="KPI Value"
-                            value={kpiValue}
-                            onChange={(e) => setKpiValue(e.target.value)}
-                            fullWidth
-                        />
-                    </Box>
+                    <TextField
+                        label={`KPI Value (${node.data.element?.kpiValueType || 'String'})`}
+                        value={kpiValue}
+                        onChange={(e) => setKpiValue(e.target.value)}
+                        fullWidth
+                    />
                     {error && (
                         <Alert severity="error" sx={{ mt: 2 }}>
                             {error}
