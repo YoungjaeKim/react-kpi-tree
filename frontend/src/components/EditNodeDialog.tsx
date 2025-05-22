@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
     CircularProgress, Alert, Box, Typography, Divider
 } from '@mui/material';
 import { BlockNode } from '../types';
 import axios from 'axios';
 import { updateNode } from '../services/blockGraphService';
+import { ExternalConnectionSettings } from './ExternalConnectionSettings';
 
 interface EditNodeDialogProps {
     open: boolean;
@@ -84,6 +85,46 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
         }
     };
 
+    const handleConnectionChange = async (connectionData: any) => {
+        // call GET /connections?=elementId and when 404 is returned, return.
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${node.data.elementId}`, {
+                validateStatus: (status) => status < 500 // Don't throw error for any status code less than 500
+            });
+
+            if (response.status === 404) {
+                // silently return
+                return;
+            }
+
+            if (!connectionData) {
+                // Disable connection
+                try {
+                    await axios.post(`${process.env.REACT_APP_API_URL}/connections/${node.data.elementId}`, {
+                        enable: false
+                    });
+                } catch (err) {
+                    setError('Failed to disable connection');
+                }
+                return;
+            }
+
+            // Create or update connection
+            try {
+                const response = await axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
+                    elementId: node.data.elementId,
+                    ...connectionData,
+                    enable: true
+                });
+            } catch (err) {
+                setError('Failed to update connection');
+            }
+        } catch (err) {
+            console.error("Unexpected error:", err);
+            setError('An unexpected error occurred');
+        }
+    };
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>Edit Node</DialogTitle>
@@ -108,6 +149,14 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
                         onChange={(e) => setKpiValue(e.target.value)}
                         fullWidth
                     />
+                    <Divider />
+
+                    <Typography variant="h6">External Connection</Typography>
+                    <ExternalConnectionSettings
+                        elementId={node.data.elementId}
+                        onConnectionChange={handleConnectionChange}
+                    />
+
                     {error && (
                         <Alert severity="error" sx={{ mt: 2 }}>
                             {error}
@@ -117,8 +166,8 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>Cancel</Button>
-                <Button 
-                    onClick={handleSubmit} 
+                <Button
+                    onClick={handleSubmit}
                     variant="contained"
                     disabled={loading}
                     startIcon={loading ? <CircularProgress size={20} /> : null}

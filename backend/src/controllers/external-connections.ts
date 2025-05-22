@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import KpiExternalConnection from "../schemas/kpiExternalConnection";
 import { ExternalConnectionService } from "../services/external-connection-service";
 import mongoose from 'mongoose';
+import app from "../app";
 
 // POST /connections
 export const createConnection = async (req: Request, res: Response) => {
@@ -16,11 +17,14 @@ export const createConnection = async (req: Request, res: Response) => {
 };
 
 // GET /connections?elementId={elementId}
-export const getConnections = async (req: Request, res: Response) => {
+export const getConnectionByElementId = async (req: Request, res: Response) => {
   try {
     const { elementId } = req.query;
     const filter = elementId ? { elementId } : {};
     const connections = await KpiExternalConnection.find(filter);
+    if (!connections || connections.length === 0) {
+      return res.status(404).json({ error: "No connections found by the elementId" });
+    }
     res.json(connections);
   } catch (error) {
     const err = error as Error;
@@ -127,6 +131,31 @@ export const getConnectionStatuses = async (req: Request, res: Response) => {
     }, {} as Record<string, boolean | null>);
 
     res.json(response);
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export interface ExternalConnectionConfig {
+  name: string;
+  elementId: string;
+  type: string;
+  parameters: Record<string, any>;
+  url: string;
+  username: string;
+  authToken: string;
+  pollingPeriodSeconds: number;
+  enable: boolean;
+}
+
+// GET /connections/spec
+export const getConnectionSpec = async (req: Request, res: Response) => {
+  try {
+    const adaptersMap = app.locals.activeExternalConnectionService.adapters;
+    const adapters = Array.from(adaptersMap.keys()).map(name => ({ name }));
+
+    res.json(adapters);
   } catch (error) {
     const err = error as Error;
     res.status(500).json({ error: err.message });

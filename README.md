@@ -79,7 +79,7 @@ Below is an example of `external-connections.json` file.
 ## To Do (as of 2025-05-05)
 - [ ] Node
   - [v] Hide Node
-  - [ ] Edit Node
+  - [v] Edit Node
   - [v] Unhide Node
   - [v] Reflect recent Element value on Node label
 - [ ] Edge
@@ -90,5 +90,5 @@ Below is an example of `external-connections.json` file.
 - [ ] Change MongoDB to PostgreSQL
 - [ ] Add more test cases
 - [ ] Group
-  - [ ] Create new Group
+  - [v] Create new Group
   - [ ] Archive a Group
