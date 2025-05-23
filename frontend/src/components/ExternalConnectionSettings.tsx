@@ -9,8 +9,13 @@ import {
     MenuItem,
     TextField,
     Typography,
-    CircularProgress
+    CircularProgress,
+    IconButton,
+    Paper
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 
 interface Adapter {
@@ -19,31 +24,81 @@ interface Adapter {
 
 interface ExternalConnectionSettingsProps {
     elementId: string;
+    connectionStatus: boolean | null;
     onConnectionChange: (connectionData: any) => void;
+}
+
+interface ParameterPair {
+    key: string;
+    value: string;
 }
 
 export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProps> = ({
     elementId,
+    connectionStatus,
     onConnectionChange
 }) => {
-    const [enabled, setEnabled] = useState(false);
+    const [enabled, setEnabled] = useState<boolean>(connectionStatus !== null);
     const [adapters, setAdapters] = useState<Adapter[]>([]);
     const [selectedAdapter, setSelectedAdapter] = useState<string>('');
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [adapterName, setAdapterName] = useState('');
+    const [adapterConfig, setAdapterConfig] = useState('');
+    const [isAdaptersLoaded, setIsAdaptersLoaded] = useState(false);
+    const [parameters, setParameters] = useState<ParameterPair[]>([]);
 
+    // First, fetch adapters
     useEffect(() => {
         const fetchAdapters = async () => {
             try {
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections/spec`);
                 setAdapters(response.data);
+                setIsAdaptersLoaded(true);
             } catch (err) {
                 setError('Failed to load adapter specifications');
             }
         };
         fetchAdapters();
     }, []);
+
+    // Then, fetch connection details after adapters are loaded
+    useEffect(() => {
+        const fetchConnectionDetails = async () => {
+            if (!isAdaptersLoaded || connectionStatus === null) return;
+
+            try {
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${elementId}`);
+                if (response.data && response.data.length > 0) {
+                    const connection = response.data[0];
+                    // Set adapter name and type
+                    setAdapterName(connection.name || '');
+                    setSelectedAdapter(connection.type || '');
+                    
+                    // Set all field values including parameters and other fields
+                    setFieldValues({
+                        ...connection.parameters,  // Include any custom parameters
+                        url: connection.url || '',
+                        username: connection.username || '',
+                        authToken: connection.authToken || '',
+                        pollingPeriodSeconds: connection.pollingPeriodSeconds?.toString() || ''
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch connection details:', error);
+            }
+        };
+        fetchConnectionDetails();
+    }, [isAdaptersLoaded, connectionStatus, elementId]);
+
+    // Update parameters when fieldValues changes
+    useEffect(() => {
+        const paramPairs = Object.entries(fieldValues)
+            .filter(([key]) => !['url', 'username', 'authToken', 'pollingPeriodSeconds'].includes(key))
+            .map(([key, value]) => ({ key, value: String(value) }));
+        setParameters(paramPairs);
+    }, [fieldValues]);
 
     const handleAdapterChange = (adapterName: string) => {
         setSelectedAdapter(adapterName);
@@ -62,24 +117,58 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
         const newEnabled = event.target.checked;
         setEnabled(newEnabled);
         if (!newEnabled) {
-            // Reset values when disabled
+            // Clear the fields when disabling
             setSelectedAdapter('');
             setFieldValues({});
+            onConnectionChange(null);
         }
     };
 
-    // Notify parent component of changes
-    useEffect(() => {
-        if (enabled && selectedAdapter) {
-            onConnectionChange({
-                elementId,
-                type: selectedAdapter,
-                ...fieldValues
-            });
-        } else {
-            onConnectionChange(null);
+    const handleParameterChange = (index: number, field: 'key' | 'value', value: string) => {
+        const newParameters = [...parameters];
+        newParameters[index] = { ...newParameters[index], [field]: value };
+        setParameters(newParameters);
+
+        // Update fieldValues with the new parameters
+        const newFieldValues = { ...fieldValues };
+        newParameters.forEach(({ key, value }) => {
+            if (key) { // Only add if key is not empty
+                newFieldValues[key] = value;
+            }
+        });
+        setFieldValues(newFieldValues);
+    };
+
+    const addParameter = () => {
+        setParameters([...parameters, { key: '', value: '' }]);
+    };
+
+    const removeParameter = (index: number) => {
+        const newParameters = parameters.filter((_, i) => i !== index);
+        setParameters(newParameters);
+
+        // Update fieldValues by removing the deleted parameter
+        const newFieldValues = { ...fieldValues };
+        delete newFieldValues[parameters[index].key];
+        setFieldValues(newFieldValues);
+    };
+
+    // Add a function to get current connection data
+    const getConnectionData = () => {
+        if (!enabled || !selectedAdapter) {
+            return null;
         }
-    }, [enabled, selectedAdapter, fieldValues, elementId, onConnectionChange]);
+        return {
+            elementId,
+            type: selectedAdapter,
+            ...fieldValues
+        };
+    };
+
+    // Expose getConnectionData to parent
+    useEffect(() => {
+        onConnectionChange(getConnectionData);
+    }, []);
 
     if (loading) {
         return <CircularProgress />;
@@ -145,6 +234,47 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
                                 onChange={(e) => handleFieldChange('pollingPeriodSeconds', e.target.value)}
                                 fullWidth
                             />
+
+                            {/* Parameters Section */}
+                            <Paper sx={{ p: 2, mt: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="subtitle1">Parameters</Typography>
+                                    <IconButton onClick={addParameter} size="small" color="primary">
+                                        <AddIcon />
+                                    </IconButton>
+                                </Box>
+                                {parameters.map((param, index) => (
+                                    <Box key={index} sx={{ display: 'flex', gap: 2, mb: 1 }}>
+                                        <Box sx={{ flex: 5 }}>
+                                            <TextField
+                                                label="Key"
+                                                value={param.key}
+                                                onChange={(e) => handleParameterChange(index, 'key', e.target.value)}
+                                                fullWidth
+                                                size="small"
+                                            />
+                                        </Box>
+                                        <Box sx={{ flex: 5 }}>
+                                            <TextField
+                                                label="Value"
+                                                value={param.value}
+                                                onChange={(e) => handleParameterChange(index, 'value', e.target.value)}
+                                                fullWidth
+                                                size="small"
+                                            />
+                                        </Box>
+                                        <Box sx={{ flex: 2, display: 'flex', alignItems: 'center' }}>
+                                            <IconButton 
+                                                onClick={() => removeParameter(index)}
+                                                size="small"
+                                                color="error"
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Box>
+                                    </Box>
+                                ))}
+                            </Paper>
                         </Box>
                     )}
                 </>

@@ -150,6 +150,7 @@ export interface ExternalConnectionConfig {
 }
 
 // GET /connections/spec
+// returns a list of available connection type names
 export const getConnectionSpec = async (req: Request, res: Response) => {
   try {
     const adaptersMap = app.locals.activeExternalConnectionService.adapters;

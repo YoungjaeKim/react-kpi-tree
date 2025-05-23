@@ -22,6 +22,7 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
     const [kpiValueType, setKpiValueType] = useState(node.data.element?.kpiValueType || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [getConnectionData, setGetConnectionData] = useState<(() => any) | null>(null);
 
     // Update form values when node changes
     useEffect(() => {
@@ -43,6 +44,10 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
             default:
                 return false;
         }
+    };
+
+    const handleConnectionChange = (getter: () => any) => {
+        setGetConnectionData(() => getter);
     };
 
     const handleSubmit = async () => {
@@ -76,52 +81,50 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
                 );
             }
 
+            // Handle connection changes
+            if (getConnectionData) {
+                const connectionData = getConnectionData();
+                try {
+                    const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${node.data.elementId}`, {
+                        validateStatus: (status) => status < 500
+                    });
+
+                    if (response.status === 404) {
+                        return;
+                    }
+
+                    if (!connectionData) {
+                        // Disable connection
+                        promises.push(
+                            axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
+                                elementId: node.data.elementId,
+                                enable: false
+                            })
+                        );
+                    } else {
+                        // Create or update connection
+                        promises.push(
+                            axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
+                                elementId: node.data.elementId,
+                                ...connectionData,
+                                enable: true
+                            })
+                        );
+                    }
+                } catch (err) {
+                    console.error("Unexpected error:", err);
+                    setError('An unexpected error occurred');
+                    setLoading(false);
+                    return;
+                }
+            }
+
             await Promise.all(promises);
             onClose();
         } catch (err) {
             setError('Failed to update node');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleConnectionChange = async (connectionData: any) => {
-        // call GET /connections?=elementId and when 404 is returned, return.
-        try {
-            const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${node.data.elementId}`, {
-                validateStatus: (status) => status < 500 // Don't throw error for any status code less than 500
-            });
-
-            if (response.status === 404) {
-                // silently return
-                return;
-            }
-
-            if (!connectionData) {
-                // Disable connection
-                try {
-                    await axios.post(`${process.env.REACT_APP_API_URL}/connections/${node.data.elementId}`, {
-                        enable: false
-                    });
-                } catch (err) {
-                    setError('Failed to disable connection');
-                }
-                return;
-            }
-
-            // Create or update connection
-            try {
-                const response = await axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
-                    elementId: node.data.elementId,
-                    ...connectionData,
-                    enable: true
-                });
-            } catch (err) {
-                setError('Failed to update connection');
-            }
-        } catch (err) {
-            console.error("Unexpected error:", err);
-            setError('An unexpected error occurred');
         }
     };
 
@@ -154,6 +157,7 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
                     <Typography variant="h6">External Connection</Typography>
                     <ExternalConnectionSettings
                         elementId={node.data.elementId}
+                        connectionStatus={node.data.connectionStatus ?? null}
                         onConnectionChange={handleConnectionChange}
                     />
 
