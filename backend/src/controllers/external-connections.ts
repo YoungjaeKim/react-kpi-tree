@@ -4,12 +4,55 @@ import { ExternalConnectionService } from "../services/external-connection-servi
 import mongoose from 'mongoose';
 import app from "../app";
 
-// POST /connections
-export const createConnection = async (req: Request, res: Response) => {
+// Helper function to manage ExternalConnectionService
+const startOrStopExternalConnectionService = async (app: any, connection: any, enable?: boolean) => {
+  if (!app.locals.activeExternalConnectionService) {
+    app.locals.activeExternalConnectionService = new ExternalConnectionService(app.locals.elementService);
+  }
+  const service: ExternalConnectionService = app.locals.activeExternalConnectionService;
+  
+  if (typeof enable === "boolean") {
+    if (enable) {
+      await service.startSingleConnection(connection.toObject());
+    } else {
+      service.stopSingleConnection(connection.name);
+    }
+  }
+};
+
+// Helper function to update connection
+const updateConnectionDocument = async (filter: any, updateData: any) => {
+  return await KpiExternalConnection.findOneAndUpdate(
+    filter,
+    { $set: updateData },
+    { new: true }
+  );
+};
+
+// POST /connections (create or update by elementId)
+export const updateConnectionByElementId = async (req: Request, res: Response) => {
   try {
-    const connection = new KpiExternalConnection(req.body);
-    await connection.save();
-    res.status(201).json(connection);
+    const { elementId, ...rest } = req.body;
+    let connection;
+
+    if (elementId) {
+      connection = await updateConnectionDocument({ elementId }, req.body);
+      if (!connection) {
+        // If not found, create new
+        connection = new KpiExternalConnection(req.body);
+        await connection.save();
+        await startOrStopExternalConnectionService(req.app, connection, req.body.enable);
+        return res.status(201).json(connection);
+      }
+    } else {
+      connection = new KpiExternalConnection(req.body);
+      await connection.save();
+      await startOrStopExternalConnectionService(req.app, connection, req.body.enable);
+      return res.status(201).json(connection);
+    }
+
+    await startOrStopExternalConnectionService(req.app, connection, req.body.enable);
+    return res.status(200).json(connection);
   } catch (error) {
     const err = error as Error;
     res.status(400).json({ error: err.message });
@@ -58,37 +101,15 @@ export const updateConnection = async (req: Request, res: Response) => {
     if (username !== undefined) updateFields.username = username;
     if (authToken !== undefined) updateFields.authToken = authToken;
     if (url !== undefined) updateFields.url = url;
-    if (pollingPeriodSeconds !== undefined)
-      updateFields.pollingPeriodSeconds = pollingPeriodSeconds;
+    if (pollingPeriodSeconds !== undefined) updateFields.pollingPeriodSeconds = pollingPeriodSeconds;
     if (enable !== undefined) updateFields.enable = enable;
 
-    const connection = await KpiExternalConnection.findByIdAndUpdate(
-      id,
-      updateFields,
-      { new: true }
-    );
+    const connection = await updateConnectionDocument({ _id: id }, updateFields);
     if (!connection) {
       return res.status(404).json({ error: "Connection not found" });
     }
 
-    // Dynamically start/stop polling for this connection
-    const app = req.app as any;
-    const elementService = app.locals.elementService;
-    if (!app.locals.activeExternalConnectionService) {
-      app.locals.activeExternalConnectionService =
-        new ExternalConnectionService(elementService);
-    }
-    const service: ExternalConnectionService =
-      app.locals.activeExternalConnectionService;
-    if (typeof updateFields.enable === "boolean") {
-      if (updateFields.enable) {
-        // Start polling for this connection only
-        await service.startSingleConnection(connection.toObject());
-      } else {
-        // Stop polling for this connection only
-        service.stopSingleConnection(connection.name);
-      }
-    }
+    await startOrStopExternalConnectionService(req.app, connection, updateFields.enable);
     res.json(connection);
   } catch (error) {
     const err = error as Error;
