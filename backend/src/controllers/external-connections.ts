@@ -22,15 +22,15 @@ const startOrStopExternalConnectionService = async (app: any, connection: any, e
 
 // Helper function to update connection
 const updateConnectionDocument = async (filter: any, updateData: any) => {
-  return await KpiExternalConnection.findOneAndUpdate(
-    filter,
-    { $set: updateData },
-    { new: true }
+  return KpiExternalConnection.findOneAndUpdate(
+      filter,
+      {$set: updateData},
+      {new: true}
   );
 };
 
 // POST /connections (create or update by elementId)
-export const updateConnectionByElementId = async (req: Request, res: Response) => {
+export const upsertConnectionByElementId = async (req: Request, res: Response) => {
   try {
     const { elementId, ...rest } = req.body;
     let connection;
