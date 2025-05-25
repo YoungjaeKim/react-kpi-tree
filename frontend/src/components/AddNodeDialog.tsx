@@ -14,56 +14,86 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { NewNodeForm } from './NewNodeForm';
 import { NodesShowHidePanel } from './NodesShowHidePanel';
-import { BlockNode } from '../types';
+import { BlockNode, BlockNodeTransferForCreate } from '../types';
+import { toBlockNode } from '../utils/nodeUtils';
+import { addNode, updateNode } from '../services/blockGraphService';
 
 interface AddNodeDialogProps {
     open: boolean;
     onClose: () => void;
     groupId: string;
-    hiddenNodes: BlockNode[];
-    selectedHiddenNode: string;
-    onSelectedHiddenNodeChange: (nodeId: string) => void;
-    onRefresh: () => void;
-    onMakeVisible: (nodeId: string) => void;
-    onNodeAdded: () => void;
+    onNodeAdded: (node: BlockNode) => void;
+    setNodes: React.Dispatch<React.SetStateAction<BlockNode[]>>;
 }
 
 export const AddNodeDialog: React.FC<AddNodeDialogProps> = ({
     open,
     onClose,
     groupId,
-    hiddenNodes,
-    selectedHiddenNode,
-    onSelectedHiddenNodeChange,
-    onRefresh,
-    onMakeVisible,
-    onNodeAdded
+    onNodeAdded,
+    setNodes
 }) => {
     const [mode, setMode] = useState<'add' | 'show'>('add');
     const [isTitleValid, setIsTitleValid] = useState(false);
+    const [hiddenNodes, setHiddenNodes] = useState<BlockNode[]>([]);
+    const [selectedHiddenNode, setSelectedHiddenNode] = useState<string>('');
+    const [formData, setFormData] = useState<BlockNodeTransferForCreate | null>(null);
+
+    const fetchHiddenNodes = async () => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/graphs/node?groupId=${groupId}&hidden=true`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch hidden nodes');
+            }
+            const data = await response.json();
+            setHiddenNodes(Array.isArray(data) ? data.map((node: any) => toBlockNode(node)) : []);
+        } catch (error) {
+            console.error('Error fetching hidden nodes:', error);
+            setHiddenNodes([]); // Set empty array on error
+        }
+    };
 
     useEffect(() => {
         if (open) {
-            onRefresh();
+            setSelectedHiddenNode('');
+            fetchHiddenNodes();
         }
-    }, [open, onRefresh]);
+    }, [open]);
 
     const handleClose = () => {
         onClose();
     };
 
-    const handleOK = () => {
-        if (mode === 'show' && selectedHiddenNode) {
-            onMakeVisible(selectedHiddenNode);
+    const handleOK = async () => {
+        try {
+            let responseNode: BlockNode;
+
+            if (mode === 'show' && selectedHiddenNode) {
+                // Show hidden node
+                responseNode = await updateNode(selectedHiddenNode, { hidden: false }, setNodes);
+            } else if (mode === 'add' && formData) {
+                // Create new node with form data
+                responseNode = await addNode(formData);
+            } else {
+                return;
+            }
+
+            // Update the nodes in the parent component
+            setNodes(prevNodes => [...prevNodes, toBlockNode(responseNode)]);
+            console.log("responseNode", toBlockNode(responseNode));
+            
+            // Close the dialog
+            onClose();
+        } catch (error) {
+            console.error('Error handling node operation:', error);
         }
-        onClose();
     };
 
     const isOKButtonDisabled = () => {
         if (mode === 'show') {
             return !selectedHiddenNode;
         }
-        return !isTitleValid;
+        return !isTitleValid || !formData;
     };
 
     return (
@@ -111,6 +141,7 @@ export const AddNodeDialog: React.FC<AddNodeDialogProps> = ({
                         groupId={groupId}
                         onNodeAdded={onNodeAdded}
                         onTitleChange={setIsTitleValid}
+                        onFormDataChange={setFormData}
                     />
                 </Box>
 
@@ -118,9 +149,9 @@ export const AddNodeDialog: React.FC<AddNodeDialogProps> = ({
                     <NodesShowHidePanel
                         hiddenNodes={hiddenNodes}
                         selectedHiddenNode={selectedHiddenNode}
-                        onSelectedHiddenNodeChange={onSelectedHiddenNodeChange}
-                        onRefresh={onRefresh}
-                        onMakeVisible={onMakeVisible}
+                        onSelectedHiddenNodeChange={setSelectedHiddenNode}
+                        onRefresh={fetchHiddenNodes}
+                        onMakeVisible={() => {}} // This is no longer used
                     />
                 </Box>
             </DialogContent>

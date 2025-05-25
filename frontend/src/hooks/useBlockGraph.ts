@@ -2,7 +2,6 @@ import {useState, useEffect} from 'react';
 import {Node} from '@xyflow/react';
 import {BlockNode, BlockEdge, BlockEdgeTransferForCreate} from '../types';
 import {getNodesAndElements, updateNode, addEdge} from '../services/blockGraphService';
-import {toBlockNode} from '../utils/nodeUtils';
 
 export const useBlockGraph = (groupId: string) => {
     const [nodes, setNodes] = useState<BlockNode[]>([]);
@@ -75,7 +74,6 @@ export const useBlockGraph = (groupId: string) => {
                     updateNode(node.id, {hidden: true}, setNodes)
                         .then(() => {
                             setSelectedNode(null);
-                            fetchHiddenNodes();
                         })
                         .catch((error) => {
                             console.error('Failed to hide node:', error);
@@ -120,31 +118,6 @@ export const useBlockGraph = (groupId: string) => {
         }
     };
 
-    const fetchHiddenNodes = async () => {
-        try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/graphs/node?groupId=${groupId}&hidden=true`);
-            const data = await response.json();
-            const blockNodes = data.nodes.map((node: any) => toBlockNode(node));
-            setHiddenNodes(blockNodes);
-        } catch (error) {
-            console.error('Failed to fetch hidden nodes:', error);
-        }
-    };
-
-    const makeNodeVisible = async () => {
-        if (!selectedHiddenNode) return;
-
-        try {
-            const response = await updateNode(selectedHiddenNode, {hidden: false}, setNodes);
-            if (response) {
-                setSelectedHiddenNode("");
-                fetchHiddenNodes();
-            }
-        } catch (error) {
-            console.error('Failed to make node visible:', error);
-        }
-    };
-
     return {
         nodes,
         edges,
@@ -155,8 +128,6 @@ export const useBlockGraph = (groupId: string) => {
         handleNodesChange,
         handleConnect,
         handleEdgesChange,
-        fetchHiddenNodes,
-        makeNodeVisible,
         setNodes
     };
 }; 

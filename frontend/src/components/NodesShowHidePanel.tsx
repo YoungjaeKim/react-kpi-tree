@@ -16,7 +16,6 @@ export const NodesShowHidePanel: React.FC<NodesShowHidePanelProps> = ({
     selectedHiddenNode,
     onSelectedHiddenNodeChange,
     onRefresh,
-    onMakeVisible
 }) => {
     return (
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>

@@ -171,8 +171,8 @@ export const getNodes = async (req: Request, res: Response): Promise<void> => {
         // Find KpiNodes based on the query and populate KpiElement by elementId
         const kpiNodes = await KpiNode.find(query).populate<{ element: IKpiElement }>('elementId').exec();
 
-        res.json({
-            nodes: kpiNodes.map((node) => {
+        res.json(
+            kpiNodes.map((node) => {
                 const nodeObject = node.toObject() as any;
                 const { elementId, _id, ...rest } = nodeObject;
                 const response = {
@@ -195,8 +195,8 @@ export const getNodes = async (req: Request, res: Response): Promise<void> => {
                 }
 
                 return response;
-            }),
-        });
+            })
+        );
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error at getNodes' });
@@ -262,7 +262,17 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
                 return;
             }
             const nodeObject = populatedNode.toObject();
-            res.status(201).json({...nodeObject, id: nodeObject._id, _id: undefined}); // change _id to id.
+            const { elementId, ...nodeWithoutElementId } = nodeObject;
+            res.status(201).json({
+                ...nodeWithoutElementId,
+                id: nodeObject._id,
+                _id: undefined,
+                element: elementId ? {
+                    ...elementId,
+                    id: elementId._id,
+                    _id: undefined
+                } : undefined
+            });
         } catch (err) {
             console.error('Failed to save document:', err);
             res.status(500).json({ error: 'Failed to save document' });

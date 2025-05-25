@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNewNodeForm } from '../hooks/useNewNodeForm';
-import { addNode } from '../services/blockGraphService';
 import {
     TextField,
     Select,
@@ -11,14 +10,21 @@ import {
     FormHelperText,
     Typography
 } from '@mui/material';
+import { BlockNode, BlockNodeTransferForCreate } from '../types';
 
 interface NewNodeFormProps {
     groupId: string;
-    onNodeAdded: () => void;
+    onNodeAdded: (node: BlockNode) => void;
     onTitleChange?: (isValid: boolean) => void;
+    onFormDataChange?: (data: BlockNodeTransferForCreate | null) => void;
 }
 
-export const NewNodeForm: React.FC<NewNodeFormProps> = ({ groupId, onNodeAdded, onTitleChange }) => {
+export const NewNodeForm: React.FC<NewNodeFormProps> = ({ 
+    groupId, 
+    onNodeAdded, 
+    onTitleChange,
+    onFormDataChange 
+}) => {
     const {
         title,
         setTitle,
@@ -30,21 +36,17 @@ export const NewNodeForm: React.FC<NewNodeFormProps> = ({ groupId, onNodeAdded, 
         elementValueError,
         handleElementValueTypeChange,
         validateElementValue,
-        resetForm
     } = useNewNodeForm();
 
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newTitle = e.target.value;
         setTitle(newTitle);
         onTitleChange?.(newTitle.trim().length > 0);
+        updateFormData();
     };
 
-    const handleSubmit = async () => {
-        if (!validateElementValue(elementValue, elementValueType)) {
-            return;
-        }
-
-        const newNode = {
+    const updateFormData = () => {
+        const formData: BlockNodeTransferForCreate = {
             position: { x: 100, y: 100 },
             groupId: groupId,
             title: title,
@@ -55,15 +57,14 @@ export const NewNodeForm: React.FC<NewNodeFormProps> = ({ groupId, onNodeAdded, 
             elementExpression: "",
             elementId: ""
         };
-
-        try {
-            await addNode(newNode);
-            resetForm();
-            onNodeAdded();
-        } catch (error) {
-            console.error('Failed to add node:', error);
-        }
+        onFormDataChange?.(formData);
     };
+
+    // Update form data when any field changes
+    React.useEffect(() => {
+        updateFormData();
+    }, [title, label, elementValue, elementValueType]);
+
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -80,7 +81,10 @@ export const NewNodeForm: React.FC<NewNodeFormProps> = ({ groupId, onNodeAdded, 
             <TextField
                 label="Label"
                 value={label}
-                onChange={(e) => setLabel(e.target.value)}
+                onChange={(e) => {
+                    setLabel(e.target.value);
+                    updateFormData();
+                }}
                 fullWidth
             />
             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
@@ -88,7 +92,10 @@ export const NewNodeForm: React.FC<NewNodeFormProps> = ({ groupId, onNodeAdded, 
                     <InputLabel>Element Value Type</InputLabel>
                     <Select
                         value={elementValueType}
-                        onChange={(e) => handleElementValueTypeChange(e.target.value)}
+                        onChange={(e) => {
+                            handleElementValueTypeChange(e.target.value);
+                            updateFormData();
+                        }}
                         label="Element Value Type"
                     >
                         <MenuItem value="Integer">Integer</MenuItem>
@@ -103,6 +110,7 @@ export const NewNodeForm: React.FC<NewNodeFormProps> = ({ groupId, onNodeAdded, 
                         onChange={(e) => {
                             if (validateElementValue(e.target.value, elementValueType)) {
                                 setElementValue(e.target.value);
+                                updateFormData();
                             }
                         }}
                         error={!!elementValueError}

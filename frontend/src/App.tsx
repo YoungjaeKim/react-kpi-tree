@@ -111,14 +111,9 @@ function App() {
     const {
         nodes,
         edges,
-        hiddenNodes,
-        selectedHiddenNode,
-        setSelectedHiddenNode,
         handleNodesChange,
         handleConnect,
         handleEdgesChange,
-        fetchHiddenNodes,
-        makeNodeVisible,
         setNodes
     } = useBlockGraph(selectedGroup?.id || '');
 
@@ -363,12 +358,11 @@ function App() {
                 open={addNodeDialogOpen}
                 onClose={() => setAddNodeDialogOpen(false)}
                 groupId={selectedGroup?.id || ''}
-                hiddenNodes={hiddenNodes}
-                selectedHiddenNode={selectedHiddenNode}
-                onSelectedHiddenNodeChange={setSelectedHiddenNode}
-                onRefresh={fetchHiddenNodes}
-                onMakeVisible={makeNodeVisible}
-                onNodeAdded={fetchHiddenNodes}
+                onNodeAdded={(node) => {
+                    // Refresh the graph data after a node is added
+                    // handleNodesChange([]);
+                }}
+                setNodes={setNodes}
             />
 
             <CreateGroupDialog
