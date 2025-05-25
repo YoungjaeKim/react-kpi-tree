@@ -79,9 +79,8 @@ export const AddNodeDialog: React.FC<AddNodeDialogProps> = ({
             }
 
             // Update the nodes in the parent component
-            setNodes(prevNodes => [...prevNodes, toBlockNode(responseNode)]);
-            console.log("responseNode", toBlockNode(responseNode));
-            
+            setNodes(prevNodes => [...prevNodes, responseNode]);
+
             // Close the dialog
             onClose();
         } catch (error) {

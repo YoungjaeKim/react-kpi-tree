@@ -23,7 +23,7 @@ export async function addNode(node: BlockNodeTransferForCreate) : Promise<BlockN
     console.log("addNode() is called");
     try {
         const response = await axios.post(`${API_URL}/graphs/node`, node);
-        return response.data as BlockNode;
+        return toBlockNode(response.data);
     } catch (error) {
         console.log(error);
         throw error;
@@ -75,7 +75,7 @@ export async function updateNode(
                 )
             );
         }
-        return response.data as BlockNode;
+        return toBlockNode(response.data);
     } catch (error) {
         console.error('Failed to update node:', error);
         throw error;
