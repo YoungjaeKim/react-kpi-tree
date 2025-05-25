@@ -32,7 +32,7 @@ export const NodesShowHidePanel: React.FC<NodesShowHidePanelProps> = ({
                     </MenuItem>
                     {hiddenNodes.map((node) => (
                         <MenuItem key={node.id} value={node.id}>
-                            {node.data.label}
+                            {node.data.title}
                         </MenuItem>
                     ))}
                 </Select>
