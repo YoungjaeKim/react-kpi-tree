@@ -3,7 +3,9 @@ import KpiNode from '../schemas/kpiNode';
 import KpiEdge from '../schemas/kpiEdge';
 import KpiElement, { IKpiElement } from '../schemas/kpiElement';
 import KpiGroup from '../schemas/kpiGroup';
+import KpiExternalConnection from '../schemas/kpiExternalConnection';
 import { isNullOrEmpty } from '../utils';
+import { Document, Types } from 'mongoose';
 
 interface NodeResponse {
     id: string;
@@ -21,6 +23,7 @@ interface NodeResponse {
         isActive: boolean;
         expression?: string;
         lastUpdatedDateTime: Date;
+        connectionStatus?: boolean;
     };
     hidden: boolean;
 }
@@ -30,6 +33,39 @@ interface EdgeResponse {
     source: string;
     target: string;
     groupId: string;
+}
+
+interface PopulatedElement extends IKpiElement {
+    externalConnection?: {
+        enable: boolean;
+    };
+}
+
+interface PopulatedNode extends Document {
+    elementId: PopulatedElement;
+    position: {
+        x: number;
+        y: number;
+    };
+    groupId: Types.ObjectId;
+    title?: string;
+    description?: string;
+    label?: string;
+    hidden: boolean;
+}
+
+interface PopulatedNodeObject {
+    elementId: PopulatedElement;
+    position: {
+        x: number;
+        y: number;
+    };
+    groupId: Types.ObjectId;
+    title?: string;
+    description?: string;
+    label?: string;
+    hidden: boolean;
+    _id: Types.ObjectId;
 }
 
 export const createGroup = async (req: Request, res: Response): Promise<void> => {
@@ -106,13 +142,29 @@ export const getGraphs = async (req: Request, res: Response): Promise<void> => {
         }
 
         const [nodes, edges] = await Promise.all([
-            KpiNode.find(query).populate<{ element: IKpiElement }>('elementId'),
+            KpiNode.find(query)
+                .populate<{ elementId: PopulatedElement }>('elementId'),
             KpiEdge.find({ groupId: groupId })
         ]);
 
+        // Get all elementIds from nodes
+        const elementIds = nodes
+            .map(node => node.elementId?._id)
+            .filter(id => id !== undefined);
+
+        // Fetch external connections for all elements at once
+        const externalConnections = await KpiExternalConnection.find({
+            elementId: { $in: elementIds }
+        });
+
+        // Create a map of elementId to connection status
+        const connectionMap = new Map(
+            externalConnections.map(conn => [conn.elementId.toString(), conn.enable])
+        );
+
         res.json({
             nodes: nodes.map((node) => {
-                const nodeObject = node.toObject() as any;
+                const nodeObject = node.toObject() as PopulatedNodeObject;
                 const { elementId, _id, ...rest } = nodeObject;
                 const response = {
                     ...rest,
@@ -129,7 +181,8 @@ export const getGraphs = async (req: Request, res: Response): Promise<void> => {
                         kpiValueType,
                         isActive,
                         expression,
-                        lastUpdatedDateTime
+                        lastUpdatedDateTime,
+                        connectionStatus: connectionMap.get(elementIdValue.toString()) || false
                     };
                 }
 
@@ -169,11 +222,28 @@ export const getNodes = async (req: Request, res: Response): Promise<void> => {
         }
 
         // Find KpiNodes based on the query and populate KpiElement by elementId
-        const kpiNodes = await KpiNode.find(query).populate<{ element: IKpiElement }>('elementId').exec();
+        const kpiNodes = await KpiNode.find(query)
+            .populate<{ elementId: PopulatedElement }>('elementId')
+            .exec();
+
+        // Get all elementIds from nodes
+        const elementIds = kpiNodes
+            .map(node => node.elementId?._id)
+            .filter(id => id !== undefined);
+
+        // Fetch external connections for all elements at once
+        const externalConnections = await KpiExternalConnection.find({
+            elementId: { $in: elementIds }
+        });
+
+        // Create a map of elementId to connection status
+        const connectionMap = new Map(
+            externalConnections.map(conn => [conn.elementId.toString(), conn.enable])
+        );
 
         res.json(
             kpiNodes.map((node) => {
-                const nodeObject = node.toObject() as any;
+                const nodeObject = node.toObject() as PopulatedNodeObject;
                 const { elementId, _id, ...rest } = nodeObject;
                 const response = {
                     ...rest,
@@ -190,7 +260,8 @@ export const getNodes = async (req: Request, res: Response): Promise<void> => {
                         kpiValueType,
                         isActive,
                         expression,
-                        lastUpdatedDateTime
+                        lastUpdatedDateTime,
+                        connectionStatus: connectionMap.get(elementIdValue.toString()) || false
                     };
                 }
 
@@ -212,15 +283,35 @@ export const getNodeById = async (req: Request, res: Response): Promise<void> =>
 
     try {
         // Find the resource with the matching ID and populate elementId
-        const resource = await KpiNode.findById(resourceId).populate<{ elementId: IKpiElement }>('elementId');
+        const resource = await KpiNode.findById(resourceId)
+            .populate<{ elementId: PopulatedElement }>('elementId');
 
         if (!resource) {
-            // Return a 404 response if the resource is not found
             res.status(404).json({ error: "Resource not found" });
         } else {
-            // Return the resource as the response
-            const nodeObject = resource.toObject();
-            res.json({ ...nodeObject, id: nodeObject._id, _id: undefined });
+            const nodeObject = resource.toObject() as PopulatedNodeObject;
+            const { elementId, _id, ...rest } = nodeObject;
+            
+            // Get connection status if elementId exists
+            let connectionStatus = false;
+            if (elementId) {
+                const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
+                connectionStatus = externalConnection?.enable || false;
+            }
+
+            const response = {
+                ...rest,
+                id: _id.toString(),
+                groupId: rest.groupId.toString(),
+                element: elementId ? {
+                    ...elementId,
+                    id: elementId._id.toString(),
+                    _id: undefined,
+                    connectionStatus
+                } : undefined
+            };
+            
+            res.json(response);
         }
     } catch (err) {
         console.error(err);
@@ -256,13 +347,24 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
             });
             const savedKpiNode = await newKpiNode.save();
             // Populate the elementId before sending response
-            const populatedNode = await KpiNode.findById(savedKpiNode._id).populate<{ elementId: IKpiElement }>('elementId');
+            const populatedNode = await KpiNode.findById(savedKpiNode._id)
+                .populate<{ elementId: PopulatedElement }>('elementId');
+
             if (!populatedNode) {
                 res.status(404).json({ error: 'Node not found after creation' });
                 return;
             }
-            const nodeObject = populatedNode.toObject();
+
+            const nodeObject = populatedNode.toObject() as PopulatedNodeObject;
             const { elementId, ...nodeWithoutElementId } = nodeObject;
+
+            // Get connection status if elementId exists
+            let connectionStatus = false;
+            if (elementId) {
+                const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
+                connectionStatus = externalConnection?.enable || false;
+            }
+
             res.status(201).json({
                 ...nodeWithoutElementId,
                 id: nodeObject._id,
@@ -270,7 +372,8 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
                 element: elementId ? {
                     ...elementId,
                     id: elementId._id,
-                    _id: undefined
+                    _id: undefined,
+                    connectionStatus
                 } : undefined
             });
         } catch (err) {
@@ -294,13 +397,24 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
 
             const savedKpiNode = await kpiNode.save();
             // Populate the elementId before sending response
-            const populatedNode = await KpiNode.findById(savedKpiNode._id).populate<{ elementId: IKpiElement }>('elementId');
+            const populatedNode = await KpiNode.findById(savedKpiNode._id)
+                .populate<{ elementId: PopulatedElement }>('elementId');
+
             if (!populatedNode) {
                 res.status(404).json({ error: 'Node not found after update' });
                 return;
             }
-            const nodeObject = populatedNode.toObject();
+
+            const nodeObject = populatedNode.toObject() as PopulatedNodeObject;
             const { elementId, ...nodeWithoutElementId } = nodeObject;
+
+            // Get connection status if elementId exists
+            let connectionStatus = false;
+            if (elementId) {
+                const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
+                connectionStatus = externalConnection?.enable || false;
+            }
+
             res.status(200).json({
                 ...nodeWithoutElementId,
                 id: nodeObject._id,
@@ -308,7 +422,8 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
                 element: elementId ? {
                     ...elementId,
                     id: elementId._id,
-                    _id: undefined
+                    _id: undefined,
+                    connectionStatus
                 } : undefined
             });
         } catch (err) {
