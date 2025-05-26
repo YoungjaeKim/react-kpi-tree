@@ -10,7 +10,7 @@ export function toBlockNode(n: any): BlockNode {
             label: n.label,
             elementId: n.elementId ? n.elementId : n.element?.id,
             element: n.element as BlockElement,
-            connectionStatus: n.connectionStatus
+            connectionStatus: n.element?.connectionStatus
         },
         hidden: n.hidden ?? false,
         type: 'kpiDisplayNodeType'
