@@ -296,7 +296,7 @@ export const getNodeById = async (req: Request, res: Response): Promise<void> =>
             let connectionStatus = null;
             if (elementId) {
                 const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
-                connectionStatus = externalConnection?.enable || null;
+                connectionStatus = externalConnection?.enable ?? null;
             }
 
             const response = {
@@ -362,7 +362,7 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
             let connectionStatus = null;
             if (elementId) {
                 const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
-                connectionStatus = externalConnection?.enable || null;
+                connectionStatus = externalConnection?.enable ?? null;
             }
 
             res.status(201).json({
@@ -412,7 +412,7 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
             let connectionStatus = null;
             if (elementId) {
                 const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
-                connectionStatus = externalConnection?.enable || null;
+                connectionStatus = externalConnection?.enable ?? null;
             }
 
             res.status(200).json({
@@ -494,7 +494,7 @@ export const updateNode = async (req: Request, res: Response): Promise<void> => 
         let connectionStatus = null;
         if (elementId) {
             const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
-            connectionStatus = externalConnection?.enable || null;
+            connectionStatus = externalConnection?.enable ?? null;
         }
 
         res.json({
