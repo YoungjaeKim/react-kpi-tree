@@ -59,7 +59,7 @@ function KpiDisplayNodeType(props: NodeProps) {
                 </div>
             )}
 
-            {data.connectionStatus !== null && (
+            {(data.connectionStatus !== null && data.connectionStatus !== undefined) && (
                 <div style={{
                     position: 'absolute',
                     top: '5px',

@@ -23,7 +23,7 @@ interface NodeResponse {
         isActive: boolean;
         expression?: string;
         lastUpdatedDateTime: Date;
-        connectionStatus?: boolean;
+        connectionStatus?: boolean | null;
     };
     hidden: boolean;
 }
@@ -182,7 +182,7 @@ export const getGraphs = async (req: Request, res: Response): Promise<void> => {
                         isActive,
                         expression,
                         lastUpdatedDateTime,
-                        connectionStatus: connectionMap.get(elementIdValue.toString()) || false
+                        connectionStatus: connectionMap.get(elementIdValue.toString()) || null
                     };
                 }
 
@@ -261,7 +261,7 @@ export const getNodes = async (req: Request, res: Response): Promise<void> => {
                         isActive,
                         expression,
                         lastUpdatedDateTime,
-                        connectionStatus: connectionMap.get(elementIdValue.toString()) || false
+                        connectionStatus: connectionMap.get(elementIdValue.toString()) || null
                     };
                 }
 
@@ -293,10 +293,10 @@ export const getNodeById = async (req: Request, res: Response): Promise<void> =>
             const { elementId, _id, ...rest } = nodeObject;
             
             // Get connection status if elementId exists
-            let connectionStatus = false;
+            let connectionStatus = null;
             if (elementId) {
                 const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
-                connectionStatus = externalConnection?.enable || false;
+                connectionStatus = externalConnection?.enable || null;
             }
 
             const response = {
@@ -359,10 +359,10 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
             const { elementId, ...nodeWithoutElementId } = nodeObject;
 
             // Get connection status if elementId exists
-            let connectionStatus = false;
+            let connectionStatus = null;
             if (elementId) {
                 const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
-                connectionStatus = externalConnection?.enable || false;
+                connectionStatus = externalConnection?.enable || null;
             }
 
             res.status(201).json({
@@ -409,10 +409,10 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
             const { elementId, ...nodeWithoutElementId } = nodeObject;
 
             // Get connection status if elementId exists
-            let connectionStatus = false;
+            let connectionStatus = null;
             if (elementId) {
                 const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
-                connectionStatus = externalConnection?.enable || false;
+                connectionStatus = externalConnection?.enable || null;
             }
 
             res.status(200).json({
@@ -478,7 +478,36 @@ export const updateNode = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
-        res.json(node);
+        // Populate the elementId before sending response
+        const populatedNode = await KpiNode.findById(node._id)
+            .populate<{ elementId: PopulatedElement }>('elementId');
+
+        if (!populatedNode) {
+            res.status(404).json({ error: 'Node not found after update' });
+            return;
+        }
+
+        const nodeObject = populatedNode.toObject() as PopulatedNodeObject;
+        const { elementId, ...nodeWithoutElementId } = nodeObject;
+
+        // Get connection status if elementId exists
+        let connectionStatus = null;
+        if (elementId) {
+            const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
+            connectionStatus = externalConnection?.enable || null;
+        }
+
+        res.json({
+            ...nodeWithoutElementId,
+            id: nodeObject._id,
+            _id: undefined,
+            element: elementId ? {
+                ...elementId,
+                id: elementId._id,
+                _id: undefined,
+                connectionStatus
+            } : undefined
+        });
     } catch (error) {
         console.error('Error updating node:', error);
         res.status(500).json({ error: 'Internal server error' });
