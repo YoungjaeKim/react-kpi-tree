@@ -125,18 +125,30 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
     };
 
     const handleParameterChange = (index: number, field: 'key' | 'value', value: string) => {
-        const newParameters = [...parameters];
-        newParameters[index] = { ...newParameters[index], [field]: value };
-        setParameters(newParameters);
+        setParameters(prevParameters => {
+            const newParameters = [...prevParameters];
+            newParameters[index] = { ...newParameters[index], [field]: value };
+            return newParameters;
+        });
 
         // Update fieldValues with the new parameters
-        const newFieldValues = { ...fieldValues };
-        newParameters.forEach(({ key, value }) => {
-            if (key) { // Only add if key is not empty
-                newFieldValues[key] = value;
+        setFieldValues(prevFieldValues => {
+            const newFieldValues = { ...prevFieldValues };
+            if (field === 'key') {
+                // Remove the old key if it exists
+                const oldKey = parameters[index].key;
+                if (oldKey) {
+                    delete newFieldValues[oldKey];
+                }
             }
+            // Add the new key-value pair
+            if (field === 'key' && value) {
+                newFieldValues[value] = parameters[index].value;
+            } else if (field === 'value' && parameters[index].key) {
+                newFieldValues[parameters[index].key] = value;
+            }
+            return newFieldValues;
         });
-        setFieldValues(newFieldValues);
     };
 
     const addParameter = () => {

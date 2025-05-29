@@ -85,22 +85,20 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
             if (getConnectionData) {
                 const connectionData = getConnectionData();
                 try {
-                    const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${node.data.elementId}`, {
-                        validateStatus: (status) => status < 500
-                    });
-
-                    if (response.status === 404) {
-                        return;
-                    }
 
                     if (!connectionData) {
-                        // Disable connection
-                        promises.push(
-                            axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
-                                elementId: node.data.elementId,
-                                enable: false
-                            })
-                        );
+                        // Disable connection if it exists
+                        const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${node.data.elementId}`, {
+                            validateStatus: (status) => status < 500
+                        });    
+                        if (response.status !== 404) {
+                            promises.push(
+                                axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
+                                    elementId: node.data.elementId,
+                                    enable: false
+                                })
+                            );
+                        }
                     } else {
                         // Create or update connection
                         promises.push(
