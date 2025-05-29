@@ -320,23 +320,24 @@ export const getNodeById = async (req: Request, res: Response): Promise<void> =>
 };
 
 export const upsertNode = async (req: Request, res: Response): Promise<void> => {
-    if (isNullOrEmpty(req.body.id)) { // create
-        // check elementId is empty
-        if (isNullOrEmpty(req.body.elementId)) {
-            // create Element first
-            const newKpiElement = new KpiElement({
-                kpiValue: req.body.elementValue,
-                kpiValueType: req.body.elementValueType,
-                isActive: req.body.elementIsActive,
-                expression: req.body.elementExpression,
-                lastUpdatedDateTime: Date.now()
-            });
-            const savedKpiElement = await newKpiElement.save();
-            req.body.elementId = savedKpiElement._id;
-        }
+    try {
+        let kpiNode;
+        let isNew = false;
 
-        try {
-            const newKpiNode = new KpiNode({
+        // Handle element creation if needed
+        if (isNullOrEmpty(req.body.id)) {
+            if (isNullOrEmpty(req.body.elementId)) {
+                const newKpiElement = new KpiElement({
+                    kpiValue: req.body.elementValue,
+                    kpiValueType: req.body.elementValueType,
+                    isActive: req.body.elementIsActive,
+                    expression: req.body.elementExpression,
+                    lastUpdatedDateTime: Date.now()
+                });
+                const savedKpiElement = await newKpiElement.save();
+                req.body.elementId = savedKpiElement._id;
+            }
+            kpiNode = new KpiNode({
                 position: req.body.position,
                 groupId: req.body.groupId,
                 title: req.body.title,
@@ -345,46 +346,12 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
                 elementId: req.body.elementId,
                 hidden: req.body.hidden
             });
-            const savedKpiNode = await newKpiNode.save();
-            // Populate the elementId before sending response
-            const populatedNode = await KpiNode.findById(savedKpiNode._id)
-                .populate<{ elementId: PopulatedElement }>('elementId');
-
-            if (!populatedNode) {
-                res.status(404).json({ error: 'Node not found after creation' });
-                return;
-            }
-
-            const nodeObject = populatedNode.toObject() as PopulatedNodeObject;
-            const { elementId, ...nodeWithoutElementId } = nodeObject;
-
-            // Get connection status if elementId exists
-            let connectionStatus = null;
-            if (elementId) {
-                const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
-                connectionStatus = externalConnection?.enable ?? null;
-            }
-
-            res.status(201).json({
-                ...nodeWithoutElementId,
-                id: nodeObject._id,
-                _id: undefined,
-                element: elementId ? {
-                    ...elementId,
-                    id: elementId._id,
-                    _id: undefined,
-                    connectionStatus
-                } : undefined
-            });
-        } catch (err) {
-            console.error('Failed to save document:', err);
-            res.status(500).json({ error: 'Failed to save document' });
-        }
-    } else { // update
-        try {
-            const kpiNode = await KpiNode.findById(req.body.id);
+            await kpiNode.save();
+            isNew = true;
+        } else {
+            kpiNode = await KpiNode.findById(req.body.id);
             if (!kpiNode) {
-                res.status(404).json({error: `Node resource id '${req.body.id}' not found`});
+                res.status(404).json({ error: `Node resource id '${req.body.id}' not found` });
                 return;
             }
             kpiNode.position = req.body.position !== undefined ? req.body.position : kpiNode.position;
@@ -394,42 +361,39 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
             kpiNode.label = req.body.label !== undefined ? req.body.label : kpiNode.label;
             kpiNode.elementId = req.body.elementId || kpiNode.elementId;
             kpiNode.hidden = req.body.hidden !== undefined ? req.body.hidden : kpiNode.hidden;
-
-            const savedKpiNode = await kpiNode.save();
-            // Populate the elementId before sending response
-            const populatedNode = await KpiNode.findById(savedKpiNode._id)
-                .populate<{ elementId: PopulatedElement }>('elementId');
-
-            if (!populatedNode) {
-                res.status(404).json({ error: 'Node not found after update' });
-                return;
-            }
-
-            const nodeObject = populatedNode.toObject() as PopulatedNodeObject;
-            const { elementId, ...nodeWithoutElementId } = nodeObject;
-
-            // Get connection status if elementId exists
-            let connectionStatus = null;
-            if (elementId) {
-                const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
-                connectionStatus = externalConnection?.enable ?? null;
-            }
-
-            res.status(200).json({
-                ...nodeWithoutElementId,
-                id: nodeObject._id,
-                _id: undefined,
-                element: elementId ? {
-                    ...elementId,
-                    id: elementId._id,
-                    _id: undefined,
-                    connectionStatus
-                } : undefined
-            });
-        } catch (err) {
-            console.error('Failed to update document:', err);
-            res.status(500).json({ error: 'Failed to update document' });
+            await kpiNode.save();
         }
+
+        // Populate and format response
+        const populatedNode = await KpiNode.findById(kpiNode._id)
+            .populate<{ elementId: PopulatedElement }>('elementId');
+        if (!populatedNode) {
+            res.status(404).json({ error: isNew ? 'Node not found after creation' : 'Node not found after update' });
+            return;
+        }
+        const nodeObject = populatedNode.toObject() as PopulatedNodeObject;
+        const { elementId, ...nodeWithoutElementId } = nodeObject;
+
+        let connectionStatus = null;
+        if (elementId) {
+            const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
+            connectionStatus = externalConnection?.enable ?? null;
+        }
+
+        res.status(isNew ? 201 : 200).json({
+            ...nodeWithoutElementId,
+            id: nodeObject._id,
+            _id: undefined,
+            element: elementId ? {
+                ...elementId,
+                id: elementId._id,
+                _id: undefined,
+                connectionStatus
+            } : undefined
+        });
+    } catch (err) {
+        console.error('Failed to upsert node:', err);
+        res.status(500).json({ error: 'Failed to upsert node' });
     }
 };
 

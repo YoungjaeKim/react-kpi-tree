@@ -32,27 +32,20 @@ const updateConnectionDocument = async (filter: any, updateData: any) => {
 // POST /connections (create or update by elementId)
 export const upsertConnectionByElementId = async (req: Request, res: Response) => {
   try {
-    const { elementId, ...rest } = req.body;
-    let connection;
+    const { elementId } = req.body;
+    let connection = elementId
+        ? await updateConnectionDocument({ elementId }, req.body)
+        : null;
 
-    if (elementId) {
-      connection = await updateConnectionDocument({ elementId }, req.body);
-      if (!connection) {
-        // If not found, create new
-        connection = new KpiExternalConnection(req.body);
-        await connection.save();
-        await startOrStopExternalConnectionService(req.app, connection, req.body.enable);
-        return res.status(201).json(connection);
-      }
-    } else {
+    let isNew = false;
+    if (!connection) {
       connection = new KpiExternalConnection(req.body);
       await connection.save();
-      await startOrStopExternalConnectionService(req.app, connection, req.body.enable);
-      return res.status(201).json(connection);
+      isNew = true;
     }
 
     await startOrStopExternalConnectionService(req.app, connection, req.body.enable);
-    return res.status(200).json(connection);
+    return res.status(isNew ? 201 : 200).json(connection);
   } catch (error) {
     const err = error as Error;
     res.status(400).json({ error: err.message });
