@@ -68,6 +68,29 @@ interface PopulatedNodeObject {
     _id: Types.ObjectId;
 }
 
+function transformNodeResponse(node: PopulatedNodeObject, connectionStatus: boolean | null): NodeResponse {
+    const { elementId, _id, ...rest } = node;
+    const response = {
+        ...rest,
+        id: _id.toString(),
+        groupId: rest.groupId.toString()
+    } as NodeResponse;
+
+    if (elementId) {
+        const { _id: elementIdValue, kpiValue, kpiValueType, isActive, expression, lastUpdatedDateTime } = elementId;
+        response.element = {
+            id: elementIdValue.toString(),
+            kpiValue,
+            kpiValueType,
+            isActive,
+            expression,
+            lastUpdatedDateTime,
+            connectionStatus
+        };
+    }
+    return response;
+}
+
 export const createGroup = async (req: Request, res: Response): Promise<void> => {
     try {
         const { title, archived } = req.body;
@@ -165,28 +188,8 @@ export const getGraphs = async (req: Request, res: Response): Promise<void> => {
         res.json({
             nodes: nodes.map((node) => {
                 const nodeObject = node.toObject() as PopulatedNodeObject;
-                const { elementId, _id, ...rest } = nodeObject;
-                const response = {
-                    ...rest,
-                    id: _id.toString(),
-                    groupId: rest.groupId.toString()
-                } as NodeResponse;
-
-                // Add element if elementId exists
-                if (elementId) {
-                    const { _id: elementIdValue, kpiValue, kpiValueType, isActive, expression, lastUpdatedDateTime } = elementId;
-                    response.element = {
-                        id: elementIdValue.toString(),
-                        kpiValue,
-                        kpiValueType,
-                        isActive,
-                        expression,
-                        lastUpdatedDateTime,
-                        connectionStatus: connectionMap.get(elementIdValue.toString()) || null
-                    };
-                }
-
-                return response;
+                const connectionStatus = connectionMap.get(nodeObject.elementId?._id.toString()) || null;
+                return transformNodeResponse(nodeObject, connectionStatus);
             }),
             edges: edges.map((edge) => {
                 const edgeObject = edge.toObject();
@@ -244,28 +247,8 @@ export const getNodes = async (req: Request, res: Response): Promise<void> => {
         res.json(
             kpiNodes.map((node) => {
                 const nodeObject = node.toObject() as PopulatedNodeObject;
-                const { elementId, _id, ...rest } = nodeObject;
-                const response = {
-                    ...rest,
-                    id: _id.toString(),
-                    groupId: rest.groupId.toString()
-                } as NodeResponse;
-
-                // Add element if elementId exists
-                if (elementId) {
-                    const { _id: elementIdValue, kpiValue, kpiValueType, isActive, expression, lastUpdatedDateTime } = elementId;
-                    response.element = {
-                        id: elementIdValue.toString(),
-                        kpiValue,
-                        kpiValueType,
-                        isActive,
-                        expression,
-                        lastUpdatedDateTime,
-                        connectionStatus: connectionMap.get(elementIdValue.toString()) || null
-                    };
-                }
-
-                return response;
+                const connectionStatus = connectionMap.get(nodeObject.elementId?._id.toString()) || null;
+                return transformNodeResponse(nodeObject, connectionStatus);
             })
         );
     } catch (err) {
@@ -290,28 +273,15 @@ export const getNodeById = async (req: Request, res: Response): Promise<void> =>
             res.status(404).json({ error: "Resource not found" });
         } else {
             const nodeObject = resource.toObject() as PopulatedNodeObject;
-            const { elementId, _id, ...rest } = nodeObject;
             
             // Get connection status if elementId exists
             let connectionStatus = null;
-            if (elementId) {
-                const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
+            if (nodeObject.elementId) {
+                const externalConnection = await KpiExternalConnection.findOne({ elementId: nodeObject.elementId._id });
                 connectionStatus = externalConnection?.enable ?? null;
             }
 
-            const response = {
-                ...rest,
-                id: _id.toString(),
-                groupId: rest.groupId.toString(),
-                element: elementId ? {
-                    ...elementId,
-                    id: elementId._id.toString(),
-                    _id: undefined,
-                    connectionStatus
-                } : undefined
-            };
-            
-            res.json(response);
+            res.json(transformNodeResponse(nodeObject, connectionStatus));
         }
     } catch (err) {
         console.error(err);
@@ -372,25 +342,14 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
             return;
         }
         const nodeObject = populatedNode.toObject() as PopulatedNodeObject;
-        const { elementId, ...nodeWithoutElementId } = nodeObject;
 
         let connectionStatus = null;
-        if (elementId) {
-            const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
+        if (nodeObject.elementId) {
+            const externalConnection = await KpiExternalConnection.findOne({ elementId: nodeObject.elementId._id });
             connectionStatus = externalConnection?.enable ?? null;
         }
 
-        res.status(isNew ? 201 : 200).json({
-            ...nodeWithoutElementId,
-            id: nodeObject._id,
-            _id: undefined,
-            element: elementId ? {
-                ...elementId,
-                id: elementId._id,
-                _id: undefined,
-                connectionStatus
-            } : undefined
-        });
+        res.status(isNew ? 201 : 200).json(transformNodeResponse(nodeObject, connectionStatus));
     } catch (err) {
         console.error('Failed to upsert node:', err);
         res.status(500).json({ error: 'Failed to upsert node' });
@@ -452,26 +411,15 @@ export const updateNode = async (req: Request, res: Response): Promise<void> => 
         }
 
         const nodeObject = populatedNode.toObject() as PopulatedNodeObject;
-        const { elementId, ...nodeWithoutElementId } = nodeObject;
 
         // Get connection status if elementId exists
         let connectionStatus = null;
-        if (elementId) {
-            const externalConnection = await KpiExternalConnection.findOne({ elementId: elementId._id });
+        if (nodeObject.elementId) {
+            const externalConnection = await KpiExternalConnection.findOne({ elementId: nodeObject.elementId._id });
             connectionStatus = externalConnection?.enable ?? null;
         }
 
-        res.json({
-            ...nodeWithoutElementId,
-            id: nodeObject._id,
-            _id: undefined,
-            element: elementId ? {
-                ...elementId,
-                id: elementId._id,
-                _id: undefined,
-                connectionStatus
-            } : undefined
-        });
+        res.json(transformNodeResponse(nodeObject, connectionStatus));
     } catch (error) {
         console.error('Error updating node:', error);
         res.status(500).json({ error: 'Internal server error' });
