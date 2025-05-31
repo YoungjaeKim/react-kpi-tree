@@ -48,6 +48,19 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
     const [adapterConfig, setAdapterConfig] = useState('');
     const [isAdaptersLoaded, setIsAdaptersLoaded] = useState(false);
     const [parameters, setParameters] = useState<ParameterPair[]>([]);
+    const [connectionName, setConnectionName] = useState('');
+
+    // Generate default name when adapter is selected
+    useEffect(() => {
+        if (selectedAdapter && !connectionName) {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const defaultName = `${selectedAdapter}-${yyyy}${mm}${dd}`;
+            setConnectionName(defaultName);
+        }
+    }, [selectedAdapter, connectionName]);
 
     // First, fetch adapters
     useEffect(() => {
@@ -102,8 +115,10 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
 
     const handleAdapterChange = (adapterName: string) => {
         setSelectedAdapter(adapterName);
-        // Reset field values when adapter changes
-        setFieldValues({});
+        // Reset field values when adapter changes, but set default polling period
+        setFieldValues({
+            pollingPeriodSeconds: '20'  // Set default polling period
+        });
     };
 
     const handleFieldChange = (fieldName: string, value: string) => {
@@ -167,12 +182,24 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
 
     // Add a function to get current connection data
     const getConnectionData = () => {
-        if (!enabled || !selectedAdapter) {
+        if (!enabled || !selectedAdapter || !connectionName) {
             return null;
         }
+
+        // Convert parameters array to object, ensuring it's always an object
+        const parametersObject = parameters.reduce((acc, { key, value }) => {
+            if (key) {  // Only include parameters with keys
+                acc[key] = value;
+            }
+            return acc;
+        }, {} as Record<string, string>);
+
         return {
             elementId,
+            name: connectionName,
             type: selectedAdapter,
+            parameters: parametersObject,  // This will always be an object, even if empty
+            pollingPeriodSeconds: fieldValues.pollingPeriodSeconds ? Number(fieldValues.pollingPeriodSeconds) : 20,
             ...fieldValues
         };
     };
@@ -180,7 +207,7 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
     // Expose getConnectionData to parent
     useEffect(() => {
         onConnectionChange(getConnectionData);
-    }, []);
+    }, [enabled, selectedAdapter, fieldValues]);
 
     if (loading) {
         return <CircularProgress />;
@@ -221,6 +248,15 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
 
                     {selectedAdapter && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <TextField
+                                label="Connection Name"
+                                value={connectionName}
+                                onChange={(e) => setConnectionName(e.target.value)}
+                                required
+                                fullWidth
+                                error={!connectionName}
+                                helperText={!connectionName ? "Connection name is required" : ""}
+                            />
                             <TextField
                                 label="URL"
                                 value={fieldValues.url || ''}

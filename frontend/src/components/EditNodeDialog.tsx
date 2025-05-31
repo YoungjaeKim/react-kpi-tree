@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
     CircularProgress, Alert, Box, Typography, Divider
 } from '@mui/material';
-import { BlockNode } from '../types';
+import {BlockNode} from '../types';
 import axios from 'axios';
-import { updateNode } from '../services/blockGraphService';
-import { ExternalConnectionSettings } from './ExternalConnectionSettings';
+import {updateNode} from '../services/blockGraphService';
+import {ExternalConnectionSettings} from './ExternalConnectionSettings';
 
 interface EditNodeDialogProps {
     open: boolean;
@@ -15,7 +15,7 @@ interface EditNodeDialogProps {
     setNodes: React.Dispatch<React.SetStateAction<BlockNode[]>>;
 }
 
-export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, node, setNodes }) => {
+export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({open, onClose, node, setNodes}) => {
     const [title, setTitle] = useState(node.data.title || '');
     const [label, setLabel] = useState(node.data.label || '');
     const [kpiValue, setKpiValue] = useState(node.data.element?.kpiValue || '');
@@ -85,21 +85,23 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
             if (getConnectionData) {
                 const connectionData = getConnectionData();
                 try {
+                    const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${node.data.elementId}`, {
+                        validateStatus: (status) => status < 500
+                    });
 
-                    if (!connectionData) {
-                        // Disable connection if it exists
-                        const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${node.data.elementId}`, {
-                            validateStatus: (status) => status < 500
-                        });    
-                        if (response.status !== 404) {
-                            promises.push(
-                                axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
-                                    elementId: node.data.elementId,
-                                    enable: false
-                                })
-                            );
-                        }
-                    } else {
+                    console.log("Connection status:", response.status);
+                    if (!connectionData && response.status === 200) { // No connection data provided, but connection exists
+                        console.log("conditon 1:", connectionData, response.status);
+                        // Disable connection
+                        promises.push(
+                            axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
+                                elementId: node.data.elementId,
+                                enable: false
+                            })
+                        );
+                    } else if (connectionData) { // Connection data provided, upsert connection
+                        console.log("conditon 2:", connectionData);
+
                         // Create or update connection
                         promises.push(
                             axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
@@ -108,6 +110,9 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
                                 enable: true
                             })
                         );
+                    } else{
+                        console.log("conditon 3:", connectionData);
+                        // do nothing if no connection data and no existing connection
                     }
                 } catch (err) {
                     console.error("Unexpected error:", err);
@@ -130,7 +135,7 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>Edit Node</DialogTitle>
             <DialogContent>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                <Box sx={{display: 'flex', flexDirection: 'column', gap: 2, mt: 2}}>
                     <TextField
                         label="Title"
                         value={title}
@@ -143,14 +148,14 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
                         onChange={(e) => setLabel(e.target.value)}
                         fullWidth
                     />
-                    <Divider />
+                    <Divider/>
                     <TextField
                         label={`KPI Value (${node.data.element?.kpiValueType || 'String'})`}
                         value={kpiValue}
                         onChange={(e) => setKpiValue(e.target.value)}
                         fullWidth
                     />
-                    <Divider />
+                    <Divider/>
 
                     <Typography variant="h6">External Connection</Typography>
                     <ExternalConnectionSettings
@@ -160,7 +165,7 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
                     />
 
                     {error && (
-                        <Alert severity="error" sx={{ mt: 2 }}>
+                        <Alert severity="error" sx={{mt: 2}}>
                             {error}
                         </Alert>
                     )}
@@ -172,7 +177,7 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({ open, onClose, n
                     onClick={handleSubmit}
                     variant="contained"
                     disabled={loading}
-                    startIcon={loading ? <CircularProgress size={20} /> : null}
+                    startIcon={loading ? <CircularProgress size={20}/> : null}
                 >
                     OK
                 </Button>
