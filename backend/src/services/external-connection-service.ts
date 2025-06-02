@@ -3,6 +3,7 @@ import { ExternalConnectionConfig, ExternalConnectionsConfig } from '../types/ex
 import { ExternalConnectionAdapter } from '../adapters/external-connection-adapter';
 import { OpenSearchAdapter } from '../adapters/opensearch-adapter';
 import { JsonAdapter } from '../adapters/json-adapter';
+import { TableauAdapter } from '../adapters/tableau-adapter';
 import { ElementService } from './element-service';
 
 export class ExternalConnectionService {
@@ -18,6 +19,7 @@ export class ExternalConnectionService {
         // Register adapters
         this.adapters.set('OpenSearch', new OpenSearchAdapter());
         this.adapters.set('Json', new JsonAdapter());
+        this.adapters.set('Tableau', new TableauAdapter());
     }
 
     public async start(): Promise<void> {

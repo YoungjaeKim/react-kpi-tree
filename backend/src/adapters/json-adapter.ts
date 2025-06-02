@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as jsonpath from 'jsonpath';
+import * as jsonpath from 'jsonpath-plus';
 import { ExternalConnectionConfig, ExternalConnectionResponse } from '../types/external-connection';
 import { ExternalConnectionAdapter } from './external-connection-adapter';
 
@@ -20,10 +20,10 @@ export class JsonAdapter implements ExternalConnectionAdapter {
             
             // Extract value using JSONPath
             const jsonPath = config.parameters.jsonPath as string;
-            const values = jsonpath.query(response.data, jsonPath);
+            const values = jsonpath.JSONPath({ path: jsonPath, json: response.data });
             
             // Return the first value found, or null if none found
-            const value = values.length > 0 ? values[0] : null;
+            const value = values.length > 0 ? values[0] : "";
 
             return {
                 success: true,
