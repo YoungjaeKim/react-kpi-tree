@@ -7,6 +7,7 @@ import {BlockNode} from '../types';
 import axios from 'axios';
 import {updateNode} from '../services/blockGraphService';
 import {ExternalConnectionSettings} from './ExternalConnectionSettings';
+import {toBlockNode} from '../utils/nodeUtils';
 
 interface EditNodeDialogProps {
     open: boolean;
@@ -90,29 +91,38 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({open, onClose, no
                     });
 
                     console.log("Connection status:", response.status);
-                    if (!connectionData && response.status === 200) { // No connection data provided, but connection exists
-                        console.log("conditon 1:", connectionData, response.status);
-                        // Disable connection
+                    if (response.status === 200) { // Connection exists on server
+                        if (!connectionData) {
+                            // No connection data provided, disable existing connection
+                            console.log("condition 1: Disable existing connection");
+                            promises.push(
+                                axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
+                                    elementId: node.data.elementId,
+                                    enable: false
+                                })
+                            );
+                        } else {
+                            // Connection data provided, update with enable state from data
+                            console.log("condition 2: Update connection with data");
+                            promises.push(
+                                axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
+                                    elementId: node.data.elementId,
+                                    ...connectionData
+                                })
+                            );
+                        }
+                    } else if (response.status === 404 && connectionData) {
+                        // No existing connection but new connection data provided
+                        console.log("condition 3: Create new connection");
                         promises.push(
                             axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
                                 elementId: node.data.elementId,
-                                enable: false
+                                ...connectionData
                             })
                         );
-                    } else if (connectionData) { // Connection data provided, upsert connection
-                        console.log("conditon 2:", connectionData);
-
-                        // Create or update connection
-                        promises.push(
-                            axios.post(`${process.env.REACT_APP_API_URL}/connections`, {
-                                elementId: node.data.elementId,
-                                ...connectionData,
-                                enable: true
-                            })
-                        );
-                    } else{
-                        console.log("conditon 3:", connectionData);
-                        // do nothing if no connection data and no existing connection
+                    } else {
+                        console.log("condition 4: No action needed");
+                        // No existing connection and no new connection data
                     }
                 } catch (err) {
                     console.error("Unexpected error:", err);
@@ -123,6 +133,14 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({open, onClose, no
             }
 
             await Promise.all(promises);
+            
+            // Update the local state with the new node data
+            const updatedNode = await axios.get(`${process.env.REACT_APP_API_URL}/graphs/node/${node.id}`);
+            console.log("updatedNode", updatedNode);
+            setNodes(prevNodes => 
+                prevNodes.map(n => n.id === node.id ? toBlockNode(updatedNode.data) : n)
+            );
+            
             onClose();
         } catch (err) {
             setError('Failed to update node');

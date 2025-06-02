@@ -258,15 +258,15 @@ export const getNodes = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const getNodeById = async (req: Request, res: Response): Promise<void> => {
-    const resourceId = req.params.id;
-    if (isNullOrEmpty(resourceId)) {
+    const nodeId = req.params.id;
+    if (isNullOrEmpty(nodeId)) {
         res.status(400).json({ error: "invalid id" });
         return;
     }
 
     try {
         // Find the resource with the matching ID and populate elementId
-        const resource = await KpiNode.findById(resourceId)
+        const resource = await KpiNode.findById(nodeId)
             .populate<{ elementId: PopulatedElement }>('elementId');
 
         if (!resource) {

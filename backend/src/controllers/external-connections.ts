@@ -56,6 +56,10 @@ export const upsertConnectionByElementId = async (req: Request, res: Response) =
 export const getConnectionByElementId = async (req: Request, res: Response) => {
   try {
     const { elementId } = req.query;
+    if (elementId && !mongoose.Types.ObjectId.isValid(elementId as string)) {
+      return res.status(400).json({ error: "Invalid elementId format" });
+    }
+
     const filter = elementId ? { elementId } : {};
     const connections = await KpiExternalConnection.find(filter);
     if (!connections || connections.length === 0) {

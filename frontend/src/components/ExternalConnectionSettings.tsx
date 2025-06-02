@@ -13,7 +13,6 @@ import {
     IconButton,
     Paper
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
@@ -38,7 +37,7 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
     connectionStatus,
     onConnectionChange
 }) => {
-    const [enabled, setEnabled] = useState<boolean>(connectionStatus !== null);
+    const [enabled, setEnabled] = useState<boolean>(connectionStatus === true);
     const [adapters, setAdapters] = useState<Adapter[]>([]);
     const [selectedAdapter, setSelectedAdapter] = useState<string>('');
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -49,6 +48,7 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
     const [isAdaptersLoaded, setIsAdaptersLoaded] = useState(false);
     const [parameters, setParameters] = useState<ParameterPair[]>([]);
     const [connectionName, setConnectionName] = useState('');
+    const [hasExistingConnection, setHasExistingConnection] = useState<boolean | null>(connectionStatus);
 
     // Generate default name when adapter is selected
     useEffect(() => {
@@ -79,7 +79,7 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
     // Then, fetch connection details after adapters are loaded
     useEffect(() => {
         const fetchConnectionDetails = async () => {
-            if (!isAdaptersLoaded || connectionStatus === null) return;
+            if (!isAdaptersLoaded) return;
 
             try {
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${elementId}`);
@@ -97,13 +97,31 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
                         authToken: connection.authToken || '',
                         pollingPeriodSeconds: connection.pollingPeriodSeconds?.toString() || ''
                     });
+                    setEnabled(connection.enable === true);
+                    setHasExistingConnection(true);
+                } else {
+                    // If no connection data is found
+                    setHasExistingConnection(null);
+                    setEnabled(false);
+                    setAdapterName('');
+                    setSelectedAdapter('');
+                    setFieldValues({});
+                    setParameters([]);
+                    setConnectionName('');
                 }
             } catch (error) {
                 console.error('Failed to fetch connection details:', error);
+                setHasExistingConnection(null);
+                setEnabled(false);
+                setAdapterName('');
+                setSelectedAdapter('');
+                setFieldValues({});
+                setParameters([]);
+                setConnectionName('');
             }
         };
         fetchConnectionDetails();
-    }, [isAdaptersLoaded, connectionStatus, elementId]);
+    }, [isAdaptersLoaded, elementId]);
 
     // Update parameters when fieldValues changes
     useEffect(() => {
@@ -131,12 +149,6 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
     const handleEnableChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newEnabled = event.target.checked;
         setEnabled(newEnabled);
-        if (!newEnabled) {
-            // Clear the fields when disabling
-            setSelectedAdapter('');
-            setFieldValues({});
-            onConnectionChange(null);
-        }
     };
 
     const handleParameterChange = (index: number, field: 'key' | 'value', value: string) => {
@@ -182,7 +194,8 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
 
     // Add a function to get current connection data
     const getConnectionData = () => {
-        if (!enabled || !selectedAdapter || !connectionName) {
+        // If form is not valid, return null
+        if (!selectedAdapter || !connectionName) {
             return null;
         }
 
@@ -198,16 +211,39 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
             elementId,
             name: connectionName,
             type: selectedAdapter,
-            parameters: parametersObject,  // This will always be an object, even if empty
+            parameters: parametersObject,
             pollingPeriodSeconds: fieldValues.pollingPeriodSeconds ? Number(fieldValues.pollingPeriodSeconds) : 20,
+            enable: enabled,  // This will be true only when checkbox is checked
             ...fieldValues
         };
     };
 
     // Expose getConnectionData to parent
     useEffect(() => {
-        onConnectionChange(getConnectionData);
-    }, [enabled, selectedAdapter, fieldValues]);
+        const data = getConnectionData();
+        onConnectionChange(() => {
+            // If form is not valid, return null
+            if (!data) {
+                return null;
+            }
+            // If checkbox is unchecked but we have existing connection, return data with enable: false
+            if (!enabled && hasExistingConnection) {
+                return {
+                    ...data,
+                    enable: false
+                };
+            }
+            // If checkbox is checked and form is valid, return data with enable: true
+            if (enabled) {
+                return {
+                    ...data,
+                    enable: true
+                };
+            }
+            // Otherwise return null
+            return null;
+        });
+    }, [enabled, selectedAdapter, fieldValues, connectionName, hasExistingConnection]);
 
     if (loading) {
         return <CircularProgress />;
@@ -216,6 +252,8 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
     if (error) {
         return <Typography color="error">{error}</Typography>;
     }
+
+    const showConnectionForm = hasExistingConnection !== null || selectedAdapter !== '';
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
@@ -229,7 +267,7 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
                 label="Enable live update connection"
             />
 
-            {enabled && (
+            {showConnectionForm && (
                 <>
                     <FormControl fullWidth>
                         <InputLabel>Available Connections</InputLabel>
