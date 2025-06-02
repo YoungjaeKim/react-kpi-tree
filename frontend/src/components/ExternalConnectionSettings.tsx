@@ -83,7 +83,7 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
 
             try {
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${elementId}`);
-                if (response.data && response.data.length > 0) {
+                if (response.status === 200 && response.data && response.data.length > 0) {
                     const connection = response.data[0];
                     // Set adapter name and type
                     setAdapterName(connection.name || '');
@@ -253,7 +253,7 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
         return <Typography color="error">{error}</Typography>;
     }
 
-    const showConnectionForm = hasExistingConnection !== null || selectedAdapter !== '';
+    const showConnectionForm = enabled || hasExistingConnection !== null || selectedAdapter !== '';
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
