@@ -22,6 +22,7 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { AddNodeDialog } from './components/AddNodeDialog';
 import KpiDisplayNodeType from './components/KpiDisplayNodeType';
 
@@ -30,10 +31,6 @@ const MIN_SCREEN_WIDTH = 1280;
 const MIN_SCREEN_HEIGHT = 1024;
 // Default properties panel width
 const DEFAULT_PROPERTIES_WIDTH = 300;
-// Minimum properties panel width
-const MIN_PROPERTIES_WIDTH = 200;
-// Maximum properties panel width
-const MAX_PROPERTIES_WIDTH = 600;
 
 interface Group {
     id: string;
@@ -155,8 +152,29 @@ function App() {
         }
     };
 
-    const handlePropertiesResize = (newWidth: number) => {
-        setPropertiesWidth(Math.min(Math.max(newWidth, MIN_PROPERTIES_WIDTH), MAX_PROPERTIES_WIDTH));
+    const handleArchiveGroup = async (groupId: string) => {
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/graphs/group/${groupId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ archived: true }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to archive group');
+            }
+
+            // Refresh the groups list after archiving
+            await fetchGroups();
+            // If the archived group was selected, clear the selection
+            if (selectedGroup?.id === groupId) {
+                setSelectedGroup(null);
+            }
+        } catch (error) {
+            console.error('Error archiving group:', error);
+        }
     };
 
     const togglePropertiesPanel = () => {
@@ -187,6 +205,26 @@ function App() {
                             options={groups}
                             getOptionLabel={(option) => option ? `${option.title} (nodes: ${option.nodeCount})` : ""}
                             sx={{ width: 300 }}
+                            renderOption={(props, option) => (
+                                <li {...props} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>{option.title} (nodes: {option.nodeCount})</span>
+                                    <IconButton
+                                        size="small"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleArchiveGroup(option.id);
+                                        }}
+                                        sx={{
+                                            visibility: 'hidden',
+                                            '.MuiAutocomplete-option:hover &': {
+                                                visibility: 'visible'
+                                            }
+                                        }}
+                                    >
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                </li>
+                            )}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}

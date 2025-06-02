@@ -107,6 +107,19 @@ export const createGroup = async (req: Request, res: Response): Promise<void> =>
     }
 };
 
+export const updateGroup = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { title, archived } = req.body;
+
+    try {
+        const group = await KpiGroup.findByIdAndUpdate(id, { title, archived }, { new: true });
+        res.status(200).json(group);
+    } catch (err) {
+        console.error('Failed to update group:', err);
+        res.status(500).json({ error: 'Failed to update group' });
+    }
+};
+
 export const getGroups = async (req: Request, res: Response): Promise<void> => {
     try {
         const { archived } = req.query;

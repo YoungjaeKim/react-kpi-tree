@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "React KPI Tree",
+  "name": "React KPI Tree - A tool for creating and managing KPI trees",
   "icons": [
     {
       "src": "favicon.ico",
