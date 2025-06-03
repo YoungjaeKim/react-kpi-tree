@@ -1,35 +1,38 @@
-import { Handle, Position, NodeProps } from '@xyflow/react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Handle, Position } from '@xyflow/react';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface KpiDisplayNodeData {
     title: string;
-    label?: string;
+    label: string;
     elementId: string;
-    kpiValue?: string;
-    kpiValueType?: string;
     element?: {
-        kpiValue?: string;
-        kpiValueType?: string;
+        kpiValue: string;
+        kpiValueType: string;
+        lastUpdatedDateTime: string;
     };
-    connectionStatus?: boolean | null;
+    connectionStatus: boolean;
 }
 
-function KpiDisplayNodeType(props: NodeProps) {
-    const data = props.data as unknown as KpiDisplayNodeData;
-    const label = data?.label;
-    const isSelected = props.selected;
+const KpiDisplayNodeType = ({ data, selected }: { data: KpiDisplayNodeData; selected?: boolean }) => {
+    const [kpiValue, setKpiValue] = useState(data.element?.kpiValue || '');
+    const [lastUpdated, setLastUpdated] = useState(data.element?.lastUpdatedDateTime || '');
     const [animationKey, setAnimationKey] = useState(0);
-    const [prevValue, setPrevValue] = useState<string | undefined>(data?.element?.kpiValue);
+    const { subscribeToNode } = useWebSocket();
 
-    // Watch for value changes and trigger animation only when value changes and connection is enabled
     useEffect(() => {
-        if (data?.element?.kpiValue && 
-            data.connectionStatus === true && 
-            data.element.kpiValue !== prevValue) {
-            setAnimationKey(prev => prev + 1);
-            setPrevValue(data.element.kpiValue);
-        }
-    }, [data?.element?.kpiValue, data?.connectionStatus, prevValue]);
+        // Subscribe to updates for this specific node
+        const unsubscribe = subscribeToNode(data.elementId, (message) => {
+            if (message.type === 'kpi_update' && data.connectionStatus) {
+                setKpiValue(message.value);
+                setLastUpdated(message.timestamp);
+                setAnimationKey(prev => prev + 1);
+            }
+        });
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
+    }, [data.elementId, data.connectionStatus, subscribeToNode]);
 
     return (
         <div className="kpi-display-node" style={{
@@ -39,11 +42,11 @@ function KpiDisplayNodeType(props: NodeProps) {
             fontSize: '12px',
             color: '#222',
             textAlign: 'center',
-            borderWidth: isSelected ? '1px' : '0.5px',
+            borderWidth: selected ? '1px' : '0.5px',
             borderStyle: 'solid',
             backgroundColor: 'white',
-            borderColor: isSelected ? '#1a192b' : '#cccccc',
-            boxShadow: isSelected ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+            borderColor: selected ? '#1a192b' : '#cccccc',
+            boxShadow: selected ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
             position: 'relative'
         }}>
             <Handle
@@ -56,7 +59,7 @@ function KpiDisplayNodeType(props: NodeProps) {
                 }}
             />
 
-            {label && (
+            {data.label && (
                 <div style={{
                     borderRadius: '5px',
                     position: 'absolute',
@@ -68,7 +71,7 @@ function KpiDisplayNodeType(props: NodeProps) {
                     color: '#666'
                 }}
                 title="Label (optional)">
-                    {label}
+                    {data.label}
                 </div>
             )}
 

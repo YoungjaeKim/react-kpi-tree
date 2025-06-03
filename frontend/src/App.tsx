@@ -4,7 +4,6 @@ import BlockCanvas from "./components/BlockCanvas";
 import { NodePropertiesPanel } from './components/NodePropertiesPanel';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useBlockGraph } from './hooks/useBlockGraph';
-import { useWebSocket } from './hooks/useWebSocket';
 import { BlockNode } from './types';
 import {
     Button,
@@ -124,44 +123,6 @@ function App() {
         setSelectedNodeId(nodes.length > 0 ? nodes[nodes.length - 1].id : null);
     }, []);
 
-    // Handle WebSocket messages
-    const handleWebSocketMessage = useCallback((message: any) => {
-        // Skip updates if edit dialog is open
-        if (isEditDialogOpen) {
-            return;
-        }
-
-        if (message.type === 'kpi_update') {
-            setNodes((nds) =>
-                nds.map((node) => {
-                    if (node.data.element && node.data.element.id === message.elementId) {
-                        return {
-                            ...node,
-                            id: node.id,
-                            type: node.type,
-                            position: node.position,
-                            selected: node.id === selectedNodeId,
-                            dragging: node.dragging,
-                            draggable: node.draggable,
-                            selectable: node.selectable,
-                            connectable: node.connectable,
-                            deletable: node.deletable,
-                            data: {
-                                ...node.data,
-                                element: {
-                                    ...node.data.element,
-                                    kpiValue: message.value,
-                                    lastUpdatedDateTime: new Date(message.timestamp)
-                                }
-                            }
-                        };
-                    }
-                    return node;
-                })
-            );
-        }
-    }, [selectedNodeId, isEditDialogOpen]);
-
     useEffect(() => {
         fetchGroups();
     }, []);
@@ -230,7 +191,7 @@ function App() {
     };
 
     return (
-        <WebSocketProvider onMessage={handleWebSocketMessage}>
+        <WebSocketProvider>
             <div className="App" style={{ minWidth: MIN_SCREEN_WIDTH, minHeight: MIN_SCREEN_HEIGHT, height: '100vh', display: 'flex', flexDirection: 'column' }}>
                 {/* Header Section */}
                 <header className="App-header" style={{ 
