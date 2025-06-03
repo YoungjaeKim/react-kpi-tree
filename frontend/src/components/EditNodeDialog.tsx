@@ -180,6 +180,7 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({open, onClose, no
                         elementId={node.data.elementId}
                         connectionStatus={node.data.connectionStatus ?? null}
                         onConnectionChange={handleConnectionChange}
+                        initialAdapter={node.data.connectionType}
                     />
 
                     {error && (

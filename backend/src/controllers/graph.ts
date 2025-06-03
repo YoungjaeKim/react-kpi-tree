@@ -24,6 +24,7 @@ interface NodeResponse {
         expression?: string;
         lastUpdatedDateTime: Date;
         connectionStatus?: boolean | null;
+        connectionType?: string;
     };
     hidden: boolean;
 }
@@ -68,7 +69,7 @@ interface PopulatedNodeObject {
     _id: Types.ObjectId;
 }
 
-function transformNodeResponse(node: PopulatedNodeObject, connectionStatus: boolean | null): NodeResponse {
+function transformNodeResponse(node: PopulatedNodeObject, connectionStatus: boolean | null, connectionType?: string): NodeResponse {
     const { elementId, _id, ...rest } = node;
     const response = {
         ...rest,
@@ -85,7 +86,8 @@ function transformNodeResponse(node: PopulatedNodeObject, connectionStatus: bool
             isActive,
             expression,
             lastUpdatedDateTime,
-            connectionStatus
+            connectionStatus,
+            connectionType
         };
     }
     return response;
@@ -193,16 +195,23 @@ export const getGraphs = async (req: Request, res: Response): Promise<void> => {
             elementId: { $in: elementIds }
         });
 
-        // Create a map of elementId to connection status
+        // Create a map of elementId to connection status and type
         const connectionMap = new Map(
-            externalConnections.map(conn => [conn.elementId.toString(), conn.enable])
+            externalConnections.map(conn => [
+                conn.elementId.toString(),
+                { enable: conn.enable, type: conn.type }
+            ])
         );
 
         res.json({
             nodes: nodes.map((node) => {
                 const nodeObject = node.toObject() as PopulatedNodeObject;
-                const connectionStatus = connectionMap.get(nodeObject.elementId?._id.toString()) || null;
-                return transformNodeResponse(nodeObject, connectionStatus);
+                const connection = connectionMap.get(nodeObject.elementId?._id.toString());
+                return transformNodeResponse(
+                    nodeObject,
+                    connection?.enable ?? null,
+                    connection?.type
+                );
             }),
             edges: edges.map((edge) => {
                 const edgeObject = edge.toObject();
@@ -252,16 +261,23 @@ export const getNodes = async (req: Request, res: Response): Promise<void> => {
             elementId: { $in: elementIds }
         });
 
-        // Create a map of elementId to connection status
+        // Create a map of elementId to connection status and type
         const connectionMap = new Map(
-            externalConnections.map(conn => [conn.elementId.toString(), conn.enable])
+            externalConnections.map(conn => [
+                conn.elementId.toString(),
+                { enable: conn.enable, type: conn.type }
+            ])
         );
 
         res.json(
             kpiNodes.map((node) => {
                 const nodeObject = node.toObject() as PopulatedNodeObject;
-                const connectionStatus = connectionMap.get(nodeObject.elementId?._id.toString()) || null;
-                return transformNodeResponse(nodeObject, connectionStatus);
+                const connection = connectionMap.get(nodeObject.elementId?._id.toString());
+                return transformNodeResponse(
+                    nodeObject,
+                    connection?.enable ?? null,
+                    connection?.type
+                );
             })
         );
     } catch (err) {
@@ -339,7 +355,7 @@ async function updateKpiNode(node: Document, updateData: any): Promise<Document>
     return kpiNode.save();
 }
 
-async function getNodeWithConnectionStatus(nodeId: Types.ObjectId): Promise<{ nodeObject: PopulatedNodeObject; connectionStatus: boolean | null }> {
+async function getNodeWithConnectionStatus(nodeId: Types.ObjectId): Promise<{ nodeObject: PopulatedNodeObject; connectionStatus: boolean | null; connectionType?: string }> {
     const populatedNode = await KpiNode.findById(nodeId)
         .populate<{ elementId: PopulatedElement }>('elementId');
     
@@ -349,13 +365,15 @@ async function getNodeWithConnectionStatus(nodeId: Types.ObjectId): Promise<{ no
 
     const nodeObject = populatedNode.toObject() as PopulatedNodeObject;
     let connectionStatus = null;
+    let connectionType: string | undefined;
 
     if (nodeObject.elementId) {
         const externalConnection = await KpiExternalConnection.findOne({ elementId: nodeObject.elementId._id });
         connectionStatus = externalConnection?.enable ?? null;
+        connectionType = externalConnection?.type;
     }
 
-    return { nodeObject, connectionStatus };
+    return { nodeObject, connectionStatus, connectionType };
 }
 
 export const upsertNode = async (req: Request, res: Response): Promise<void> => {
@@ -385,9 +403,9 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
         }
 
         // Get populated node with connection status
-        const { nodeObject, connectionStatus } = await getNodeWithConnectionStatus(kpiNode._id);
+        const { nodeObject, connectionStatus, connectionType } = await getNodeWithConnectionStatus(kpiNode._id);
         
-        res.status(isNew ? 201 : 200).json(transformNodeResponse(nodeObject, connectionStatus));
+        res.status(isNew ? 201 : 200).json(transformNodeResponse(nodeObject, connectionStatus, connectionType));
     } catch (err) {
         console.error('Failed to upsert node:', err);
         res.status(500).json({ error: 'Failed to upsert node' });
