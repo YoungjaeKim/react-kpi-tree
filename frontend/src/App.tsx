@@ -26,6 +26,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { AddNodeDialog } from './components/AddNodeDialog';
 import KpiDisplayNodeType from './components/KpiDisplayNodeType';
+import { WebSocketProvider } from './contexts/WebSocketContext';
 
 // Minimum screen resolution
 const MIN_SCREEN_WIDTH = 1280;
@@ -118,11 +119,9 @@ function App() {
     // Handle WebSocket messages
     const handleWebSocketMessage = useCallback((message: any) => {
         if (message.type === 'kpi_update') {
-            console.log('kpi_update', message);
             setNodes((nds) =>
                 nds.map((node) => {
                     if (node.data.element && node.data.element.id === message.elementId) {
-                        console.log('nodeX', node);
                         return {
                             ...node,
                             data: {
@@ -140,13 +139,6 @@ function App() {
             );
         }
     }, []);
-
-    // Initialize WebSocket connection
-    useWebSocket({
-        onMessage: handleWebSocketMessage,
-        onError: (error) => console.error('WebSocket error:', error),
-        onClose: () => console.log('WebSocket connection closed')
-    });
 
     useEffect(() => {
         fetchGroups();
@@ -216,233 +208,235 @@ function App() {
     };
 
     return (
-        <div className="App" style={{ minWidth: MIN_SCREEN_WIDTH, minHeight: MIN_SCREEN_HEIGHT, height: '100vh', display: 'flex', flexDirection: 'column' }}>
-            {/* Header Section */}
-            <header className="App-header" style={{ 
-                padding: '16px 24px',
-                borderBottom: '1px solid #e0e0e0',
-                backgroundColor: '#fff'
-            }}>
-                <div style={{ 
-                    width: '100%', 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center'
+        <WebSocketProvider onMessage={handleWebSocketMessage}>
+            <div className="App" style={{ minWidth: MIN_SCREEN_WIDTH, minHeight: MIN_SCREEN_HEIGHT, height: '100vh', display: 'flex', flexDirection: 'column' }}>
+                {/* Header Section */}
+                <header className="App-header" style={{ 
+                    padding: '16px 24px',
+                    borderBottom: '1px solid #e0e0e0',
+                    backgroundColor: '#fff'
                 }}>
-                    <Typography variant="h5" component="h1">
-                        React KPI Tree
-                    </Typography>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                        <Autocomplete
-                            value={selectedGroup}
-                            onChange={(event, newValue) => setSelectedGroup(newValue)}
-                            options={groups}
-                            getOptionLabel={(option) => option ? `${option.title} (nodes: ${option.nodeCount})` : ""}
-                            sx={{ width: 300 }}
-                            renderOption={(props, option) => (
-                                <li {...props} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>{option.title} (nodes: {option.nodeCount})</span>
-                                    <IconButton
+                    <div style={{ 
+                        width: '100%', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center'
+                    }}>
+                        <Typography variant="h5" component="h1">
+                            React KPI Tree
+                        </Typography>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                            <Autocomplete
+                                value={selectedGroup}
+                                onChange={(event, newValue) => setSelectedGroup(newValue)}
+                                options={groups}
+                                getOptionLabel={(option) => option ? `${option.title} (nodes: ${option.nodeCount})` : ""}
+                                sx={{ width: 300 }}
+                                renderOption={(props, option) => (
+                                    <li {...props} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>{option.title} (nodes: {option.nodeCount})</span>
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleArchiveGroup(option.id);
+                                            }}
+                                            sx={{
+                                                visibility: 'hidden',
+                                                '.MuiAutocomplete-option:hover &': {
+                                                    visibility: 'visible'
+                                                }
+                                            }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </li>
+                                )}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
                                         size="small"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleArchiveGroup(option.id);
-                                        }}
+                                        placeholder="Select a Group"
+                                    />
+                                )}
+                            />
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                onClick={() => setCreateGroupDialogOpen(true)}
+                                size="small"
+                            >
+                                Create Group
+                            </Button>
+                        </Stack>
+                    </div>
+                </header>
+
+                {/* Main Content Section */}
+                <main style={{ 
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '24px',
+                    height: 0,
+                    overflow: 'hidden',
+                    padding: '24px'
+                }}>
+                    {/* Canvas and Properties Section */}
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '24px',
+                        flex: 1,
+                        minHeight: 0,
+                        position: 'relative',
+                    }}>
+                        <ReactFlowProvider>
+                            {/* Canvas Section */}
+                            <div style={{ 
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '16px',
+                                minWidth: 0,
+                                position: 'relative',
+                                height: '100%'
+                            }}>
+                                <div style={{ 
+                                    flex: 1,
+                                    border: '1px solid #e0e0e0',
+                                    borderRadius: '4px',
+                                    overflow: 'hidden',
+                                    minHeight: 0,
+                                    position: 'relative',
+                                    background: '#fff',
+                                    height: '100%'
+                                }}>
+                                    <BlockCanvas
+                                        nodes={nodes}
+                                        edges={edges}
+                                        onConnect={handleConnect}
+                                        onNodesChange={handleNodesChange}
+                                        onEdgesChange={handleEdgesChange}
+                                        nodeTypes={nodeTypes}
+                                    />
+                                    {/* Floating Add Node Button */}
+                                    {selectedGroup && (
+                                        <Fab
+                                            color="primary"
+                                            aria-label="add"
+                                            onClick={() => setAddNodeDialogOpen(true)}
+                                            title="Add a Node"
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 16,
+                                                right: isPropertiesExpanded ? 16 : 48,
+                                                zIndex: 2,
+                                                transition: 'right'
+                                            }}
+                                        >
+                                            <AddIcon />
+                                        </Fab>
+                                    )}
+                                    {/* Collapsed Properties Panel Button */}
+                                    {!isPropertiesExpanded && (
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                top: '10%',
+                                                right: 0,
+                                                transform: 'translateY(-50%)',
+                                                zIndex: 3,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                cursor: 'pointer',
+                                                background: '#fff',
+                                                border: '1px solid #e0e0e0',
+                                                borderRadius: '8px 0 0 8px',
+                                                boxShadow: 1,
+                                                px: 1,
+                                                py: 2
+                                            }}
+                                            onClick={togglePropertiesPanel}
+                                        >
+                                            <ChevronLeftIcon />
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    writingMode: 'vertical-rl',
+                                                    textOrientation: 'mixed',
+                                                    letterSpacing: '0.1em',
+                                                    mt: 1
+                                                }}
+                                            >
+                                                Node Properties
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Properties Panel */}
+                            <Box sx={{
+                                width: isPropertiesExpanded ? propertiesWidth : 0,
+                                transition: 'width 0.3s ease',
+                                position: 'relative',
+                                border: isPropertiesExpanded ? '1px solid #e0e0e0' : 'none',
+                                borderRadius: '4px',
+                                overflow: 'hidden',
+                                minWidth: 0,
+                                background: '#fff',
+                                boxShadow: isPropertiesExpanded ? 1 : 'none',
+                                display: isPropertiesExpanded ? 'block' : 'none',
+                            }}>
+                                {isPropertiesExpanded && (
+                                    <IconButton
+                                        onClick={togglePropertiesPanel}
                                         sx={{
-                                            visibility: 'hidden',
-                                            '.MuiAutocomplete-option:hover &': {
-                                                visibility: 'visible'
+                                            position: 'absolute',
+                                            top: 8,
+                                            right: 8,
+                                            zIndex: 1,
+                                            backgroundColor: 'white',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(255, 255, 255, 0.9)'
                                             }
                                         }}
                                     >
-                                        <DeleteIcon fontSize="small" />
+                                        <ChevronRightIcon />
                                     </IconButton>
-                                </li>
-                            )}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    size="small"
-                                    placeholder="Select a Group"
-                                />
-                            )}
-                        />
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => setCreateGroupDialogOpen(true)}
-                            size="small"
-                        >
-                            Create Group
-                        </Button>
-                    </Stack>
-                </div>
-            </header>
-
-            {/* Main Content Section */}
-            <main style={{ 
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '24px',
-                height: 0,
-                overflow: 'hidden',
-                padding: '24px'
-            }}>
-                {/* Canvas and Properties Section */}
-                <div style={{ 
-                    display: 'flex', 
-                    gap: '24px',
-                    flex: 1,
-                    minHeight: 0,
-                    position: 'relative',
-                }}>
-                    <ReactFlowProvider>
-                        {/* Canvas Section */}
-                        <div style={{ 
-                            flex: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '16px',
-                            minWidth: 0,
-                            position: 'relative',
-                            height: '100%'
-                        }}>
-                            <div style={{ 
-                                flex: 1,
-                                border: '1px solid #e0e0e0',
-                                borderRadius: '4px',
-                                overflow: 'hidden',
-                                minHeight: 0,
-                                position: 'relative',
-                                background: '#fff',
-                                height: '100%'
-                            }}>
-                                <BlockCanvas
-                                    nodes={nodes}
-                                    edges={edges}
-                                    onConnect={handleConnect}
-                                    onNodesChange={handleNodesChange}
-                                    onEdgesChange={handleEdgesChange}
-                                    nodeTypes={nodeTypes}
-                                />
-                                {/* Floating Add Node Button */}
-                                {selectedGroup && (
-                                    <Fab
-                                        color="primary"
-                                        aria-label="add"
-                                        onClick={() => setAddNodeDialogOpen(true)}
-                                        title="Add a Node"
-                                        sx={{
-                                            position: 'absolute',
-                                            top: 16,
-                                            right: isPropertiesExpanded ? 16 : 48,
-                                            zIndex: 2,
-                                            transition: 'right'
-                                        }}
-                                    >
-                                        <AddIcon />
-                                    </Fab>
                                 )}
-                                {/* Collapsed Properties Panel Button */}
-                                {!isPropertiesExpanded && (
-                                    <Box
-                                        sx={{
-                                            position: 'absolute',
-                                            top: '10%',
-                                            right: 0,
-                                            transform: 'translateY(-50%)',
-                                            zIndex: 3,
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            cursor: 'pointer',
-                                            background: '#fff',
-                                            border: '1px solid #e0e0e0',
-                                            borderRadius: '8px 0 0 8px',
-                                            boxShadow: 1,
-                                            px: 1,
-                                            py: 2
-                                        }}
-                                        onClick={togglePropertiesPanel}
-                                    >
-                                        <ChevronLeftIcon />
-                                        <Typography
-                                            variant="caption"
-                                            sx={{
-                                                writingMode: 'vertical-rl',
-                                                textOrientation: 'mixed',
-                                                letterSpacing: '0.1em',
-                                                mt: 1
-                                            }}
-                                        >
-                                            Node Properties
-                                        </Typography>
-                                    </Box>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Properties Panel */}
-                        <Box sx={{
-                            width: isPropertiesExpanded ? propertiesWidth : 0,
-                            transition: 'width 0.3s ease',
-                            position: 'relative',
-                            border: isPropertiesExpanded ? '1px solid #e0e0e0' : 'none',
-                            borderRadius: '4px',
-                            overflow: 'hidden',
-                            minWidth: 0,
-                            background: '#fff',
-                            boxShadow: isPropertiesExpanded ? 1 : 'none',
-                            display: isPropertiesExpanded ? 'block' : 'none',
-                        }}>
-                            {isPropertiesExpanded && (
-                                <IconButton
-                                    onClick={togglePropertiesPanel}
-                                    sx={{
-                                        position: 'absolute',
-                                        top: 8,
-                                        right: 8,
-                                        zIndex: 1,
-                                        backgroundColor: 'white',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(255, 255, 255, 0.9)'
-                                        }
+                                <NodePropertiesPanel 
+                                    style={{
+                                        width: '100%',
+                                        height: '100%'
                                     }}
-                                >
-                                    <ChevronRightIcon />
-                                </IconButton>
-                            )}
-                            <NodePropertiesPanel 
-                                style={{
-                                    width: '100%',
-                                    height: '100%'
-                                }}
-                                setNodes={setNodes}
-                            />
-                        </Box>
-                    </ReactFlowProvider>
-                </div>
-            </main>
+                                    setNodes={setNodes}
+                                />
+                            </Box>
+                        </ReactFlowProvider>
+                    </div>
+                </main>
 
-            {/* Dialogs */}
-            <AddNodeDialog
-                open={addNodeDialogOpen}
-                onClose={() => setAddNodeDialogOpen(false)}
-                groupId={selectedGroup?.id || ''}
-                onNodeAdded={(node) => {
-                    // Refresh the graph data after a node is added
-                    // handleNodesChange([]);
-                }}
-                setNodes={setNodes}
-            />
+                {/* Dialogs */}
+                <AddNodeDialog
+                    open={addNodeDialogOpen}
+                    onClose={() => setAddNodeDialogOpen(false)}
+                    groupId={selectedGroup?.id || ''}
+                    onNodeAdded={(node) => {
+                        // Refresh the graph data after a node is added
+                        // handleNodesChange([]);
+                    }}
+                    setNodes={setNodes}
+                />
 
-            <CreateGroupDialog
-                open={createGroupDialogOpen}
-                onClose={() => setCreateGroupDialogOpen(false)}
-                onConfirm={handleCreateGroup}
-            />
-        </div>
+                <CreateGroupDialog
+                    open={createGroupDialogOpen}
+                    onClose={() => setCreateGroupDialogOpen(false)}
+                    onConfirm={handleCreateGroup}
+                />
+            </div>
+        </WebSocketProvider>
     );
 }
 

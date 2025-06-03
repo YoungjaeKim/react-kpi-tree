@@ -13,6 +13,7 @@ export class ExternalConnectionService {
     private config?: ExternalConnectionsConfig;
     private elementService: ElementService;
     private wss?: WebSocketServer;
+    private activeConnections: Set<WebSocket> = new Set();
 
     constructor(elementService: ElementService, config?: ExternalConnectionsConfig) {
         this.elementService = elementService;
@@ -27,11 +28,30 @@ export class ExternalConnectionService {
     // Set WebSocket server instance
     public setWebSocketServer(wss: WebSocketServer): void {
         this.wss = wss;
+        
+        // Set up connection tracking
+        wss.on('connection', (ws: WebSocket) => {
+            console.log('New WebSocket client connected. Total clients:', this.activeConnections.size + 1);
+            this.activeConnections.add(ws);
+
+            ws.on('close', () => {
+                console.log('WebSocket client disconnected. Remaining clients:', this.activeConnections.size - 1);
+                this.activeConnections.delete(ws);
+            });
+
+            ws.on('error', (error) => {
+                console.error('WebSocket client error:', error);
+                this.activeConnections.delete(ws);
+            });
+        });
     }
 
     // Broadcast update to all connected clients
     private broadcastUpdate(elementId: string, value: string): void {
-        if (!this.wss) return;
+        if (!this.wss) {
+            console.log('WebSocket server not initialized');
+            return;
+        }
 
         const message = JSON.stringify({
             type: 'kpi_update',
@@ -40,9 +60,13 @@ export class ExternalConnectionService {
             timestamp: new Date().toISOString()
         });
 
-        this.wss.clients.forEach((client: WebSocket) => {
+        console.log(`Broadcasting to ${this.activeConnections.size} active clients`);
+        this.activeConnections.forEach((client: WebSocket) => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(message);
+            } else {
+                console.log('Skipping inactive client');
+                this.activeConnections.delete(client);
             }
         });
     }
