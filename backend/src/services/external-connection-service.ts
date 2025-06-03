@@ -161,6 +161,8 @@ export class ExternalConnectionService {
 
     // Add a public method to start polling for a single connection
     public async startSingleConnection(config: ExternalConnectionConfig): Promise<void> {
+        // Stop any existing connection with the same name before starting a new one
+        this.stopSingleConnection(config.name);
         await this.startConnection(config);
     }
 
@@ -195,6 +197,7 @@ export class ExternalConnectionService {
         }, config.pollingPeriodSeconds * 1000);
 
         this.connections.set(config.name, interval);
+        console.log(`Started polling for connection: ${config.name} with period: ${config.pollingPeriodSeconds} seconds`);
     }
 
     private async fetchAndUpdate(

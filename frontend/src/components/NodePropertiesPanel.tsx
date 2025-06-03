@@ -15,6 +15,7 @@ interface NodePropertiesPanelProps {
     setNodes: React.Dispatch<React.SetStateAction<BlockNode[]>>;
     selectedNodeId: string | null;
     onSelectionChange: (params: { nodes: BlockNode[] }) => void;
+    onEditDialogOpenChange: (isOpen: boolean) => void;
 }
 
 interface PropertyListItemProps {
@@ -62,7 +63,8 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
     style, 
     setNodes, 
     selectedNodeId,
-    onSelectionChange 
+    onSelectionChange,
+    onEditDialogOpenChange
 }) => {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const nodes = useNodes<BlockNode>();
@@ -73,6 +75,11 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
     });
 
     const selectedNode = nodes.find(node => node.id === selectedNodeId);
+
+    // Notify parent about dialog state changes
+    useEffect(() => {
+        onEditDialogOpenChange(editDialogOpen);
+    }, [editDialogOpen, onEditDialogOpenChange]);
 
     // Keep dialog open if the selected node is updated
     useEffect(() => {

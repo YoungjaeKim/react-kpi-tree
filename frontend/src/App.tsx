@@ -109,6 +109,7 @@ function App() {
     const [propertiesWidth, setPropertiesWidth] = useState(DEFAULT_PROPERTIES_WIDTH);
     const [isPropertiesExpanded, setIsPropertiesExpanded] = useState(true);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const {
         nodes,
         edges,
@@ -125,6 +126,11 @@ function App() {
 
     // Handle WebSocket messages
     const handleWebSocketMessage = useCallback((message: any) => {
+        // Skip updates if edit dialog is open
+        if (isEditDialogOpen) {
+            return;
+        }
+
         if (message.type === 'kpi_update') {
             setNodes((nds) =>
                 nds.map((node) => {
@@ -134,7 +140,7 @@ function App() {
                             id: node.id,
                             type: node.type,
                             position: node.position,
-                            selected: node.id === selectedNodeId, // Maintain selection based on selectedNodeId
+                            selected: node.id === selectedNodeId,
                             dragging: node.dragging,
                             draggable: node.draggable,
                             selectable: node.selectable,
@@ -154,7 +160,7 @@ function App() {
                 })
             );
         }
-    }, [selectedNodeId]);
+    }, [selectedNodeId, isEditDialogOpen]);
 
     useEffect(() => {
         fetchGroups();
@@ -430,6 +436,7 @@ function App() {
                                     setNodes={setNodes}
                                     selectedNodeId={selectedNodeId}
                                     onSelectionChange={handleSelectionChange}
+                                    onEditDialogOpenChange={setIsEditDialogOpen}
                                 />
                             </Box>
                         </ReactFlowProvider>
