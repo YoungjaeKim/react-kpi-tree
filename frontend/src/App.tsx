@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import BlockCanvas from "./components/BlockCanvas";
 import { NodePropertiesPanel } from './components/NodePropertiesPanel';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useBlockGraph } from './hooks/useBlockGraph';
+import { useWebSocket } from './hooks/useWebSocket';
 import {
     Button,
     Dialog,
@@ -113,6 +114,39 @@ function App() {
         handleEdgesChange,
         setNodes
     } = useBlockGraph(selectedGroup?.id || '');
+
+    // Handle WebSocket messages
+    const handleWebSocketMessage = useCallback((message: any) => {
+        if (message.type === 'kpi_update') {
+            console.log('kpi_update', message);
+            setNodes((nds) =>
+                nds.map((node) => {
+                    if (node.data.element && node.data.element.id === message.elementId) {
+                        console.log('nodeX', node);
+                        return {
+                            ...node,
+                            data: {
+                                ...node.data,
+                                element: {
+                                    ...node.data.element,
+                                    kpiValue: message.value,
+                                    lastUpdatedDateTime: new Date(message.timestamp)
+                                }
+                            }
+                        };
+                    }
+                    return node;
+                })
+            );
+        }
+    }, []);
+
+    // Initialize WebSocket connection
+    useWebSocket({
+        onMessage: handleWebSocketMessage,
+        onError: (error) => console.error('WebSocket error:', error),
+        onClose: () => console.log('WebSocket connection closed')
+    });
 
     useEffect(() => {
         fetchGroups();

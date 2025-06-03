@@ -28,7 +28,15 @@ app.locals.activeExternalConnectionService = null;
 
 // Initialize ExternalConnectionService
 app.locals.initializeExternalConnectionService = () => {
+    console.log('Initializing ExternalConnectionService...');
     activeExternalConnectionService = new ExternalConnectionService(elementService);
+    // Set the WebSocket server instance
+    if (app.locals.wss) {
+        console.log('WebSocket server found, setting it in ExternalConnectionService');
+        activeExternalConnectionService.setWebSocketServer(app.locals.wss);
+    } else {
+        console.warn('WebSocket server not initialized yet - real-time updates will not work');
+    }
     app.locals.activeExternalConnectionService = activeExternalConnectionService;
     activeExternalConnectionService.startAllEnabled();
 };

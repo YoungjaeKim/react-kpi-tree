@@ -5,12 +5,14 @@ import { OpenSearchAdapter } from '../adapters/opensearch-adapter';
 import { JsonAdapter } from '../adapters/json-adapter';
 import { TableauAdapter } from '../adapters/tableau-adapter';
 import { ElementService } from './element-service';
+import { WebSocketServer, WebSocket } from 'ws';
 
 export class ExternalConnectionService {
     private connections: Map<string, NodeJS.Timeout> = new Map();
     private adapters: Map<string, ExternalConnectionAdapter> = new Map();
     private config?: ExternalConnectionsConfig;
     private elementService: ElementService;
+    private wss?: WebSocketServer;
 
     constructor(elementService: ElementService, config?: ExternalConnectionsConfig) {
         this.elementService = elementService;
@@ -20,6 +22,29 @@ export class ExternalConnectionService {
         this.adapters.set('OpenSearch', new OpenSearchAdapter());
         this.adapters.set('Json', new JsonAdapter());
         this.adapters.set('Tableau', new TableauAdapter());
+    }
+
+    // Set WebSocket server instance
+    public setWebSocketServer(wss: WebSocketServer): void {
+        this.wss = wss;
+    }
+
+    // Broadcast update to all connected clients
+    private broadcastUpdate(elementId: string, value: string): void {
+        if (!this.wss) return;
+
+        const message = JSON.stringify({
+            type: 'kpi_update',
+            elementId,
+            value,
+            timestamp: new Date().toISOString()
+        });
+
+        this.wss.clients.forEach((client: WebSocket) => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(message);
+            }
+        });
     }
 
     public async start(): Promise<void> {
@@ -158,6 +183,8 @@ export class ExternalConnectionService {
                 const updatedElement = await this.elementService.recordAndUpdateKpiValue(config.elementId, String(response.value));
                 if (updatedElement) {
                     console.log(`Successfully updated element ${config.elementId} for connection ${config.name} with value: ${response.value}`);
+                    // Broadcast the update to all connected clients
+                    this.broadcastUpdate(config.elementId, String(response.value));
                 } else {
                     console.error(`Failed to update element ${config.elementId} for connection ${config.name} via ElementService.`);
                 }
