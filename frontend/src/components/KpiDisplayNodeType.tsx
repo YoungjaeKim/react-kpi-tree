@@ -1,4 +1,5 @@
 import { Handle, Position, NodeProps } from '@xyflow/react';
+import { useEffect, useState } from 'react';
 
 interface KpiDisplayNodeData {
     title: string;
@@ -17,6 +18,15 @@ function KpiDisplayNodeType(props: NodeProps) {
     const data = props.data as unknown as KpiDisplayNodeData;
     const label = data?.label;
     const isSelected = props.selected;
+    const [animationKey, setAnimationKey] = useState(0);
+
+    // Watch for value changes and trigger animation
+    useEffect(() => {
+        if (data?.element?.kpiValue) {
+            console.log('Value changed, triggering animation:', data.element.kpiValue);
+            setAnimationKey(prev => prev + 1);
+        }
+    }, [data?.element?.kpiValue]);
 
     return (
         <div className="kpi-display-node" style={{
@@ -80,12 +90,16 @@ function KpiDisplayNodeType(props: NodeProps) {
             }}>
                 {data?.title || 'Untitled'}
             </div>
-            <div style={{
-                padding: '4px',
-                backgroundColor: '#f5f5f5',
-                borderRadius: '3px',
-                fontSize: '11px'
-            }}>
+            <div 
+                key={animationKey}
+                style={{
+                    padding: '4px',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '3px',
+                    fontSize: '11px',
+                    animation: 'blink 1.0s ease-in-out'
+                }}
+            >
                 {data?.element?.kpiValueType === 'Integer' 
                     ? Number(data?.element?.kpiValue).toLocaleString()
                     : data?.element?.kpiValue || '-'}
@@ -99,6 +113,17 @@ function KpiDisplayNodeType(props: NodeProps) {
                     height: '8px'
                 }}
             />
+
+            <style>
+                {`
+                    @keyframes blink {
+                        0% { background-color: #f5f5f5; }
+                        20% { background-color: #91db93; }
+                        50% { background-color: #91db93; }
+                        100% { background-color: #f5f5f5; }
+                    }
+                `}
+            </style>
         </div>
     );
 }
