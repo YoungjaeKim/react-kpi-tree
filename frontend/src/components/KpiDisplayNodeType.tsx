@@ -19,14 +19,17 @@ function KpiDisplayNodeType(props: NodeProps) {
     const label = data?.label;
     const isSelected = props.selected;
     const [animationKey, setAnimationKey] = useState(0);
+    const [prevValue, setPrevValue] = useState<string | undefined>(data?.element?.kpiValue);
 
-    // Watch for value changes and trigger animation
+    // Watch for value changes and trigger animation only when value changes and connection is enabled
     useEffect(() => {
-        if (data?.element?.kpiValue) {
-            console.log('Value changed, triggering animation:', data.element.kpiValue);
+        if (data?.element?.kpiValue && 
+            data.connectionStatus === true && 
+            data.element.kpiValue !== prevValue) {
             setAnimationKey(prev => prev + 1);
+            setPrevValue(data.element.kpiValue);
         }
-    }, [data?.element?.kpiValue]);
+    }, [data?.element?.kpiValue, data?.connectionStatus, prevValue]);
 
     return (
         <div className="kpi-display-node" style={{
@@ -97,7 +100,7 @@ function KpiDisplayNodeType(props: NodeProps) {
                     backgroundColor: '#f5f5f5',
                     borderRadius: '3px',
                     fontSize: '11px',
-                    animation: 'blink 1.0s ease-in-out'
+                    animation: animationKey > 0 ? 'blink 1.0s ease-in-out' : 'none'
                 }}
             >
                 {data?.element?.kpiValueType === 'Integer' 

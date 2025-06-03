@@ -13,6 +13,8 @@ import { EditNodeDialog } from './EditNodeDialog';
 interface NodePropertiesPanelProps {
     style?: React.CSSProperties;
     setNodes: React.Dispatch<React.SetStateAction<BlockNode[]>>;
+    selectedNodeId: string | null;
+    onSelectionChange: (params: { nodes: BlockNode[] }) => void;
 }
 
 interface PropertyListItemProps {
@@ -56,21 +58,28 @@ const PropertyListItem: React.FC<PropertyListItemProps> = ({ primary, secondary 
     );
 };
 
-export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ style, setNodes }) => {
-    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({ 
+    style, 
+    setNodes, 
+    selectedNodeId,
+    onSelectionChange 
+}) => {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const nodes = useNodes<BlockNode>();
 
-    const onSelectionChange = useCallback(({ nodes }: { nodes: BlockNode[] }) => {
-        // Only take the last selected node
-        setSelectedNodeId(nodes.length > 0 ? nodes[nodes.length - 1].id : null);
-    }, []);
-
+    // Use the passed selection change handler
     useOnSelectionChange({
         onChange: onSelectionChange,
     });
 
     const selectedNode = nodes.find(node => node.id === selectedNodeId);
+
+    // Keep dialog open if the selected node is updated
+    useEffect(() => {
+        if (selectedNode && editDialogOpen) {
+            setEditDialogOpen(true);
+        }
+    }, [selectedNode, editDialogOpen]);
 
     if (!selectedNode) {
         return (

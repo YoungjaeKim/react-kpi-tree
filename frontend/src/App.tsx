@@ -5,6 +5,7 @@ import { NodePropertiesPanel } from './components/NodePropertiesPanel';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useBlockGraph } from './hooks/useBlockGraph';
 import { useWebSocket } from './hooks/useWebSocket';
+import { BlockNode } from './types';
 import {
     Button,
     Dialog,
@@ -107,6 +108,7 @@ function App() {
     const [addNodeDialogOpen, setAddNodeDialogOpen] = useState(false);
     const [propertiesWidth, setPropertiesWidth] = useState(DEFAULT_PROPERTIES_WIDTH);
     const [isPropertiesExpanded, setIsPropertiesExpanded] = useState(true);
+    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const {
         nodes,
         edges,
@@ -116,6 +118,11 @@ function App() {
         setNodes
     } = useBlockGraph(selectedGroup?.id || '');
 
+    // Handle node selection changes
+    const handleSelectionChange = useCallback(({ nodes }: { nodes: BlockNode[] }) => {
+        setSelectedNodeId(nodes.length > 0 ? nodes[nodes.length - 1].id : null);
+    }, []);
+
     // Handle WebSocket messages
     const handleWebSocketMessage = useCallback((message: any) => {
         if (message.type === 'kpi_update') {
@@ -124,6 +131,15 @@ function App() {
                     if (node.data.element && node.data.element.id === message.elementId) {
                         return {
                             ...node,
+                            id: node.id,
+                            type: node.type,
+                            position: node.position,
+                            selected: node.id === selectedNodeId, // Maintain selection based on selectedNodeId
+                            dragging: node.dragging,
+                            draggable: node.draggable,
+                            selectable: node.selectable,
+                            connectable: node.connectable,
+                            deletable: node.deletable,
                             data: {
                                 ...node.data,
                                 element: {
@@ -138,7 +154,7 @@ function App() {
                 })
             );
         }
-    }, []);
+    }, [selectedNodeId]);
 
     useEffect(() => {
         fetchGroups();
@@ -412,6 +428,8 @@ function App() {
                                         height: '100%'
                                     }}
                                     setNodes={setNodes}
+                                    selectedNodeId={selectedNodeId}
+                                    onSelectionChange={handleSelectionChange}
                                 />
                             </Box>
                         </ReactFlowProvider>
