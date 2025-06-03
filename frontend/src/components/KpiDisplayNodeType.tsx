@@ -107,8 +107,8 @@ const KpiDisplayNodeType = ({ data, selected }: { data: KpiDisplayNodeData; sele
                 }}
             >
                 {data?.element?.kpiValueType === 'Integer' 
-                    ? Number(data?.element?.kpiValue).toLocaleString()
-                    : data?.element?.kpiValue || '-'}
+                    ? Number(kpiValue).toLocaleString()
+                    : kpiValue || '-'}
             </div>
             <Handle
                 type='source'
