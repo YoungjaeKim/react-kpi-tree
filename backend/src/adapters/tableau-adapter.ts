@@ -9,15 +9,19 @@ export class TableauAdapter implements ExternalConnectionAdapter {
     private config!: ExternalConnectionConfig;
 
     private async signIn(config: ExternalConnectionConfig): Promise<void> {
-        const url = `${config.url}/api/3.19/auth/signin`;
+        const url = `${this.baseUrl}/api/3.19/auth/signin`;
+        const headers = { 
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
 
         const response = await axios.post(url, {
             credentials: {
                 personalAccessTokenName: config.username,
                 personalAccessTokenSecret: config.authToken,
-                site: { contentUrl: config.parameters.site_content_url },
+                site: { contentUrl: config.parameters.site_content_url || "" },
             },
-        });
+        }, { headers });
 
         const { token, site } = response.data.credentials;
         this.authToken = token;
@@ -33,14 +37,18 @@ export class TableauAdapter implements ExternalConnectionAdapter {
         const url = `${this.baseUrl}/api/3.19/sites/${this.siteId}/views/${viewId}/data/summaries?${params}`;
 
         const response = await axios.get(url, {
-            headers: { 'X-Tableau-Auth': this.authToken },
+            headers: { 
+                'X-Tableau-Auth': this.authToken,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
         });
 
         return response.data;
     }
 
     private get baseUrl(): string {
-        return this.config.url;
+        return this.config.url.replace(/\/$/, '');
     }
 
     async fetch(config: ExternalConnectionConfig): Promise<ExternalConnectionResponse> {
@@ -55,6 +63,7 @@ export class TableauAdapter implements ExternalConnectionAdapter {
             const filters = config.parameters.filters ? JSON.parse(config.parameters.filters) : {};
             
             const summaryData = await this.getViewDataSummary(viewId, filters);
+            console.log(summaryData);
 
             // Extract value using JSONPath if provided, otherwise use default extraction
             if (config.parameters.jsonPath) {
