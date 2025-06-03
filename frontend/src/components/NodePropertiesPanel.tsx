@@ -171,6 +171,11 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                 />
                 <Divider />
                 <PropertyListItem 
+                    primary="Connection Type" 
+                    secondary={String(selectedNode.data.connectionType)}
+                />
+                <Divider />
+                <PropertyListItem 
                     primary="Connection Status" 
                     secondary={String(selectedNode.data.connectionStatus)}
                 />
