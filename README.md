@@ -77,18 +77,21 @@ Below is an example of `external-connections.json` file.
 3. Open your browser and go to `http://localhost:3000`.
 
 ## To Do (as of 2025-05-05)
-- [ ] Node
+- [v] Node
   - [v] Hide Node
   - [v] Edit Node
   - [v] Unhide Node
   - [v] Reflect recent Element value on Node label
-- [ ] Edge
+- [v] Edge
   - [v] Remove Edge
 - [ ] Element
-  - [ ] Update Element
-  - [ ] Show a newest Element value periodically
-- [ ] Change MongoDB to PostgreSQL
+  - [v] Update Element
+  - [v] Show the newest Element value periodically
+  - [ ] Add Tableau Adapter
+  - [ ] Add OpenSearch Adapter
+  - [v] Add Json Adapter
+  - [ ] Add Google BigQuery Adapter
 - [ ] Add more test cases
 - [ ] Group
   - [v] Create new Group
-  - [ ] Archive a Group
+  - [v] Archive a Group

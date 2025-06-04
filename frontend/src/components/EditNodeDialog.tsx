@@ -85,6 +85,8 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({open, onClose, no
             // Handle connection changes
             if (getConnectionData) {
                 const connectionData = getConnectionData();
+                console.log("connectionData", connectionData);
+
                 try {
                     const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${node.data.elementId}`, {
                         validateStatus: (status) => status < 500

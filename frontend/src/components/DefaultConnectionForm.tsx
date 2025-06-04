@@ -23,6 +23,7 @@ interface DefaultConnectionFormProps {
         authToken: string;
         pollingPeriodSeconds: string;
         parameters: ParameterPair[];
+        type: string;
     };
     onConnectionChange: (connectionData: any) => void;
 }
@@ -86,6 +87,7 @@ export const DefaultConnectionForm: React.FC<DefaultConnectionFormProps> = ({
         const connectionData = {
             elementId,
             name: connectionName,
+            type: initialValues?.type || 'Json', // Default to Json if not specified
             parameters: parameters.reduce((acc, { key, value }) => {
                 if (key) {
                     acc[key] = value;
@@ -111,7 +113,8 @@ export const DefaultConnectionForm: React.FC<DefaultConnectionFormProps> = ({
         username,
         authToken,
         pollingPeriodSeconds,
-        parameters
+        parameters,
+        initialValues?.type
     ]);
 
     return (

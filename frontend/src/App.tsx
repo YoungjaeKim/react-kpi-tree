@@ -4,7 +4,8 @@ import BlockCanvas from "./components/BlockCanvas";
 import { NodePropertiesPanel } from './components/NodePropertiesPanel';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useBlockGraph } from './hooks/useBlockGraph';
-import { BlockNode } from './types';
+import { BlockNode, Group } from './types';
+import { groupService } from './services/groupService';
 import {
     Button,
     Dialog,
@@ -33,15 +34,6 @@ const MIN_SCREEN_WIDTH = 1280;
 const MIN_SCREEN_HEIGHT = 1024;
 // Default properties panel width
 const DEFAULT_PROPERTIES_WIDTH = 300;
-
-interface Group {
-    id: string;
-    title: string;
-    nodeCount: number;
-    edgeCount: number;
-    archived: boolean;
-    timestamp: Date;
-}
 
 interface CreateGroupDialogProps {
     open: boolean;
@@ -129,11 +121,7 @@ function App() {
 
     const fetchGroups = async () => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/graphs/group?archived=false`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch groups');
-            }
-            const data = await response.json();
+            const data = await groupService.fetchGroups();
             setGroups(data);
         } catch (error) {
             console.error('Error fetching groups:', error);
@@ -142,19 +130,7 @@ function App() {
 
     const handleCreateGroup = async (title: string) => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/graphs/group`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ title }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to create group');
-            }
-
-            // Refresh the groups list after creating a new one
+            await groupService.createGroup(title);
             await fetchGroups();
         } catch (error) {
             console.error('Error creating group:', error);
@@ -163,21 +139,8 @@ function App() {
 
     const handleArchiveGroup = async (groupId: string) => {
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/graphs/group/${groupId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ archived: true }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to archive group');
-            }
-
-            // Refresh the groups list after archiving
+            await groupService.archiveGroup(groupId);
             await fetchGroups();
-            // If the archived group was selected, clear the selection
             if (selectedGroup?.id === groupId) {
                 setSelectedGroup(null);
             }

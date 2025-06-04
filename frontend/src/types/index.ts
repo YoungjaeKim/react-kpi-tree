@@ -56,3 +56,12 @@ export interface NodeFormData {
     elementValueType: string;
     elementValue: string;
 }
+
+export interface Group {
+    id: string;
+    title: string;
+    nodeCount: number;
+    edgeCount: number;
+    archived: boolean;
+    timestamp: Date;
+} 

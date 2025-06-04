@@ -96,17 +96,34 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
                 today.getDate().toString().padStart(2, '0');
             const defaultName = `${adapterName}-${yyyymmdd}`;
             
-            setConnectionData((prev: any) => ({
-                ...prev,
+            const newConnectionData = {
+                ...connectionData,
                 name: defaultName,
+                type: adapterName,
+                enable: enabled
+            };
+            setConnectionData(newConnectionData);
+            onConnectionChange(newConnectionData);
+        } else {
+            // Update existing connection data with new type
+            const newConnectionData = {
+                ...connectionData,
                 type: adapterName
-            }));
+            };
+            setConnectionData(newConnectionData);
+            onConnectionChange(newConnectionData);
         }
     };
 
     const handleEnableChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newEnabled = event.target.checked;
         setEnabled(newEnabled);
+        // Pass the current connection data with enabled state and type
+        onConnectionChange({
+            ...connectionData,
+            enable: newEnabled,
+            type: selectedAdapter
+        });
     };
 
     if (loading) {

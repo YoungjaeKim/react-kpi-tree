@@ -37,6 +37,7 @@ interface TableauConnectionFormProps {
         selectedViewId: string;
         pollingPeriodSeconds: string;
         parameters: ParameterPair[];
+        type: string;
     };
     onConnectionChange: (connectionData: any) => void;
 }
@@ -126,7 +127,7 @@ export const TableauConnectionForm: React.FC<TableauConnectionFormProps> = ({
         const connectionData = {
             elementId,
             name: connectionName,
-            type: 'Tableau',
+            type: initialValues?.type || 'Tableau',
             parameters: parameters.reduce((acc, { key, value }) => {
                 if (key) {
                     acc[key] = value;
@@ -156,7 +157,8 @@ export const TableauConnectionForm: React.FC<TableauConnectionFormProps> = ({
         siteContentUrl,
         selectedViewId,
         pollingPeriodSeconds,
-        parameters
+        parameters,
+        initialValues?.type
     ]);
 
     return (
