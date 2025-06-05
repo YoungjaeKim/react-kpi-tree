@@ -13,8 +13,15 @@ dotenv.config();
 
 const app = express();
 
+// Configure CORS
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+        ? process.env.FRONTEND_URL 
+        : ['http://localhost:3000', 'http://localhost:3001'],
+    credentials: true
+}));
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

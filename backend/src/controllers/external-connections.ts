@@ -91,15 +91,8 @@ export const getConnectionById = async (req: Request, res: Response) => {
 export const updateConnection = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { username, authToken, url, pollingPeriodSeconds, enable } = req.body;
-
-    // Only include fields that are actually provided
-    const updateFields: any = {};
-    if (username !== undefined) updateFields.username = username;
-    if (authToken !== undefined) updateFields.authToken = authToken;
-    if (url !== undefined) updateFields.url = url;
-    if (pollingPeriodSeconds !== undefined) updateFields.pollingPeriodSeconds = pollingPeriodSeconds;
-    if (enable !== undefined) updateFields.enable = enable;
+    const updateFields = { ...req.body };
+    delete updateFields.id; // Remove id if it was included in the body
 
     const connection = await updateConnectionDocument({ _id: id }, updateFields);
     if (!connection) {
@@ -161,10 +154,9 @@ export interface ExternalConnectionConfig {
   type: string;
   parameters: Record<string, any>;
   url: string;
-  username: string;
-  authToken: string;
   pollingPeriodSeconds: number;
   enable: boolean;
+  [key: string]: any; // Allow additional fields
 }
 
 // GET /connections/spec

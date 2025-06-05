@@ -33,7 +33,7 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
 }) => {
     const [enabled, setEnabled] = useState<boolean>(connectionStatus === true);
     const [adapters, setAdapters] = useState<Adapter[]>([]);
-    const [selectedAdapter, setSelectedAdapter] = useState<string>(initialAdapter || '');
+    const [selectedAdapter, setSelectedAdapter] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isAdaptersLoaded, setIsAdaptersLoaded] = useState(false);
@@ -47,12 +47,20 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections/spec`);
                 setAdapters(response.data);
                 setIsAdaptersLoaded(true);
+                
+                // Set initial adapter only after adapters are loaded
+                if (initialAdapter) {
+                    const adapterExists = response.data.some((adapter: Adapter) => adapter.name === initialAdapter);
+                    if (adapterExists) {
+                        setSelectedAdapter(initialAdapter);
+                    }
+                }
             } catch (err) {
                 setError('Failed to load adapter specifications');
             }
         };
         fetchAdapters();
-    }, []);
+    }, [initialAdapter]);
 
     // Then, fetch connection details after adapters are loaded
     useEffect(() => {
@@ -63,26 +71,36 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
                 const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections?elementId=${elementId}`);
                 if (response.status === 200 && response.data && response.data.length > 0) {
                     const connection = response.data[0];
-                    setSelectedAdapter(connection.type || '');
+                    // Only set adapter if it exists in the loaded adapters
+                    const adapterExists = adapters.some(adapter => adapter.name === connection.type);
+                    if (adapterExists) {
+                        setSelectedAdapter(connection.type || '');
+                    }
                     setEnabled(connection.enable === true);
                     setHasExistingConnection(true);
                     setConnectionData(connection);
                 } else {
                     setHasExistingConnection(null);
                     setEnabled(false);
-                    setSelectedAdapter('');
+                    // Don't reset selectedAdapter if it was set from initialAdapter
+                    if (!initialAdapter) {
+                        setSelectedAdapter('');
+                    }
                     setConnectionData(null);
                 }
             } catch (error) {
                 console.error('Failed to fetch connection details:', error);
                 setHasExistingConnection(null);
                 setEnabled(false);
-                setSelectedAdapter('');
+                // Don't reset selectedAdapter if it was set from initialAdapter
+                if (!initialAdapter) {
+                    setSelectedAdapter('');
+                }
                 setConnectionData(null);
             }
         };
         fetchConnectionDetails();
-    }, [isAdaptersLoaded, elementId]);
+    }, [isAdaptersLoaded, elementId, adapters, initialAdapter]);
 
     const handleAdapterChange = (adapterName: string) => {
         setSelectedAdapter(adapterName);

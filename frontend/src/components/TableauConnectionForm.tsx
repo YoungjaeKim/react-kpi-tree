@@ -76,7 +76,6 @@ export const TableauConnectionForm: React.FC<TableauConnectionFormProps> = ({
             setTokenName(initialValues.tokenName || '');
             setTokenValue(initialValues.tokenValue || '');
             setSiteContentUrl(initialValues.siteContentUrl || '');
-            setSelectedViewId(initialValues.selectedViewId || '');
             setPollingPeriodSeconds(initialValues.pollingPeriodSeconds?.toString() || '20');
             setParameters(
                 Object.entries(initialValues.parameters || {}).map(([key, value]) => ({
@@ -84,6 +83,20 @@ export const TableauConnectionForm: React.FC<TableauConnectionFormProps> = ({
                     value: String(value)
                 }))
             );
+            
+            // Auto-fetch views if we have the required credentials and a selectedViewId
+            if (initialValues.url && initialValues.tokenName && initialValues.tokenValue && initialValues.selectedViewId) {
+                setSelectedViewId(initialValues.selectedViewId);
+                // Auto-fetch views to populate the dropdown
+                fetchViewsWithCredentials(
+                    initialValues.url,
+                    initialValues.tokenName,
+                    initialValues.tokenValue,
+                    initialValues.siteContentUrl || ''
+                );
+            } else {
+                setSelectedViewId(initialValues.selectedViewId || '');
+            }
         }
     }, [initialValues]);
 
@@ -103,23 +116,44 @@ export const TableauConnectionForm: React.FC<TableauConnectionFormProps> = ({
         setParameters(parameters.filter((_, i) => i !== index));
     };
 
-    const fetchViews = async () => {
+    const fetchViewsWithCredentials = async (urlParam: string, tokenNameParam: string, tokenValueParam: string, siteContentUrlParam: string) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/tableau/views`, {
-                url,
-                tokenName,
-                tokenValue,
-                siteContentUrl
+            // Step 1: Authenticate and get token through our backend
+            const authResponse = await axios.post(`${process.env.REACT_APP_API_URL}/connections/tableau/auth`, {
+                url: urlParam,
+                tokenName: tokenNameParam,
+                tokenValue: tokenValueParam,
+                siteContentUrl: siteContentUrlParam
             });
-            setViews(response.data.views.view || []);
+
+            const { site, token } = authResponse.data.credentials;
+
+            // Step 2: Fetch views using the token through our backend
+            const viewsResponse = await axios.post(`${process.env.REACT_APP_API_URL}/connections/tableau/views`, {
+                url: urlParam,
+                siteId: site.id,
+                token
+            });
+
+            // Transform the views data to match our interface
+            const transformedViews = viewsResponse.data.views.view.map((view: any) => ({
+                id: view.id,
+                name: view.name
+            }));
+
+            setViews(transformedViews);
         } catch (err) {
             setError('Failed to fetch views');
             console.error('Error fetching views:', err);
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchViews = async () => {
+        await fetchViewsWithCredentials(url, tokenName, tokenValue, siteContentUrl);
     };
 
     // Update parent component whenever form values change
@@ -206,7 +240,7 @@ export const TableauConnectionForm: React.FC<TableauConnectionFormProps> = ({
                 fullWidth
             />
             
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                 <FormControl fullWidth>
                     <InputLabel>View</InputLabel>
                     <Select
@@ -214,7 +248,11 @@ export const TableauConnectionForm: React.FC<TableauConnectionFormProps> = ({
                         label="View"
                         onChange={(e) => setSelectedViewId(e.target.value)}
                         error={!selectedViewId}
+                        displayEmpty
                     >
+                        <MenuItem value="" disabled>
+                            {views.length > 0 ? `${views.length} views available` : 'No views available'}
+                        </MenuItem>
                         {views.map((view) => (
                             <MenuItem key={view.id} value={view.id}>
                                 {view.name}
@@ -226,7 +264,10 @@ export const TableauConnectionForm: React.FC<TableauConnectionFormProps> = ({
                     variant="contained"
                     onClick={fetchViews}
                     disabled={loading || !url || !tokenName || !tokenValue}
-                    sx={{ minWidth: '120px' }}
+                    sx={{ 
+                        minWidth: '120px',
+                        height: '56px' // Match Material-UI's default input height
+                    }}
                 >
                     {loading ? <CircularProgress size={24} /> : 'Get Views'}
                 </Button>
