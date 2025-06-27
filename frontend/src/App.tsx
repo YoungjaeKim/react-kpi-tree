@@ -28,6 +28,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { AddNodeDialog } from './components/AddNodeDialog';
 import KpiDisplayNodeType from './components/KpiDisplayNodeType';
 import { WebSocketProvider } from './contexts/WebSocketContext';
+import CreateGroupDialog from './components/CreateGroupDialog';
 
 // Minimum screen resolution
 const MIN_SCREEN_WIDTH = 1280;
@@ -35,62 +36,7 @@ const MIN_SCREEN_HEIGHT = 1024;
 // Default properties panel width
 const DEFAULT_PROPERTIES_WIDTH = 300;
 
-interface CreateGroupDialogProps {
-    open: boolean;
-    onClose: () => void;
-    onConfirm: (title: string) => void;
-}
-
 const nodeTypes = { kpiDisplayNodeType: KpiDisplayNodeType };
-
-const CreateGroupDialog: React.FC<CreateGroupDialogProps> = ({ open, onClose, onConfirm }) => {
-    const [title, setTitle] = useState('');
-
-    const handleConfirm = () => {
-        if (title.trim()) {
-            onConfirm(title.trim());
-            setTitle('');
-            onClose();
-        }
-    };
-
-    return (
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>
-                Create a Group
-                <IconButton
-                    aria-label="close"
-                    onClick={onClose}
-                    sx={{
-                        position: 'absolute',
-                        right: 8,
-                        top: 8,
-                    }}
-                >
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
-            <DialogContent>
-                <TextField
-                    autoFocus
-                    margin="dense"
-                    label="Title"
-                    type="text"
-                    fullWidth
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    sx={{ mt: 2 }}
-                />
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Cancel</Button>
-                <Button onClick={handleConfirm} variant="contained" disabled={!title.trim()}>
-                    OK
-                </Button>
-            </DialogActions>
-        </Dialog>
-    );
-};
 
 function App() {
     const [groups, setGroups] = useState<Group[]>([]);
