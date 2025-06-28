@@ -170,6 +170,15 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                     secondary={String(selectedNode.data.element?.kpiValue)}
                 />
                 <Divider />
+                {selectedNode.data.element?.expression && (
+                    <>
+                        <PropertyListItem 
+                            primary="Expression" 
+                            secondary={String(selectedNode.data.element.expression)}
+                        />
+                        <Divider />
+                    </>
+                )}
                 <PropertyListItem 
                     primary="Connection Type" 
                     secondary={String(selectedNode.data.connectionType)}
@@ -205,6 +214,7 @@ export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                 onClose={() => setEditDialogOpen(false)}
                 node={selectedNode}
                 setNodes={setNodes}
+                nodes={nodes}
             />
         </Paper>
     );

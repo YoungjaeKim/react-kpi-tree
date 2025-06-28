@@ -323,6 +323,7 @@ function App() {
                         // handleNodesChange([]);
                     }}
                     setNodes={setNodes}
+                    nodes={nodes}
                 />
 
                 <CreateGroupDialog

@@ -7,6 +7,7 @@ export const useNewNodeForm = () => {
     const [elementValueType, setElementValueType] = useState<string>("Integer");
     const [elementValue, setElementValue] = useState<string>("0");
     const [elementValueError, setElementValueError] = useState<string>("");
+    const [expression, setExpression] = useState<string>("");
 
     const handleElementValueTypeChange = (type: string) => {
         setElementValueType(type);
@@ -61,6 +62,7 @@ export const useNewNodeForm = () => {
         setElementValueType("Integer");
         setElementValue("0");
         setElementValueError("");
+        setExpression("");
     };
 
     return {
@@ -74,6 +76,8 @@ export const useNewNodeForm = () => {
         elementValueError,
         handleElementValueTypeChange,
         validateElementValue,
+        expression,
+        setExpression,
         resetForm
     };
 }; 

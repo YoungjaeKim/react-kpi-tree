@@ -8,22 +8,26 @@ import {
     InputLabel,
     Box,
     FormHelperText,
-    Typography
+    Typography,
+    Divider
 } from '@mui/material';
 import { BlockNode, BlockNodeTransferForCreate } from '../types';
+import { ExpressionInput } from './ExpressionInput';
 
 interface NewNodeFormProps {
     groupId: string;
     onNodeAdded: (node: BlockNode) => void;
     onTitleChange?: (isValid: boolean) => void;
     onFormDataChange?: (data: BlockNodeTransferForCreate | null) => void;
+    nodes?: BlockNode[]; // Add nodes prop for expression autocomplete
 }
 
 export const NewNodeForm: React.FC<NewNodeFormProps> = ({ 
     groupId, 
     onNodeAdded, 
     onTitleChange,
-    onFormDataChange 
+    onFormDataChange,
+    nodes = []
 }) => {
     const {
         title,
@@ -36,6 +40,8 @@ export const NewNodeForm: React.FC<NewNodeFormProps> = ({
         elementValueError,
         handleElementValueTypeChange,
         validateElementValue,
+        expression,
+        setExpression,
     } = useNewNodeForm();
 
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +60,7 @@ export const NewNodeForm: React.FC<NewNodeFormProps> = ({
             elementValue: elementValue.trim(),
             elementValueType: elementValueType,
             elementIsActive: true,
-            elementExpression: "",
+            elementExpression: expression || "",
             elementId: ""
         };
         onFormDataChange?.(formData);
@@ -63,8 +69,7 @@ export const NewNodeForm: React.FC<NewNodeFormProps> = ({
     // Update form data when any field changes
     React.useEffect(() => {
         updateFormData();
-    }, [title, label, elementValue, elementValueType]);
-
+    }, [title, label, elementValue, elementValueType, expression]);
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -120,6 +125,23 @@ export const NewNodeForm: React.FC<NewNodeFormProps> = ({
                     )}
                 </FormControl>
             </Box>
+            
+            <Divider />
+            
+            <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+                Expression (Optional)
+            </Typography>
+            <ExpressionInput
+                value={expression}
+                onChange={(value) => {
+                    setExpression(value);
+                    updateFormData();
+                }}
+                nodes={nodes}
+                label="Expression"
+                placeholder="Type @ to see available nodes, then enter expression (e.g., @{elementId} + 10)"
+                helperText="Use @ to reference other nodes. Supports +, -, *, /, %, (, )"
+            />
         </Box>
     );
 }; 

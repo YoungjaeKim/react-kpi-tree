@@ -8,19 +8,22 @@ import axios from 'axios';
 import {updateNode} from '../services/blockGraphService';
 import {ExternalConnectionSettings} from './ExternalConnectionSettings';
 import {toBlockNode} from '../utils/nodeUtils';
+import {ExpressionInput} from './ExpressionInput';
 
 interface EditNodeDialogProps {
     open: boolean;
     onClose: () => void;
     node: BlockNode;
     setNodes: React.Dispatch<React.SetStateAction<BlockNode[]>>;
+    nodes?: BlockNode[]; // Add nodes prop for expression autocomplete
 }
 
-export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({open, onClose, node, setNodes}) => {
+export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({open, onClose, node, setNodes, nodes = []}) => {
     const [title, setTitle] = useState(node.data.title || '');
     const [label, setLabel] = useState(node.data.label || '');
     const [kpiValue, setKpiValue] = useState(node.data.element?.kpiValue || '');
     const [kpiValueType, setKpiValueType] = useState(node.data.element?.kpiValueType || '');
+    const [expression, setExpression] = useState(node.data.element?.expression || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [getConnectionData, setGetConnectionData] = useState<(() => any) | null>(null);
@@ -31,6 +34,7 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({open, onClose, no
         setLabel(node.data.label || '');
         setKpiValue(node.data.element?.kpiValue || '');
         setKpiValueType(node.data.element?.kpiValueType || '');
+        setExpression(node.data.element?.expression || '');
         setError(null);
     }, [node]);
 
@@ -78,6 +82,16 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({open, onClose, no
                     axios.post(`${process.env.REACT_APP_API_URL}/elements`, {
                         id: node.data.elementId,
                         kpiValue
+                    })
+                );
+            }
+
+            // Handle expression changes
+            if (expression !== node.data.element?.expression) {
+                promises.push(
+                    axios.post(`${process.env.REACT_APP_API_URL}/elements`, {
+                        id: node.data.elementId,
+                        expression
                     })
                 );
             }
@@ -174,6 +188,18 @@ export const EditNodeDialog: React.FC<EditNodeDialogProps> = ({open, onClose, no
                         value={kpiValue}
                         onChange={(e) => setKpiValue(e.target.value)}
                         fullWidth
+                    />
+                    <Divider/>
+
+                    <Typography variant="h6">Expression</Typography>
+                    <ExpressionInput
+                        value={expression}
+                        onChange={setExpression}
+                        nodes={nodes}
+                        currentNodeId={node.id}
+                        label="Expression"
+                        placeholder="Type @ to see available nodes, then enter expression (e.g., @{elementId} + 10)"
+                        helperText="Use @ to reference other nodes. Supports +, -, *, /, %, (, )"
                     />
                     <Divider/>
 

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { useWebSocket } from '../contexts/WebSocketContext';
+import { calculateExpression } from '../services/blockGraphService';
+import { BlockNode } from '../types';
 
 interface KpiDisplayNodeData {
     title: string;
@@ -9,16 +11,40 @@ interface KpiDisplayNodeData {
     element?: {
         kpiValue: string;
         kpiValueType: string;
+        expression?: string;
         lastUpdatedDateTime: string;
     };
     connectionStatus: boolean;
 }
 
-const KpiDisplayNodeType = ({ data, selected }: { data: KpiDisplayNodeData; selected?: boolean }) => {
+interface KpiDisplayNodeTypeProps {
+    data: KpiDisplayNodeData;
+    selected?: boolean;
+    nodes?: BlockNode[]; // Add nodes prop for expression calculation
+}
+
+const KpiDisplayNodeType = ({ data, selected, nodes = [] }: KpiDisplayNodeTypeProps) => {
     const [kpiValue, setKpiValue] = useState(data.element?.kpiValue || '');
     const [lastUpdated, setLastUpdated] = useState(data.element?.lastUpdatedDateTime || '');
     const [animationKey, setAnimationKey] = useState(0);
     const { subscribeToNode } = useWebSocket();
+
+    // Calculate expression value if expression exists
+    const getDisplayValue = (): string => {
+        if (data.element?.expression) {
+            const calculatedValue = calculateExpression(data.element.expression, nodes);
+            if (calculatedValue !== null) {
+                return data.element.kpiValueType === 'Integer' 
+                    ? Math.round(calculatedValue).toLocaleString()
+                    : calculatedValue.toString();
+            }
+        }
+        
+        // Fall back to direct kpiValue
+        return data.element?.kpiValueType === 'Integer' 
+            ? Number(kpiValue).toLocaleString()
+            : kpiValue || '-';
+    };
 
     useEffect(() => {
         // Subscribe to updates for this specific node
@@ -100,15 +126,14 @@ const KpiDisplayNodeType = ({ data, selected }: { data: KpiDisplayNodeData; sele
                 key={animationKey}
                 style={{
                     padding: '4px',
-                    backgroundColor: '#f5f5f5',
+                    backgroundColor: data.element?.expression ? '#e3f2fd' : '#f5f5f5',
                     borderRadius: '3px',
                     fontSize: '11px',
                     animation: animationKey > 0 ? 'blink 1.0s ease-in-out' : 'none'
                 }}
+                title={data.element?.expression ? `Expression: ${data.element.expression}` : undefined}
             >
-                {data?.element?.kpiValueType === 'Integer' 
-                    ? Number(kpiValue).toLocaleString()
-                    : kpiValue || '-'}
+                {getDisplayValue()}
             </div>
             <Handle
                 type='source'

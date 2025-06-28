@@ -18,6 +18,7 @@ import {
 
 import '@xyflow/react/dist/style.css';
 import { BlockNode, BlockEdge } from '../types';
+import KpiDisplayNodeType from './KpiDisplayNodeType';
 
 interface BlockCanvasProps {
     edges: BlockEdge[];
@@ -70,6 +71,14 @@ const BlockCanvas: React.FC<BlockCanvasProps> = ({
         [setBlockEdges, onEdgesChange],
     );
 
+    // Create custom node types with nodes prop
+    const customNodeTypes: NodeTypes = {
+        ...nodeTypes,
+        kpiDisplayNodeType: (props: any) => (
+            <KpiDisplayNodeType {...props} nodes={nodes} />
+        )
+    };
+
     return (
         <ReactFlow
             nodes={blockNodes}
@@ -79,7 +88,7 @@ const BlockCanvas: React.FC<BlockCanvasProps> = ({
             onConnect={onConnect}
             fitView
             style={{ background: '#f8f8f8' }}
-            nodeTypes={nodeTypes}
+            nodeTypes={customNodeTypes}
         >
             <MiniMap/>
             <Controls/>

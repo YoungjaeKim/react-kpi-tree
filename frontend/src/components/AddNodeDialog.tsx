@@ -24,6 +24,7 @@ interface AddNodeDialogProps {
     groupId: string;
     onNodeAdded: (node: BlockNode) => void;
     setNodes: React.Dispatch<React.SetStateAction<BlockNode[]>>;
+    nodes?: BlockNode[]; // Add nodes prop for expression autocomplete
 }
 
 export const AddNodeDialog: React.FC<AddNodeDialogProps> = ({
@@ -31,7 +32,8 @@ export const AddNodeDialog: React.FC<AddNodeDialogProps> = ({
     onClose,
     groupId,
     onNodeAdded,
-    setNodes
+    setNodes,
+    nodes = []
 }) => {
     const [mode, setMode] = useState<'add' | 'show'>('add');
     const [isTitleValid, setIsTitleValid] = useState(false);
@@ -141,6 +143,7 @@ export const AddNodeDialog: React.FC<AddNodeDialogProps> = ({
                         onNodeAdded={onNodeAdded}
                         onTitleChange={setIsTitleValid}
                         onFormDataChange={setFormData}
+                        nodes={nodes}
                     />
                 </Box>
 
