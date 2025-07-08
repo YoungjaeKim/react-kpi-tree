@@ -7,12 +7,13 @@ import { IKpiElement } from '../schemas/kpiElement'; // Assuming IKpiElement is 
 export class ElementService {
 
     /**
-     * Finds an element, records its current kpiValue, and then updates the kpiValue.
+     * Updates an element with either kpiValue, expression, or both.
+     * If kpiValue is provided, it records the current value before updating.
      * @param elementId The ID of the element to update.
-     * @param newKpiValue The new KPI value to set.
+     * @param updates Object containing the fields to update
      * @returns The updated KpiElement document or null if not found or error.
      */
-    public async recordAndUpdateKpiValue(elementId: string, newKpiValue: string): Promise<IKpiElement | null> {
+    public async updateElement(elementId: string, updates: { kpiValue?: string; expression?: string }): Promise<IKpiElement | null> {
         try {
             // Find the current element
             const element = await KpiElement.findById(elementId);
@@ -21,42 +22,51 @@ export class ElementService {
                 return null;
             }
 
-            // Create a record of the current value based on type
-            let newRecord;
-            switch (element.kpiValueType) {
-                case 'Integer':
-                    newRecord = new KpiElementRecordInteger({
-                        elementId: element._id,
-                        recordValue: parseInt(element.kpiValue, 10) || 0
-                    });
-                    break;
-                case 'Double':
-                    newRecord = new KpiElementRecordDouble({
-                        elementId: element._id,
-                        recordValue: parseFloat(element.kpiValue) || 0.0
-                    });
-                    break;
-                case 'String':
-                    newRecord = new KpiElementRecordString({
-                        elementId: element._id,
-                        recordValue: element.kpiValue || ""
-                    });
-                    break;
-                default:
-                    console.error(`Unsupported value type: ${element.kpiValueType} for element ID: ${elementId}`);
-                    // Optionally throw an error or handle as appropriate
-                    return null; // Or throw new Error(...)
+            // If updating kpiValue, create a record of the current value first
+            if (updates.kpiValue !== undefined) {
+                let newRecord;
+                switch (element.kpiValueType) {
+                    case 'Integer':
+                        newRecord = new KpiElementRecordInteger({
+                            elementId: element._id,
+                            recordValue: parseInt(element.kpiValue, 10) || 0
+                        });
+                        break;
+                    case 'Double':
+                        newRecord = new KpiElementRecordDouble({
+                            elementId: element._id,
+                            recordValue: parseFloat(element.kpiValue) || 0.0
+                        });
+                        break;
+                    case 'String':
+                        newRecord = new KpiElementRecordString({
+                            elementId: element._id,
+                            recordValue: element.kpiValue || ""
+                        });
+                        break;
+                    default:
+                        console.error(`Unsupported value type: ${element.kpiValueType} for element ID: ${elementId}`);
+                        return null;
+                }
+                await newRecord.save();
+                
+                // Update the kpiValue
+                element.kpiValue = updates.kpiValue;
             }
-            await newRecord.save();
 
-            // Update the element with the new kpiValue
-            element.kpiValue = newKpiValue;
+            // Update expression if provided
+            if (updates.expression !== undefined) {
+                element.expression = updates.expression;
+            }
+
+            // Save the updated element
             const updatedElement = await element.save();
             return updatedElement;
 
         } catch (err) {
-            console.error(`Failed to update element value for ID ${elementId}:`, err);
-            return null; // Or throw err depending on desired error handling
+            console.error(`Failed to update element for ID ${elementId}:`, err);
+            return null;
         }
     }
+
 } 

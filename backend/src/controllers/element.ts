@@ -11,17 +11,27 @@ export const pushElement = async (req: Request, res: Response): Promise<void> =>
     try {
         const elementId = req.body.id as string;
         const newKpiValue = req.body.kpiValue as string;
+        const expression = req.body.expression as string;
 
         if (isNullOrEmpty(elementId)) {
             res.status(400).json({ error: "invalid id" });
             return;
         }
-        if (isNullOrEmpty(newKpiValue)) {
-            res.status(400).json({ error: "kpiValue is required" });
+        if (isNullOrEmpty(newKpiValue) && isNullOrEmpty(expression)) {
+            res.status(400).json({ error: "kpiValue or expression is required" });
             return;
         }
 
-        const updatedElement = await elementService.recordAndUpdateKpiValue(elementId, newKpiValue);
+        // Create updates object with only the provided fields
+        const updates: { kpiValue?: string; expression?: string } = {};
+        if (!isNullOrEmpty(newKpiValue)) {
+            updates.kpiValue = newKpiValue;
+        }
+        if (!isNullOrEmpty(expression)) {
+            updates.expression = expression;
+        }
+
+        const updatedElement = await elementService.updateElement(elementId, updates);
 
         if (!updatedElement) {
             res.status(404).json({ error: "Element not found or failed to update" }); 

@@ -207,7 +207,7 @@ export class ExternalConnectionService {
         try {
             const response = await adapter.fetch(config);
             if (response.success && response.value !== undefined && response.value !== null) {
-                const updatedElement = await this.elementService.recordAndUpdateKpiValue(config.elementId, String(response.value));
+                const updatedElement = await this.elementService.updateElement(config.elementId, { kpiValue: String(response.value) });
                 if (updatedElement) {
                     console.log(`Successfully updated element ${config.elementId} for connection ${config.name} with value: ${response.value}`);
                     // Broadcast the update to all connected clients
