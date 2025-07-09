@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     TextField,
     Autocomplete,
     Box,
     Typography,
-    Chip
+    Chip,
+    IconButton
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { BlockNode } from '../types';
 
 interface ExpressionInputProps {
@@ -42,6 +44,7 @@ export const ExpressionInput: React.FC<ExpressionInputProps> = ({
     const [showAutocomplete, setShowAutocomplete] = useState(false);
     const [cursorPosition, setCursorPosition] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // Create element options for autocomplete, excluding current node
     const elementOptions: ElementOption[] = nodes
@@ -59,56 +62,104 @@ export const ExpressionInput: React.FC<ExpressionInputProps> = ({
         option.elementId.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Handle text input changes
-    const handleInputChange = (newValue: string) => {
-        setInputValue(newValue);
-        onChange(newValue);
+    // Check if cursor is inside {@...} region
+    const checkCursorInAtRegion = (text: string, cursorPos: number) => {
+        // Find all {@...} regions
+        const atRegions: Array<{start: number, end: number, searchTerm: string}> = [];
+        const regex = /@\{([^}]*)\}/g;
+        let match;
         
-        // Check if we should show autocomplete
-        const lastAtSymbol = newValue.lastIndexOf('@');
-        if (lastAtSymbol !== -1) {
-            const afterAt = newValue.substring(lastAtSymbol + 1);
-            // Show autocomplete immediately when @ is typed
-            if (afterAt === '' || afterAt.includes('{')) {
-                setSearchTerm('');
-                setShowAutocomplete(true);
-                setCursorPosition(lastAtSymbol);
-            } else if (afterAt.includes('{') && !afterAt.includes('}')) {
-                // If user is typing inside braces, use that as search term
-                const searchText = afterAt.substring(afterAt.indexOf('{') + 1);
-                setSearchTerm(searchText);
-                setShowAutocomplete(true);
-                setCursorPosition(lastAtSymbol);
-            } else {
-                setShowAutocomplete(false);
-                setSearchTerm('');
+        while ((match = regex.exec(text)) !== null) {
+            atRegions.push({
+                start: match.index,
+                end: match.index + match[0].length,
+                searchTerm: match[1]
+            });
+        }
+        
+        // Check for incomplete @{...} regions (without closing brace)
+        const incompleteRegex = /@\{([^}]*?)$/g;
+        let incompleteMatch;
+        while ((incompleteMatch = incompleteRegex.exec(text)) !== null) {
+            atRegions.push({
+                start: incompleteMatch.index,
+                end: text.length,
+                searchTerm: incompleteMatch[1]
+            });
+        }
+        
+        // Check if cursor is within any @{...} region
+        for (const region of atRegions) {
+            if (cursorPos >= region.start + 2 && cursorPos <= region.end) { // +2 to skip @{
+                return {
+                    isInside: true,
+                    searchTerm: region.searchTerm,
+                    regionStart: region.start
+                };
             }
+        }
+        
+        return { isInside: false, searchTerm: '', regionStart: -1 };
+    };
+
+    // Handle cursor position changes
+    const handleCursorPositionChange = (newCursorPos: number) => {
+        setCursorPosition(newCursorPos);
+        
+        const regionInfo = checkCursorInAtRegion(inputValue, newCursorPos);
+        
+        if (regionInfo.isInside) {
+            setSearchTerm(regionInfo.searchTerm);
+            setShowAutocomplete(true);
         } else {
             setShowAutocomplete(false);
             setSearchTerm('');
         }
     };
 
+    // Handle text input changes
+    const handleInputChange = (newValue: string) => {
+        setInputValue(newValue);
+        onChange(newValue);
+        
+        // Get current cursor position
+        const currentCursorPos = inputRef.current?.selectionStart || 0;
+        handleCursorPositionChange(currentCursorPos);
+    };
+
+    // Handle cursor position changes on selection/click
+    const handleSelectionChange = () => {
+        if (inputRef.current) {
+            const newCursorPos = inputRef.current.selectionStart || 0;
+            handleCursorPositionChange(newCursorPos);
+        }
+    };
+
     // Handle autocomplete selection
     const handleAutocompleteSelect = (option: ElementOption) => {
-        const beforeAt = inputValue.substring(0, cursorPosition);
-        const afterCursor = inputValue.substring(cursorPosition);
+        const regionInfo = checkCursorInAtRegion(inputValue, cursorPosition);
         
-        // Check if we're already inside braces
-        if (afterCursor.includes('{')) {
-            const afterBrace = afterCursor.substring(afterCursor.indexOf('{') + 1);
-            const afterElementId = afterBrace.includes('}') ? afterBrace.substring(afterBrace.indexOf('}') + 1) : afterBrace;
-            const newValue = beforeAt + `@{${option.elementId}}` + afterElementId;
-            setInputValue(newValue);
-            onChange(newValue);
-        } else {
-            // Insert @{elementId} after the @ symbol, removing any existing @
-            const afterAt = afterCursor.substring(1); // Remove the @ symbol
-            const newValue = beforeAt + `@{${option.elementId}}` + afterAt;
+        if (regionInfo.isInside) {
+            const beforeRegion = inputValue.substring(0, regionInfo.regionStart);
+            const afterRegion = inputValue.substring(cursorPosition);
+            
+            // Find the end of the current @{...} region
+            const closingBraceIndex = afterRegion.indexOf('}');
+            const actualAfterRegion = closingBraceIndex !== -1 
+                ? afterRegion.substring(closingBraceIndex + 1) 
+                : afterRegion;
+            
+            const newValue = beforeRegion + `@{${option.elementId}}` + actualAfterRegion;
             setInputValue(newValue);
             onChange(newValue);
         }
         
+        setShowAutocomplete(false);
+        setSearchTerm('');
+    };
+
+    // Handle close button click
+    const handleCloseAutocomplete = () => {
         setShowAutocomplete(false);
         setSearchTerm('');
     };
@@ -121,9 +172,13 @@ export const ExpressionInput: React.FC<ExpressionInputProps> = ({
     return (
         <Box sx={{ position: 'relative' }}>
             <TextField
+                inputRef={inputRef}
                 label={label}
                 value={inputValue}
                 onChange={(e) => handleInputChange(e.target.value)}
+                onSelect={handleSelectionChange}
+                onClick={handleSelectionChange}
+                onKeyUp={handleSelectionChange}
                 placeholder={placeholder}
                 fullWidth={fullWidth}
                 error={error}
@@ -154,6 +209,29 @@ export const ExpressionInput: React.FC<ExpressionInputProps> = ({
                         mb: 1
                     }}
                 >
+                    {/* Header with close button */}
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '4px 8px',
+                            borderBottom: '1px solid #eee',
+                            backgroundColor: '#f8f9fa'
+                        }}
+                    >
+                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.secondary' }}>
+                            Select Node
+                        </Typography>
+                        <IconButton
+                            size="small"
+                            onClick={handleCloseAutocomplete}
+                            sx={{ padding: '2px' }}
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </Box>
+                    
                     {filteredOptions.map((option) => (
                         <Box
                             key={option.elementId}
