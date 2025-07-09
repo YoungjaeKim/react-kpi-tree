@@ -92,6 +92,6 @@ Below is an example of `external-connections.json` file.
   - [v] Add Json Adapter
   - [ ] Add Google BigQuery Adapter
 - [ ] Add more test cases
-- [ ] Group
+- [v] Group
   - [v] Create new Group
   - [v] Archive a Group
