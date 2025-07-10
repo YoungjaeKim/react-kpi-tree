@@ -26,5 +26,3 @@ router.post('/edge', upsertEdge);
 router.delete('/edge/:id', deleteEdge);
 
 export default router;
-
-module.exports = router;
