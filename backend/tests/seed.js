@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
-const kpiElement = require('../schmas/kpiElement');
-const kpiNode = require('../schmas/kpiNode');
-const kpiEdge = require('../schmas/kpiEdge');
-const kpiGroup = require('../schmas/kpiGroup');
+const kpiElement = require('../schemas/kpiElement');
+const kpiNode = require('../schemas/kpiNode');
+const kpiEdge = require('../schemas/kpiEdge');
+const kpiGroup = require('../schemas/kpiGroup');
 
 const mongoURI = process.env.MONGODB_DEV || 'mongodb://localhost:27017/dev';
 
