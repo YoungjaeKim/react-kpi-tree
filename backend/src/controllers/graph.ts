@@ -376,6 +376,31 @@ async function getNodeWithConnectionStatus(nodeId: Types.ObjectId): Promise<{ no
     return { nodeObject, connectionStatus, connectionType };
 }
 
+/**
+ * Helper function to update group counts based on actual node and edge counts
+ */
+async function updateGroupCounts(groupId: string | Types.ObjectId): Promise<void> {
+    try {
+        // Count non-hidden nodes in the group
+        const nodeCount = await KpiNode.countDocuments({ 
+            groupId: groupId, 
+            hidden: false 
+        });
+        
+        // Count all edges in the group
+        const edgeCount = await KpiEdge.countDocuments({ groupId: groupId });
+        
+        // Update the group with actual counts
+        await KpiGroup.findByIdAndUpdate(groupId, {
+            nodeCount,
+            edgeCount
+        });
+    } catch (error) {
+        console.error('Error updating group counts:', error);
+        // Don't throw error to avoid disrupting the main operation
+    }
+}
+
 export const upsertNode = async (req: Request, res: Response): Promise<void> => {
     try {
         let kpiNode: Document;
@@ -405,6 +430,9 @@ export const upsertNode = async (req: Request, res: Response): Promise<void> => 
         // Get populated node with connection status
         const { nodeObject, connectionStatus, connectionType } = await getNodeWithConnectionStatus(kpiNode._id);
         
+        // Update group counts after node upsert
+        await updateGroupCounts(nodeObject.groupId);
+        
         res.status(isNew ? 201 : 200).json(transformNodeResponse(nodeObject, connectionStatus, connectionType));
     } catch (err) {
         console.error('Failed to upsert node:', err);
@@ -417,6 +445,10 @@ export const upsertEdge = async (req: Request, res: Response): Promise<void> => 
         try {
             const newKpiEdge = new KpiEdge(req.body);
             const savedKpiEdge = await newKpiEdge.save();
+            
+            // Update group counts after edge creation
+            await updateGroupCounts(savedKpiEdge.groupId);
+            
             res.status(201).json(savedKpiEdge);
         } catch (err) {
             console.error('Failed to save document:', err);
@@ -433,6 +465,10 @@ export const upsertEdge = async (req: Request, res: Response): Promise<void> => 
             kpiEdge.target = req.body.target;
             kpiEdge.groupId = req.body.groupId;
             const updatedKpiEdge = await kpiEdge.save();
+            
+            // Update group counts after edge update
+            await updateGroupCounts(updatedKpiEdge.groupId);
+            
             res.status(200).json(updatedKpiEdge);
         } catch (err) {
             console.error('Failed to update document:', err);
@@ -475,6 +511,9 @@ export const updateNode = async (req: Request, res: Response): Promise<void> => 
             connectionStatus = externalConnection?.enable ?? null;
         }
 
+        // Update group counts after node update
+        await updateGroupCounts(nodeObject.groupId);
+
         res.json(transformNodeResponse(nodeObject, connectionStatus));
     } catch (error) {
         console.error('Error updating node:', error);
@@ -496,6 +535,10 @@ export const deleteEdge = async (req: Request, res: Response): Promise<void> => 
             res.status(404).json({ error: "Edge not found" });
             return;
         }
+        
+        // Update group counts after edge deletion
+        await updateGroupCounts(deletedEdge.groupId);
+        
         res.status(200).json({ message: "Edge deleted successfully" });
     } catch (err) {
         console.error('Failed to delete edge:', err);
