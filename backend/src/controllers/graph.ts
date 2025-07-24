@@ -529,6 +529,13 @@ export const deleteEdge = async (req: Request, res: Response): Promise<void> => 
         return;
     }
 
+    // query the edge to get the groupId
+    const edge = await KpiEdge.findById(edgeId);
+    if (!edge) {
+        res.status(404).json({ error: "Edge not found" });
+        return;
+    }
+
     try {
         const deletedEdge = await KpiEdge.findByIdAndDelete(edgeId);
         if (!deletedEdge) {
@@ -537,7 +544,7 @@ export const deleteEdge = async (req: Request, res: Response): Promise<void> => 
         }
         
         // Update group counts after edge deletion
-        await updateGroupCounts(deletedEdge.groupId);
+        await updateGroupCounts(edge.groupId);
         
         res.status(200).json({ message: "Edge deleted successfully" });
     } catch (err) {
