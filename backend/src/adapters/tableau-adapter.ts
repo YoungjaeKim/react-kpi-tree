@@ -8,6 +8,60 @@ export class TableauAdapter implements ExternalConnectionAdapter {
     private siteId: string = '';
     private config!: ExternalConnectionConfig;
 
+    /**
+     * Fetch data from Tableau
+     * 
+     * @param config example: name:eq:value (see; https://help.tableau.com/current/api/rest_api/en-us/REST/rest_api_concepts_filtering_and_sorting.htm#filter_expressions)
+     * @returns The response from the external connection
+     */
+    async fetch(config: ExternalConnectionConfig): Promise<ExternalConnectionResponse> {
+        try {
+            this.config = config;
+
+            // Sign in to get auth token
+            await this.signIn(config);
+
+            // Get view data summary
+            const viewId = config.parameters.view_id;
+            const filter = config.parameters.filter || '';
+            
+            const csvData = await this.getViewData(viewId, filter);
+            console.log(csvData);
+
+            // Parse CSV data
+            const { headers, rows } = this.parseCSV(csvData);
+
+            // Extract a single value from the CSV data
+            const targetColumn = config.parameters.target_column || headers[headers.length - 1]; // Default to last column (usually percentage)
+            const targetRow = config.parameters.target_row || 0; // Default to first data row
+
+            const columnIndex = headers.findIndex(header => 
+                header.toLowerCase().includes(targetColumn.toLowerCase())
+            );
+
+            if (columnIndex === -1) {
+                throw new Error(`Column containing "${targetColumn}" not found`);
+            }
+
+            if (targetRow >= rows.length) {
+                throw new Error(`Row index ${targetRow} not found. Available rows: ${rows.length}`);
+            }
+
+            const value = rows[targetRow][columnIndex];
+
+            return {
+                success: true,
+                value: value
+            };
+        } catch (error) {
+            return {
+                success: false,
+                value: null,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
+            };
+        }
+    }
+
     private async signIn(config: ExternalConnectionConfig): Promise<void> {
         const url = `${this.baseUrl}/api/3.19/auth/signin`;
         const headers = { 
@@ -28,18 +82,14 @@ export class TableauAdapter implements ExternalConnectionAdapter {
         this.siteId = site.id;
     }
 
-    private async getViewDataSummary(viewId: string, filters: Record<string, string>): Promise<any> {
-        const params = new URLSearchParams();
-        for (const key in filters) {
-            params.append(`vf_${key}`, filters[key]);
-        }
-
-        const url = `${this.baseUrl}/api/3.19/sites/${this.siteId}/views/${viewId}/data/summaries?${params}`;
+    private async getViewData(viewId: string, filters: string): Promise<any> {
+        // https://help.tableau.com/current/api/rest_api/en-us/REST/rest_api_ref_site.htm#query_views_for_site
+        const url = `${this.baseUrl}/api/3.19/sites/${this.siteId}/views/${viewId}/data?filter=${filters}`;
 
         const response = await axios.get(url, {
             headers: { 
                 'X-Tableau-Auth': this.authToken,
-                'Accept': 'application/json',
+                'Accept': 'text/csv',
                 'Content-Type': 'application/json'
             },
         });
@@ -51,57 +101,32 @@ export class TableauAdapter implements ExternalConnectionAdapter {
         return this.config.url.replace(/\/$/, '');
     }
 
-    async fetch(config: ExternalConnectionConfig): Promise<ExternalConnectionResponse> {
-        try {
-            this.config = config;
+    private parseCSV(csvData: string): { headers: string[], rows: string[][] } {
+        const lines = csvData.trim().split('\n');
+        const headers = this.parseCSVLine(lines[0]);
+        const rows = lines.slice(1).map(line => this.parseCSVLine(line));
+        return { headers, rows };
+    }
 
-            // Sign in to get auth token
-            await this.signIn(config);
-
-            // Get view data summary
-            const viewId = config.parameters.view_id;
-            const filters = config.parameters.filters ? JSON.parse(config.parameters.filters) : {};
+    private parseCSVLine(line: string): string[] {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
             
-            const summaryData = await this.getViewDataSummary(viewId, filters);
-            console.log(summaryData);
-
-            // Extract value using JSONPath if provided, otherwise use default extraction
-            if (config.parameters.jsonPath) {
-                const values = jsonpath.JSONPath({ path: config.parameters.jsonPath, json: summaryData });
-                const value = values.length > 0 ? values[0] : null;
-                return {
-                    success: true,
-                    value
-                };
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current.trim());
+                current = '';
             } else {
-                // Default extraction logic
-                const { data: rows, columns } = summaryData;
-                const targetColumn = config.parameters.target_column || 'percentage';
-                const targetValue = config.parameters.target_value;
-
-                const columnIndex = columns.findIndex((col: any) => 
-                    col.fieldName === targetColumn || col.fieldName.includes(targetColumn)
-                );
-
-                if (columnIndex === -1) {
-                    throw new Error(`Column ${targetColumn} not found`);
-                }
-
-                const value = targetValue 
-                    ? rows.find((row: any) => parseFloat(row[columnIndex]) === parseFloat(targetValue))
-                    : rows[0];
-
-                return {
-                    success: true,
-                    value
-                };
+                current += char;
             }
-        } catch (error) {
-            return {
-                success: false,
-                value: null,
-                error: error instanceof Error ? error.message : 'Unknown error occurred'
-            };
         }
+        
+        result.push(current.trim());
+        return result;
     }
 } 
