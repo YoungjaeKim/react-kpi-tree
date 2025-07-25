@@ -8,7 +8,10 @@ import {
     Select,
     MenuItem,
     Typography,
-    CircularProgress
+    CircularProgress,
+    Button,
+    Alert,
+    Snackbar
 } from '@mui/material';
 import axios from 'axios';
 import { TableauConnectionForm } from './TableauConnectionForm';
@@ -39,12 +42,19 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
     const [isAdaptersLoaded, setIsAdaptersLoaded] = useState(false);
     const [hasExistingConnection, setHasExistingConnection] = useState<boolean | null>(connectionStatus);
     const [connectionData, setConnectionData] = useState<any>(null);
+    const [validationLoading, setValidationLoading] = useState(false);
+    const [validationResult, setValidationResult] = useState<{
+        success: boolean;
+        message: string;
+        errors?: string[];
+    } | null>(null);
+    const [showValidationResult, setShowValidationResult] = useState(false);
 
     // First, fetch adapters
     useEffect(() => {
         const fetchAdapters = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections/spec`);
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/connections/list`);
                 setAdapters(response.data);
                 setIsAdaptersLoaded(true);
                 
@@ -144,6 +154,48 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
         });
     };
 
+    const validateConnectionConfig = async () => {
+        if (!connectionData || !selectedAdapter) {
+            setValidationResult({
+                success: false,
+                message: 'No connection data to validate',
+                errors: ['Please fill in the connection details first']
+            });
+            setShowValidationResult(true);
+            return;
+        }
+
+        setValidationLoading(true);
+        setValidationResult(null);
+
+        try {
+            const configToValidate = {
+                ...connectionData,
+                type: selectedAdapter,
+                elementId: elementId,
+                enable: enabled
+            };
+
+            const response = await axios.post(
+                `${process.env.REACT_APP_API_URL}/connections/validate`,
+                configToValidate
+            );
+
+            setValidationResult(response.data);
+            setShowValidationResult(true);
+        } catch (error: any) {
+            const errorMessage = error.response?.data || {
+                success: false,
+                message: 'Failed to validate connection',
+                errors: [error.message || 'Unknown error occurred']
+            };
+            setValidationResult(errorMessage);
+            setShowValidationResult(true);
+        } finally {
+            setValidationLoading(false);
+        }
+    };
+
     if (loading) {
         return <CircularProgress />;
     }
@@ -205,9 +257,50 @@ export const ExternalConnectionSettings: React.FC<ExternalConnectionSettingsProp
                         </Select>
                     </FormControl>
 
-                    {selectedAdapter && renderConnectionForm()}
+                    {selectedAdapter && (
+                        <>
+                            {renderConnectionForm()}
+                            
+                            <Box sx={{ mt: 2 }}>
+                                <Button
+                                    variant="outlined"
+                                    onClick={validateConnectionConfig}
+                                    disabled={validationLoading || !connectionData}
+                                    sx={{ mr: 2 }}
+                                >
+                                    {validationLoading ? <CircularProgress size={20} /> : 'Validate Configuration'}
+                                </Button>
+                            </Box>
+                        </>
+                    )}
                 </>
             )}
+
+            <Snackbar
+                open={showValidationResult}
+                autoHideDuration={6000}
+                onClose={() => setShowValidationResult(false)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={() => setShowValidationResult(false)}
+                    severity={validationResult?.success ? 'success' : 'error'}
+                    sx={{ width: '100%' }}
+                >
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        {validationResult?.message}
+                    </Typography>
+                    {validationResult?.errors && validationResult.errors.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                            {validationResult.errors.map((error, index) => (
+                                <Typography key={index} variant="body2" sx={{ fontSize: '0.875rem' }}>
+                                    • {error}
+                                </Typography>
+                            ))}
+                        </Box>
+                    )}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }; 

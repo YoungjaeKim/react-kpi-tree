@@ -3,6 +3,7 @@ import KpiExternalConnection from "../schemas/kpiExternalConnection";
 import { ExternalConnectionService } from "../services/external-connection-service";
 import mongoose from 'mongoose';
 import app from "../app";
+import { ExternalConnectionConfig } from "../types/external-connection";
 
 // Helper function to manage ExternalConnectionService
 const startOrStopExternalConnectionService = async (app: any, connection: any, enable?: boolean) => {
@@ -53,6 +54,27 @@ export const upsertConnectionByElementId = async (req: Request, res: Response) =
 };
 
 // GET /connections?elementId={elementId}
+export const getConnectionsHandler = async (req: Request, res: Response) => {
+  try {
+    const { elementId } = req.query;
+    
+    if (elementId && !mongoose.Types.ObjectId.isValid(elementId as string)) {
+      return res.status(400).json({ error: "Invalid elementId format" });
+    }
+
+    const filter = elementId ? { elementId } : {};
+    const connections = await KpiExternalConnection.find(filter);
+    if (!connections || connections.length === 0) {
+      return res.status(404).json({ error: "No connections found" });
+    }
+    res.json(connections);
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// GET /connections/by-element?elementId={elementId} (kept for backward compatibility)
 export const getConnectionByElementId = async (req: Request, res: Response) => {
   try {
     const { elementId } = req.query;
@@ -148,27 +170,65 @@ export const getConnectionStatuses = async (req: Request, res: Response) => {
   }
 };
 
-export interface ExternalConnectionConfig {
-  name: string;
-  elementId: string;
-  type: string;
-  parameters: Record<string, any>;
-  url: string;
-  pollingPeriodSeconds: number;
-  enable: boolean;
-  [key: string]: any; // Allow additional fields
-}
-
-// GET /connections/spec
+// GET /connections/list
 // returns a list of available connection type names
 export const getConnectionSpec = async (req: Request, res: Response) => {
   try {
-    const adaptersMap = app.locals.activeExternalConnectionService.adapters;
+    const service: ExternalConnectionService = req.app.locals.activeExternalConnectionService;
+    const adaptersMap = service.getAdapters();
     const adapters = Array.from(adaptersMap.keys()).map(name => ({ name }));
 
     res.json(adapters);
   } catch (error) {
     const err = error as Error;
     res.status(500).json({ error: err.message });
+  }
+};
+
+// POST /connections/validate
+// validates connection configuration without saving it
+export const validateConnection = async (req: Request, res: Response) => {
+  try {
+    const config: ExternalConnectionConfig = req.body;
+
+    // Basic validation of required fields
+    if (!config.type) {
+      return res.status(400).json({
+        success: false,
+        message: 'Connection type is required',
+        errors: ['Connection type is required']
+      });
+    }
+
+    // Get the appropriate adapter
+    const service: ExternalConnectionService = req.app.locals.activeExternalConnectionService;
+    if (!service) {
+      return res.status(500).json({
+        success: false,
+        message: 'External connection service not available',
+        errors: ['External connection service not available']
+      });
+    }
+
+    const adapter = service.getAdapters().get(config.type);
+    if (!adapter) {
+      return res.status(400).json({
+        success: false,
+        message: `Unknown connection type: ${config.type}`,
+        errors: [`Unknown connection type: ${config.type}`]
+      });
+    }
+
+    // Validate the configuration using the adapter
+    const validationResult = await adapter.validate(config);
+    
+    res.status(validationResult.success ? 200 : 400).json(validationResult);
+  } catch (error) {
+    const err = error as Error;
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error during validation',
+      errors: [err.message]
+    });
   }
 };

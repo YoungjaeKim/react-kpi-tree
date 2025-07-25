@@ -18,4 +18,10 @@ export interface ExternalConnectionResponse {
     success: boolean;
     value: any;
     error?: string;
+}
+
+export interface ExternalConnectionValidationResponse {
+    success: boolean;
+    message: string;
+    errors?: string[];
 } 

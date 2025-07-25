@@ -1,8 +1,59 @@
 import axios from 'axios';
-import { ExternalConnectionConfig, ExternalConnectionResponse } from '../types/external-connection';
+import { ExternalConnectionConfig, ExternalConnectionResponse, ExternalConnectionValidationResponse } from '../types/external-connection';
 import { ExternalConnectionAdapter } from './external-connection-adapter';
 
 export class OpenSearchAdapter implements ExternalConnectionAdapter {
+    async validate(config: ExternalConnectionConfig): Promise<ExternalConnectionValidationResponse> {
+        const errors: string[] = [];
+
+        // Validate required fields
+        if (!config.url) {
+            errors.push('URL is required');
+        } else {
+            try {
+                new URL(config.url);
+            } catch {
+                errors.push('URL must be a valid URL');
+            }
+        }
+
+        // Validate authentication (required for OpenSearch)
+        if (!config.username) {
+            errors.push('Username is required for OpenSearch');
+        }
+        if (!config.authToken) {
+            errors.push('Auth token is required for OpenSearch');
+        }
+
+        // Validate parameters (should be a valid search query object)
+        if (!config.parameters || typeof config.parameters !== 'object') {
+            errors.push('Parameters object is required for OpenSearch queries');
+        } else {
+            // Basic validation for OpenSearch query structure
+            if (!config.parameters.query && !config.parameters.aggs) {
+                errors.push('Parameters must contain either "query" or "aggs" for OpenSearch');
+            }
+        }
+
+        // Validate polling period
+        if (config.pollingPeriodSeconds <= 0) {
+            errors.push('Polling period must be greater than 0');
+        }
+
+        if (errors.length > 0) {
+            return {
+                success: false,
+                message: 'Validation failed',
+                errors
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Configuration is valid'
+        };
+    }
+
     async fetch(config: ExternalConnectionConfig): Promise<ExternalConnectionResponse> {
         try {
             const headers: Record<string, string> = {

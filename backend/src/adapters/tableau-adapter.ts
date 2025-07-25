@@ -1,12 +1,75 @@
 import axios from 'axios';
 import * as jsonpath from 'jsonpath-plus';
-import { ExternalConnectionConfig, ExternalConnectionResponse } from '../types/external-connection';
+import { ExternalConnectionConfig, ExternalConnectionResponse, ExternalConnectionValidationResponse } from '../types/external-connection';
 import { ExternalConnectionAdapter } from './external-connection-adapter';
 
 export class TableauAdapter implements ExternalConnectionAdapter {
     private authToken: string = '';
     private siteId: string = '';
     private config!: ExternalConnectionConfig;
+
+    async validate(config: ExternalConnectionConfig): Promise<ExternalConnectionValidationResponse> {
+        const errors: string[] = [];
+
+        // Validate required fields
+        if (!config.url) {
+            errors.push('URL is required');
+        } else {
+            try {
+                new URL(config.url);
+            } catch {
+                errors.push('URL must be a valid URL');
+            }
+        }
+
+        // Validate authentication (required for Tableau)
+        if (!config.username) {
+            errors.push('Personal Access Token Name (username) is required for Tableau');
+        }
+        if (!config.authToken) {
+            errors.push('Personal Access Token Secret (authToken) is required for Tableau');
+        }
+
+        // Validate required parameters
+        if (!config.parameters?.view_id) {
+            errors.push('View ID is required in parameters');
+        }
+
+        // Validate optional parameters with proper types
+        if (config.parameters?.target_row !== undefined) {
+            const targetRow = Number(config.parameters.target_row);
+            if (isNaN(targetRow) || targetRow < 0) {
+                errors.push('Target row must be a non-negative number');
+            }
+        }
+
+        // Validate filter format if provided
+        if (config.parameters?.filter) {
+            const filter = config.parameters.filter as string;
+            // Basic validation for Tableau filter format (should contain colon for name:value pairs)
+            if (!filter.includes(':')) {
+                errors.push('Filter must be in format "name:eq:value" or similar Tableau filter expression');
+            }
+        }
+
+        // Validate polling period
+        if (config.pollingPeriodSeconds <= 0) {
+            errors.push('Polling period must be greater than 0');
+        }
+
+        if (errors.length > 0) {
+            return {
+                success: false,
+                message: 'Validation failed',
+                errors
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Configuration is valid'
+        };
+    }
 
     /**
      * Fetch data from Tableau

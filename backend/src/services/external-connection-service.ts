@@ -175,6 +175,11 @@ export class ExternalConnectionService {
         }
     }
 
+    // Add a public method to get adapters for validation
+    public getAdapters(): Map<string, ExternalConnectionAdapter> {
+        return this.adapters;
+    }
+
     private async startConnection(config: ExternalConnectionConfig): Promise<void> {
         // Skip if connection is disabled
         if (!config.enable) {
